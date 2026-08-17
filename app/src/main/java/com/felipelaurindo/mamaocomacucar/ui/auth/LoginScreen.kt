@@ -209,6 +209,8 @@ fun LoginScreen(
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Stone900,
+                                unfocusedTextColor = Stone900,
                                 focusedBorderColor = MamaoOrange,
                                 unfocusedBorderColor = Stone200,
                                 focusedContainerColor = Stone50,
@@ -255,6 +257,8 @@ fun LoginScreen(
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Stone900,
+                                unfocusedTextColor = Stone900,
                                 focusedBorderColor = MamaoOrange,
                                 unfocusedBorderColor = Stone200,
                                 focusedContainerColor = Stone50,

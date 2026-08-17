@@ -347,8 +347,8 @@ fun AccountSettingsSheet(
                                                 val firebaseUser = auth.currentUser ?: return@launch
 
                                                 // Re-authenticate
-                                                val credential = EmailAuthProvider.credential(firebaseUser.email!!, deletePassword)
-                                                firebaseUser.reauthenticateWithCredential(credential).await()
+                                                val credential = EmailAuthProvider.getCredential(firebaseUser.email!!, deletePassword)
+                                                firebaseUser.reauthenticate(credential).await()
 
                                                 // Delete from Firestore
                                                 repository.deleteUserProfile(currentUser.uid, currentUser.username)

@@ -37,52 +37,34 @@ import com.felipelaurindo.mamaocomacucar.ui.settings.AppSettingsSheet
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.formatDistance
 import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.OnlineTileSource
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.MapTileIndex
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 
 // Map tile sources matching the web app's styles
-private fun getCartoVoyager() = object : OnlineTileSource(
+private fun getCartoVoyager() = XYTileSource(
     "CartoVoyager", 0, 19, 256, ".png",
     arrayOf("https://a.basemaps.cartocdn.com/rastertiles/voyager/",
             "https://b.basemaps.cartocdn.com/rastertiles/voyager/",
             "https://c.basemaps.cartocdn.com/rastertiles/voyager/")
-) {
-    override fun getTileURLString(pMapTileIndex: Long): String {
-        return baseUrl + MapTileIndex.getZoom(pMapTileIndex) + "/" +
-                MapTileIndex.getX(pMapTileIndex) + "/" +
-                MapTileIndex.getY(pMapTileIndex) + mImageFilenameEnding
-    }
-}
+)
 
-private fun getCartoDark() = object : OnlineTileSource(
+private fun getCartoDark() = XYTileSource(
     "CartoDark", 0, 19, 256, ".png",
     arrayOf("https://a.basemaps.cartocdn.com/dark_all/",
             "https://b.basemaps.cartocdn.com/dark_all/",
             "https://c.basemaps.cartocdn.com/dark_all/")
-) {
-    override fun getTileURLString(pMapTileIndex: Long): String {
-        return baseUrl + MapTileIndex.getZoom(pMapTileIndex) + "/" +
-                MapTileIndex.getX(pMapTileIndex) + "/" +
-                MapTileIndex.getY(pMapTileIndex) + mImageFilenameEnding
-    }
-}
+)
 
-private fun getCartoPositron() = object : OnlineTileSource(
+private fun getCartoPositron() = XYTileSource(
     "CartoPositron", 0, 19, 256, ".png",
     arrayOf("https://a.basemaps.cartocdn.com/light_all/",
             "https://b.basemaps.cartocdn.com/light_all/",
             "https://c.basemaps.cartocdn.com/light_all/")
-) {
-    override fun getTileURLString(pMapTileIndex: Long): String {
-        return baseUrl + MapTileIndex.getZoom(pMapTileIndex) + "/" +
-                MapTileIndex.getX(pMapTileIndex) + "/" +
-                MapTileIndex.getY(pMapTileIndex) + mImageFilenameEnding
-    }
-}
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -234,29 +216,20 @@ fun MapScreen(
                     Text(
                         currentUser.displayName,
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
-                        color = Stone900
+                        color = Stone900,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                     Text(
                         "@${currentUser.username}",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                        color = MamaoOrange
+                        color = MamaoOrange,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
-                // Badge
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = MamaoOrangeLight
-                ) {
-                    Text(
-                        "${badge.title.uppercase()} ${badge.icon}",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
-                        color = MamaoOrange
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
                 // Account settings
                 IconButton(
@@ -273,20 +246,18 @@ fun MapScreen(
                 ) {
                     Icon(Icons.Outlined.Settings, null, tint = Stone700, modifier = Modifier.size(18.dp))
                 }
+                
+                Spacer(modifier = Modifier.width(4.dp))
 
                 // Logout
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = MamaoOrangeLight,
-                    onClick = onLogout
+                    onClick = onLogout,
+                    modifier = Modifier.size(36.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(Icons.Outlined.Logout, null, tint = MamaoOrange, modifier = Modifier.size(14.dp))
-                        Text("Sair", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp), color = MamaoOrange)
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Outlined.Logout, null, tint = MamaoOrange, modifier = Modifier.size(16.dp))
                     }
                 }
             }

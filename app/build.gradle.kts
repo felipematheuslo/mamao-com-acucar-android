@@ -54,7 +54,7 @@ dependencies {
     implementation(libs.androidx.material3)
 
     // Firebase BoM (manages all Firebase library versions)
-    implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
