@@ -40,6 +40,7 @@ Este arquivo serve como contexto base e guia de regras para Agentes de IA trabal
 ## 6. Boas Práticas e Gotchas (Armadilhas Comuns)
 - **Gradle & Kotlin Versions**: Nunca atualize arbitrariamente o `firebase-bom` ou dependências do `AndroidX` sem garantir que são compatíveis com a versão do Kotlin do projeto e o `compileSdk 36`.
 - **OSMDroid**: 
+  - Sempre inicializar a configuração com `Configuration.getInstance().load(context, preferences)` no `MainActivity` para ativar o cache local de tiles e garantir fluidez no mapa.
   - A interface `ITileSource` tem a propriedade de nome mapeada como `.name()`, e **não** `.name`.
   - Atualizar marcadores na thread correta e sempre chamar `mapView.invalidate()` após modificações dinâmicas.
 - **Previews**: Se fizer componentes visuais, evite dependências pesadas do Firebase nas assinaturas (passe lambdas e primitivas) para não quebrar `@Preview` no Compose.
