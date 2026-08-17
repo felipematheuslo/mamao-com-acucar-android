@@ -25,6 +25,15 @@ data class UserBadge(
     val icon: String
 )
 
+data class NextBadgeInfo(
+    val nextTitle: String,
+    val nextIcon: String,
+    val targetCount: Int,
+    val currentCount: Int,
+    val progress: Float
+)
+
+
 class MapViewModel : ViewModel() {
 
     private val repository = FirestoreRepository()
@@ -261,25 +270,46 @@ class MapViewModel : ViewModel() {
     fun getUserBadge(count: Int): UserBadge {
         return when {
             count == 0 -> UserBadge(
-                "Explorador de Bairro",
-                "Ainda não cadastrou fruteiras. Mapeie seu primeiro pé para ganhar o emblema!",
+                "SEMENTINHA",
+                "Ainda não cadastrou fruteiras. Mapeie seu primeiro pé para começar a germinar!",
                 "🌱"
             )
-            count <= 2 -> UserBadge(
-                "Mapeador Iniciante",
+            count in 1..4 -> UserBadge(
+                "BROTINHO",
                 "Cadastrou suas primeiras árvores no acervo coletivo do bairro.",
+                "🌿"
+            )
+            count in 5..9 -> UserBadge(
+                "CULTIVADOR",
+                "Membro ativo ajudando a expandir o mapa urbano de frutas.",
+                "🪴"
+            )
+            count in 10..24 -> UserBadge(
+                "PROTETOR DA FLORESTA",
+                "Cuida da comunidade e mantém o mapa urbano sempre atualizado!",
                 "🌳"
             )
-            count <= 5 -> UserBadge(
-                "Guardião Verde",
-                "Membro ativo ajudando a expandir a segurança alimentar urbana.",
-                "🌸"
+            count in 25..49 -> UserBadge(
+                "GUARDIÃO DAS FRUTAS",
+                "Referência no mapeamento urbano e na segurança alimentar coletiva.",
+                "🍊"
             )
             else -> UserBadge(
-                "Mestre Frutífero",
+                "MESTRE FRUTÍFERO",
                 "Uma lenda viva da colheita e do mapeamento urbano coletivo!",
                 "🍒"
             )
+        }
+    }
+
+    fun getNextBadgeInfo(count: Int): NextBadgeInfo? {
+        return when {
+            count == 0 -> NextBadgeInfo("BROTINHO", "🌿", targetCount = 1, currentCount = 0, progress = 0f)
+            count in 1..4 -> NextBadgeInfo("CULTIVADOR", "🪴", targetCount = 5, currentCount = count, progress = count / 5f)
+            count in 5..9 -> NextBadgeInfo("PROTETOR DA FLORESTA", "🌳", targetCount = 10, currentCount = count, progress = count / 10f)
+            count in 10..24 -> NextBadgeInfo("GUARDIÃO DAS FRUTAS", "🍊", targetCount = 25, currentCount = count, progress = count / 25f)
+            count in 25..49 -> NextBadgeInfo("MESTRE FRUTÍFERO", "🍒", targetCount = 50, currentCount = count, progress = count / 50f)
+            else -> null
         }
     }
 

@@ -2,13 +2,16 @@ package com.felipelaurindo.mamaocomacucar.ui.settings
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -17,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
 import com.felipelaurindo.mamaocomacucar.data.repository.FirestoreRepository
+import com.felipelaurindo.mamaocomacucar.ui.map.NextBadgeInfo
 import com.felipelaurindo.mamaocomacucar.ui.map.UserBadge
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.normalizeUsername
@@ -46,17 +50,33 @@ fun AccountSettingsSheet(
     var deletePassword by remember { mutableStateOf("") }
     var isDeletingProfile by remember { mutableStateOf(false) }
 
+    val nextBadgeInfo = remember(userTreeCount) {
+        when {
+            userTreeCount == 0 -> NextBadgeInfo("BROTINHO", "🌿", targetCount = 1, currentCount = 0, progress = 0f)
+            userTreeCount in 1..4 -> NextBadgeInfo("CULTIVADOR", "🪴", targetCount = 5, currentCount = userTreeCount, progress = userTreeCount / 5f)
+            userTreeCount in 5..9 -> NextBadgeInfo("PROTETOR DA FLORESTA", "🌳", targetCount = 10, currentCount = userTreeCount, progress = userTreeCount / 10f)
+            userTreeCount in 10..24 -> NextBadgeInfo("GUARDIÃO DAS FRUTAS", "🍊", targetCount = 25, currentCount = userTreeCount, progress = userTreeCount / 25f)
+            userTreeCount in 25..49 -> NextBadgeInfo("MESTRE FRUTÍFERO", "🍒", targetCount = 50, currentCount = userTreeCount, progress = userTreeCount / 50f)
+            else -> null
+        }
+    }
+
+    val userInitial = remember(currentUser.displayName, currentUser.username) {
+        val name = currentUser.displayName.ifBlank { currentUser.username }
+        if (name.isNotBlank()) name.first().uppercase() else "👤"
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(Color.Black.copy(alpha = 0.6f))
             .clickable(onClick = onDismiss),
         contentAlignment = Alignment.Center
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
+                .padding(horizontal = 20.dp, vertical = 24.dp)
                 .clickable(enabled = false, onClick = {}),
             shape = RoundedCornerShape(28.dp),
             color = Color.White,
@@ -66,7 +86,7 @@ fun AccountSettingsSheet(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 // Header
                 Row(
@@ -78,41 +98,115 @@ fun AccountSettingsSheet(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("👤", fontSize = 20.sp)
+                        Text("👤", fontSize = 22.sp)
                         Text(
                             "Configurações da Conta",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = Stone950
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Stone900
                         )
                     }
-                    IconButton(onClick = { onDismiss(); isProfileUpdated = false }, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Outlined.Close, null, tint = Stone400, modifier = Modifier.size(16.dp))
+                    IconButton(
+                        onClick = { onDismiss(); isProfileUpdated = false },
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(Stone100, CircleShape)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Close,
+                            contentDescription = "Fechar",
+                            tint = Stone600,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
 
-                HorizontalDivider(color = Stone100)
+                // Profile Card Header
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MamaoOrangeLight,
+                    border = BorderStroke(1.dp, MamaoOrangeContainer),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MamaoOrange,
+                            modifier = Modifier.size(52.dp),
+                            shadowElevation = 4.dp
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = userInitial,
+                                    color = Color.White,
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                            }
+                        }
 
-                // Display Name
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("NOME DE EXIBIÇÃO", style = MaterialTheme.typography.labelSmall, color = Stone400)
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = currentUser.displayName.ifBlank { "Membro Frutífero" },
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                color = Stone900
+                            )
+                            Text(
+                                text = "@${currentUser.username}",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = MamaoOrange
+                            )
+                            Text(
+                                text = currentUser.email,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Stone500
+                            )
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = Stone200)
+
+                // Form Section
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        "INFORMAÇÕES DE PERFIL",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 1.5.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Stone400
+                    )
+
+                    // Display Name
                     OutlinedTextField(
                         value = tempDisplayName,
-                        onValueChange = { tempDisplayName = it; isProfileUpdated = false; profileError = "" },
+                        onValueChange = {
+                            tempDisplayName = it
+                            isProfileUpdated = false
+                            profileError = ""
+                        },
+                        label = { Text("Nome de Exibição") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Stone900,
+                            unfocusedTextColor = Stone900,
                             focusedBorderColor = MamaoOrange,
                             unfocusedBorderColor = Stone200,
                             focusedContainerColor = Stone50,
-                            unfocusedContainerColor = Stone50
+                            unfocusedContainerColor = Stone50,
+                            cursorColor = MamaoOrange,
+                            focusedLabelColor = MamaoOrange,
+                            unfocusedLabelColor = Stone400
                         )
                     )
-                }
 
-                // Username
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("USERNAME", style = MaterialTheme.typography.labelSmall, color = MamaoOrange)
+                    // Username
                     OutlinedTextField(
                         value = tempUsername,
                         onValueChange = {
@@ -120,264 +214,429 @@ fun AccountSettingsSheet(
                             isProfileUpdated = false
                             profileError = ""
                         },
+                        label = { Text("Username") },
                         modifier = Modifier.fillMaxWidth(),
                         prefix = {
-                            Text("@", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = Stone400)
+                            Text(
+                                "@",
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                color = MamaoOrange
+                            )
                         },
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MamaoOrange,
+                            unfocusedTextColor = MamaoOrange,
                             focusedBorderColor = MamaoOrange,
                             unfocusedBorderColor = Stone200,
                             focusedContainerColor = Stone50,
                             unfocusedContainerColor = Stone50,
-                            focusedTextColor = MamaoOrange,
-                            unfocusedTextColor = MamaoOrange
+                            cursorColor = MamaoOrange,
+                            focusedLabelColor = MamaoOrange,
+                            unfocusedLabelColor = Stone400
                         )
                     )
-                }
 
-                // Email (disabled)
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("E-MAIL DE CADASTRO", style = MaterialTheme.typography.labelSmall, color = Stone400)
+                    // Email (disabled)
                     OutlinedTextField(
                         value = currentUser.email,
                         onValueChange = {},
+                        label = { Text("E-mail de Cadastro") },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = false,
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = Stone700,
                             disabledBorderColor = Stone200,
                             disabledContainerColor = Stone100,
-                            disabledTextColor = Stone500
+                            disabledLabelColor = Stone400
                         )
                     )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    // Save Button
+                    val isFormChanged = tempDisplayName.trim() != currentUser.displayName || tempUsername.trim() != currentUser.username
+                    val isFormValid = tempDisplayName.isNotBlank() && tempUsername.isNotBlank()
+
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                isSavingProfile = true
+                                profileError = ""
+                                isProfileUpdated = false
+
+                                try {
+                                    val newUsername = tempUsername.trim()
+                                    if (newUsername != currentUser.username) {
+                                        val isUnique = repository.checkUsernameUnique(newUsername)
+                                        if (!isUnique) {
+                                            profileError = "Este username já está em uso por outro membro."
+                                            isSavingProfile = false
+                                            return@launch
+                                        }
+                                    }
+
+                                    repository.updateUsername(
+                                        uid = currentUser.uid,
+                                        oldUsername = currentUser.username,
+                                        newUsername = newUsername,
+                                        email = currentUser.email,
+                                        displayName = tempDisplayName.trim()
+                                    )
+
+                                    isProfileUpdated = true
+                                } catch (e: Exception) {
+                                    profileError = "Erro ao salvar alterações do perfil."
+                                } finally {
+                                    isSavingProfile = false
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        enabled = !isSavingProfile && isFormChanged && isFormValid,
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MamaoOrange,
+                            contentColor = Color.White,
+                            disabledContainerColor = Stone200,
+                            disabledContentColor = Stone400
+                        )
+                    ) {
+                        if (isSavingProfile) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                "Salvar Alterações",
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+
+                    if (profileError.isNotBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Rose50,
+                            border = BorderStroke(1.dp, Rose200),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                "⚠️ $profileError",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = Rose700,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    }
+
+                    if (isProfileUpdated) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Emerald50,
+                            border = BorderStroke(1.dp, Emerald600.copy(alpha = 0.3f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                "✨ Alterações salvas com sucesso no seu perfil!",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = Emerald600,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    }
                 }
 
-                // Save button
-                Button(
-                    onClick = {
-                        scope.launch {
-                            isSavingProfile = true
-                            profileError = ""
-                            isProfileUpdated = false
+                HorizontalDivider(color = Stone200)
 
-                            try {
-                                val newUsername = tempUsername.trim()
-                                if (newUsername != currentUser.username) {
-                                    val isUnique = repository.checkUsernameUnique(newUsername)
-                                    if (!isUnique) {
-                                        profileError = "Este username já está em uso."
-                                        isSavingProfile = false
-                                        return@launch
+                // Stats & Gamification Section
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        "PROGRESSO & EMBLEMAS",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 1.5.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Stone400
+                    )
+
+                    // Stats Row
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(18.dp),
+                            color = Stone50,
+                            border = BorderStroke(1.dp, Stone200)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(
+                                    "ÁRVORES MAPEADAS",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    color = Stone400
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    verticalAlignment = Alignment.Bottom,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        "$userTreeCount",
+                                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
+                                        color = Stone900
+                                    )
+                                    Text(
+                                        "pins",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = Stone400,
+                                        modifier = Modifier.padding(bottom = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(18.dp),
+                            color = Stone50,
+                            border = BorderStroke(1.dp, Stone200)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(
+                                    "NÍVEL DA COMUNIDADE",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    color = Stone400
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    "${badge.icon} ${badge.title}",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
+                                    color = MamaoOrange
+                                )
+                            }
+                        }
+                    }
+
+                    // Badge details card
+                    Surface(
+                        shape = RoundedCornerShape(18.dp),
+                        color = MamaoOrangeLight,
+                        border = BorderStroke(1.dp, MamaoOrangeContainer),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = MamaoOrangeContainer,
+                                    modifier = Modifier.size(44.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(badge.icon, fontSize = 22.sp)
                                     }
                                 }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Emblema Atual: ${badge.title}",
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = Stone900
+                                    )
+                                    Text(
+                                        badge.desc,
+                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                        color = Stone600
+                                    )
+                                }
+                            }
 
-                                repository.updateUsername(
-                                    uid = currentUser.uid,
-                                    oldUsername = currentUser.username,
-                                    newUsername = newUsername,
-                                    email = currentUser.email,
-                                    displayName = tempDisplayName.trim()
+                            // Progress to next badge
+                            if (nextBadgeInfo != null) {
+                                HorizontalDivider(color = MamaoOrangeContainer)
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            "Próximo nível: ${nextBadgeInfo.nextIcon} ${nextBadgeInfo.nextTitle}",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = MamaoOrangeDark
+                                        )
+                                        Text(
+                                            "$userTreeCount / ${nextBadgeInfo.targetCount}",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = Stone600
+                                        )
+                                    }
+
+                                    LinearProgressIndicator(
+                                        progress = { nextBadgeInfo.progress },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(8.dp)
+                                            .clip(RoundedCornerShape(4.dp)),
+                                        color = MamaoOrange,
+                                        trackColor = MamaoOrangeContainer
+                                    )
+
+                                    val remaining = nextBadgeInfo.targetCount - userTreeCount
+                                    Text(
+                                        "Faltam apenas $remaining ${if (remaining == 1) "fruteira" else "fruteiras"} para avançar de nível! 🚀",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                        color = Stone500
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    "🏆 Parabéns! Você atingiu o nível máximo de mapeamento urbano!",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = MamaoOrangeDark
                                 )
-
-                                isProfileUpdated = true
-                            } catch (e: Exception) {
-                                profileError = "Erro ao salvar alterações."
-                            } finally {
-                                isSavingProfile = false
                             }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                    enabled = !isSavingProfile &&
-                            tempDisplayName.isNotBlank() &&
-                            tempUsername.isNotBlank() &&
-                            (tempDisplayName.trim() != currentUser.displayName || tempUsername != currentUser.username),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MamaoOrange)
-                ) {
-                    if (isSavingProfile) {
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
-                    } else {
-                        Text("Salvar Alterações", style = MaterialTheme.typography.labelMedium)
-                    }
-                }
-
-                if (profileError.isNotBlank()) {
-                    Text("⚠️ $profileError", style = MaterialTheme.typography.labelSmall, color = Rose600)
-                }
-                if (isProfileUpdated) {
-                    Text("✨ Alterações salvas com sucesso!", style = MaterialTheme.typography.labelSmall, color = Emerald600)
-                }
-
-                // Stats
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Surface(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        color = Stone50,
-                        border = BorderStroke(1.dp, Stone200)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("ÁRVORES MAPEADAS", style = MaterialTheme.typography.labelSmall, color = Stone400)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text("$userTreeCount", style = MaterialTheme.typography.headlineMedium, color = Stone900)
-                                Text("pins", style = MaterialTheme.typography.labelSmall, color = Stone400)
-                            }
-                        }
-                    }
-
-                    Surface(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        color = Stone50,
-                        border = BorderStroke(1.dp, Stone200)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("NÍVEL", style = MaterialTheme.typography.labelSmall, color = Stone400)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                "${badge.icon} ${badge.title}",
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
-                                color = MamaoOrange
-                            )
-                        }
-                    }
-                }
-
-                // Badge card
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MamaoOrangeLight,
-                    border = BorderStroke(1.dp, MamaoOrangeContainer)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MamaoOrangeContainer,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(badge.icon, fontSize = 20.sp)
-                            }
-                        }
-                        Column {
-                            Text(
-                                "Emblema: ${badge.title}",
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
-                                color = Stone900
-                            )
-                            Text(
-                                badge.desc,
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                color = Stone500
-                            )
                         }
                     }
                 }
 
                 // Danger Zone
-                HorizontalDivider(color = Stone100)
-                Text("ZONA DE PERIGO", style = MaterialTheme.typography.labelSmall, color = Rose600, letterSpacing = 2.sp)
+                HorizontalDivider(color = Stone200)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        "ZONA DE PERIGO",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            letterSpacing = 1.5.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Rose600
+                    )
 
-                if (!showDeleteConfirm) {
-                    OutlinedButton(
-                        onClick = { showDeleteConfirm = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Rose600),
-                        border = BorderStroke(1.dp, Rose200)
-                    ) {
-                        Text("Deletar Perfil", style = MaterialTheme.typography.labelMedium)
-                    }
-                } else {
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = Rose50,
-                        border = BorderStroke(1.dp, Rose200)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                    if (!showDeleteConfirm) {
+                        OutlinedButton(
+                            onClick = { showDeleteConfirm = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Rose600),
+                            border = BorderStroke(1.dp, Rose200)
                         ) {
                             Text(
-                                "⚠️ Tem certeza? Esta ação apagará permanentemente sua conta, seus dados de perfil e todas as árvores que você mapeou no sistema. Esta ação não pode ser desfeita.",
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                                color = Rose700
+                                "Deletar Perfil Definitivamente",
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                             )
+                        }
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(18.dp),
+                            color = Rose50,
+                            border = BorderStroke(1.dp, Rose200)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    "⚠️ Tem certeza absoluta? Esta ação apagará permanentemente sua conta, seus dados de perfil e todas as árvores que você mapeou no sistema. Esta ação não pode ser desfeita.",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                                    color = Rose700
+                                )
 
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text("SENHA ATUAL DO PERFIL", style = MaterialTheme.typography.labelSmall, color = Rose700)
                                 OutlinedTextField(
                                     value = deletePassword,
                                     onValueChange = { deletePassword = it },
+                                    label = { Text("Senha Atual para Confirmar") },
                                     modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("Confirme sua senha", color = Stone400) },
                                     visualTransformation = PasswordVisualTransformation(),
                                     singleLine = true,
                                     shape = RoundedCornerShape(12.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Stone900,
+                                        unfocusedTextColor = Stone900,
                                         focusedBorderColor = Rose600,
-                                        unfocusedBorderColor = Rose200
+                                        unfocusedBorderColor = Rose200,
+                                        focusedLabelColor = Rose600,
+                                        cursorColor = Rose600
                                     )
                                 )
-                            }
 
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(
-                                    onClick = { showDeleteConfirm = false; deletePassword = "" },
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(10.dp),
-                                    enabled = !isDeletingProfile
-                                ) {
-                                    Text("Cancelar", style = MaterialTheme.typography.labelMedium)
-                                }
-                                Button(
-                                    onClick = {
-                                        scope.launch {
-                                            isDeletingProfile = true
-                                            try {
-                                                val auth = FirebaseAuth.getInstance()
-                                                val firebaseUser = auth.currentUser ?: return@launch
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    OutlinedButton(
+                                        onClick = { showDeleteConfirm = false; deletePassword = "" },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(44.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        enabled = !isDeletingProfile
+                                    ) {
+                                        Text("Cancelar", style = MaterialTheme.typography.labelMedium)
+                                    }
+                                    Button(
+                                        onClick = {
+                                            scope.launch {
+                                                isDeletingProfile = true
+                                                try {
+                                                    val auth = FirebaseAuth.getInstance()
+                                                    val firebaseUser = auth.currentUser ?: return@launch
 
-                                                // Re-authenticate
-                                                val credential = EmailAuthProvider.getCredential(firebaseUser.email!!, deletePassword)
-                                                firebaseUser.reauthenticate(credential).await()
+                                                    // Re-authenticate
+                                                    val credential = EmailAuthProvider.getCredential(firebaseUser.email!!, deletePassword)
+                                                    firebaseUser.reauthenticate(credential).await()
 
-                                                // Delete from Firestore
-                                                repository.deleteUserProfile(currentUser.uid, currentUser.username)
+                                                    // Delete from Firestore
+                                                    repository.deleteUserProfile(currentUser.uid, currentUser.username)
 
-                                                // Delete auth user
-                                                firebaseUser.delete().await()
+                                                    // Delete auth user
+                                                    firebaseUser.delete().await()
 
-                                                onLogout()
-                                            } catch (e: Exception) {
-                                                val msg = when {
-                                                    e.message?.contains("wrong-password") == true ||
-                                                    e.message?.contains("invalid-credential") == true -> "Senha incorreta."
-                                                    else -> "Erro ao deletar o perfil."
+                                                    onLogout()
+                                                } catch (e: Exception) {
+                                                    val msg = when {
+                                                        e.message?.contains("wrong-password") == true ||
+                                                        e.message?.contains("invalid-credential") == true -> "Senha incorreta."
+                                                        else -> "Erro ao deletar o perfil."
+                                                    }
+                                                    profileError = msg
+                                                } finally {
+                                                    isDeletingProfile = false
                                                 }
-                                                profileError = msg
-                                            } finally {
-                                                isDeletingProfile = false
                                             }
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(44.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Rose600,
+                                            contentColor = Color.White
+                                        ),
+                                        enabled = !isDeletingProfile && deletePassword.isNotBlank()
+                                    ) {
+                                        if (isDeletingProfile) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(18.dp),
+                                                color = Color.White,
+                                                strokeWidth = 2.dp
+                                            )
+                                        } else {
+                                            Text(
+                                                "Sim, Deletar",
+                                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                                            )
                                         }
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Rose600),
-                                    enabled = !isDeletingProfile && deletePassword.isNotBlank()
-                                ) {
-                                    Text(
-                                        if (isDeletingProfile) "Deletando..." else "Sim, Deletar",
-                                        style = MaterialTheme.typography.labelMedium
-                                    )
+                                    }
                                 }
                             }
                         }
