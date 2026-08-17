@@ -371,10 +371,43 @@ fun MapScreen(
             }
         }
 
+        // ---- Tree List Bottom Sheet ----
+        if (isTreeListOpen) {
+            TreeListSheet(
+                mapViewModel = mapViewModel,
+                creatorUsernames = creatorUsernames,
+                onSelectTree = { tree ->
+                    mapViewModel.selectTree(tree)
+                    isTreeListOpen = false
+                    isTreeDetailOpen = true
+                },
+                onDismiss = { isTreeListOpen = false }
+            )
+        }
+
+        // ---- Tree Detail Sheet ----
+        if (isTreeDetailOpen && selectedTree != null) {
+            TreeDetailSheet(
+                tree = selectedTree!!,
+                updates = updates,
+                currentUser = currentUser,
+                creatorUsernames = creatorUsernames,
+                mapViewModel = mapViewModel,
+                onDismiss = {
+                    isTreeDetailOpen = false
+                    mapViewModel.selectTree(null)
+                }
+            )
+        }
+
         // ---- GPS FAB ----
         FloatingActionButton(
             onClick = {
-                requestCurrentLocation(context, mapViewModel)
+                requestCurrentLocation(context, mapViewModel) { lat, lng ->
+                    mapViewRef.value?.controller?.apply {
+                        animateTo(GeoPoint(lat, lng), 18.0, 1000L)
+                    }
+                }
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -391,14 +424,14 @@ fun MapScreen(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding(),
+                .align(Alignment.BottomCenter),
             color = Color.White.copy(alpha = 0.95f),
             shadowElevation = 16.dp
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .navigationBarsPadding()
                     .height(64.dp)
                     .padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
@@ -443,35 +476,6 @@ fun MapScreen(
                     }
                 )
             }
-        }
-
-        // ---- Tree List Bottom Sheet ----
-        if (isTreeListOpen) {
-            TreeListSheet(
-                mapViewModel = mapViewModel,
-                creatorUsernames = creatorUsernames,
-                onSelectTree = { tree ->
-                    mapViewModel.selectTree(tree)
-                    isTreeListOpen = false
-                    isTreeDetailOpen = true
-                },
-                onDismiss = { isTreeListOpen = false }
-            )
-        }
-
-        // ---- Tree Detail Sheet ----
-        if (isTreeDetailOpen && selectedTree != null) {
-            TreeDetailSheet(
-                tree = selectedTree!!,
-                updates = updates,
-                currentUser = currentUser,
-                creatorUsernames = creatorUsernames,
-                mapViewModel = mapViewModel,
-                onDismiss = {
-                    isTreeDetailOpen = false
-                    mapViewModel.selectTree(null)
-                }
-            )
         }
 
         // ---- Add Tree Dialog ----
@@ -636,7 +640,11 @@ private fun createEmojiDrawable(context: Context, emoji: String, isPulsing: Bool
     return android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
 }
 
-private fun requestCurrentLocation(context: Context, mapViewModel: MapViewModel) {
+private fun requestCurrentLocation(
+    context: Context,
+    mapViewModel: MapViewModel,
+    onLocationFound: ((Double, Double) -> Unit)? = null
+) {
     try {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val hasPermission = ContextCompat.checkSelfPermission(
@@ -650,12 +658,14 @@ private fun requestCurrentLocation(context: Context, mapViewModel: MapViewModel)
 
         if (lastKnown != null) {
             mapViewModel.setUserLocation(lastKnown.latitude, lastKnown.longitude)
+            onLocationFound?.invoke(lastKnown.latitude, lastKnown.longitude)
         }
 
         locationManager.requestSingleUpdate(
             LocationManager.GPS_PROVIDER,
             { location ->
                 mapViewModel.setUserLocation(location.latitude, location.longitude)
+                onLocationFound?.invoke(location.latitude, location.longitude)
             },
             null
         )

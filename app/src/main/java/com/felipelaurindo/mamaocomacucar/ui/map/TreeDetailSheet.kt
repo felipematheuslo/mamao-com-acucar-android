@@ -55,6 +55,8 @@ fun TreeDetailSheet(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .fillMaxHeight(0.75f)
+                .padding(bottom = 64.dp)
+                .navigationBarsPadding()
                 .clickable(enabled = false, onClick = {}),
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             color = Color.White,

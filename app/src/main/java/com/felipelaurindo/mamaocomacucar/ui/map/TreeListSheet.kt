@@ -53,6 +53,8 @@ fun TreeListSheet(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .fillMaxHeight(0.65f)
+                .padding(bottom = 64.dp)
+                .navigationBarsPadding()
                 .clickable(enabled = false, onClick = {}),
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             color = Color.White,

@@ -2,6 +2,7 @@ package com.felipelaurindo.mamaocomacucar.ui.auth
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -55,286 +56,340 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
+            .background(Color.White)
+            .statusBarsPadding()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 32.dp)
                 .imePadding(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Brand Icon
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MamaoOrange,
-                shadowElevation = 8.dp,
-                modifier = Modifier.size(56.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Outlined.Explore,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp)
+            if (registrationComplete) {
+                // ---- Success State ----
+                Spacer(modifier = Modifier.height(48.dp))
+
+                Surface(
+                    shape = CircleShape,
+                    color = Emerald50,
+                    modifier = Modifier.size(80.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Outlined.CheckCircle,
+                            contentDescription = null,
+                            tint = Emerald600,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    "Confirme seu E-mail!",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Stone950,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    "Enviamos um link de confirmação para $email.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Stone500,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    "Verifique sua caixa de entrada (e a pasta de spam) e clique no link para ativar sua conta.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Stone400,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Button(
+                    onClick = {
+                        authViewModel.resetRegistrationState()
+                        onNavigateToLogin()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MamaoOrange)
+                ) {
+                    Text(
+                        "IR PARA O LOGIN",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 1.5.sp
+                        ),
+                        color = Color.White
                     )
                 }
-            }
+            } else {
+                // ---- Registration Form ----
 
-            Spacer(modifier = Modifier.height(12.dp))
+                // Emoji logo
+                Text("🌱", fontSize = 48.sp)
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Mamão", style = MaterialTheme.typography.headlineMedium, color = Stone950)
-                Text(" com Açúcar", style = MaterialTheme.typography.headlineMedium, color = MamaoOrange)
-            }
+                Spacer(modifier = Modifier.height(20.dp))
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Text(
+                    "Criar conta",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Stone950
+                )
 
-            // Register Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    if (registrationComplete) {
-                        // Success State
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    "Mapeie fruteiras urbanas e ganhe medalhas",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Stone500
+                )
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // Error
+                AnimatedVisibility(visible = registerError != null) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = Rose50
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = Emerald50,
-                                modifier = Modifier.size(72.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        Icons.Outlined.CheckCircle,
-                                        contentDescription = null,
-                                        tint = Emerald600,
-                                        modifier = Modifier.size(48.dp)
-                                    )
-                                }
-                            }
-
+                            Text("⚠️ ", fontSize = 14.sp)
                             Text(
-                                "Confirme seu E-mail!",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = Stone950,
-                                textAlign = TextAlign.Center
+                                registerError ?: "",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = Rose700
                             )
-
-                            Text(
-                                "Enviamos um link de confirmação para o endereço $email.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Stone500,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Text(
-                                "Por favor, verifique sua caixa de entrada (e pasta de spam) e clique no link de ativação para poder entrar no app.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Stone500,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Button(
-                                onClick = {
-                                    authViewModel.resetRegistrationState()
-                                    onNavigateToLogin()
-                                },
-                                modifier = Modifier.fillMaxWidth().height(48.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MamaoOrange)
-                            ) {
-                                Text("IR PARA O LOGIN", style = MaterialTheme.typography.labelMedium, letterSpacing = 2.sp)
-                            }
-                        }
-                    } else {
-                        // Registration Form
-                        Text(
-                            "NOVO CADASTRO",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MamaoOrange,
-                            letterSpacing = 2.sp
-                        )
-
-                        Text(
-                            "Associe-se ao movimento",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Stone950
-                        )
-                        Text(
-                            "Cataloge árvores frutíferas no bairro e ganhe medalhas de participação ativa.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Stone500
-                        )
-
-                        // Error
-                        AnimatedVisibility(visible = registerError != null) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Rose50
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("⚠️ ", fontSize = 14.sp)
-                                    Text(
-                                        registerError ?: "",
-                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                                        color = Rose700
-                                    )
-                                }
-                            }
-                        }
-
-                        // Display Name
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("NOME DE EXIBIÇÃO", style = MaterialTheme.typography.labelSmall, color = Stone400)
-                            OutlinedTextField(
-                                value = displayName,
-                                onValueChange = { displayName = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Felipe Oliveira", color = Stone400) },
-                                leadingIcon = { Icon(Icons.Outlined.Person, null, tint = Stone400) },
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MamaoOrange,
-                                    unfocusedBorderColor = Stone200,
-                                    focusedContainerColor = Stone50,
-                                    unfocusedContainerColor = Stone50
-                                )
-                            )
-                        }
-
-                        // Username
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("USERNAME", style = MaterialTheme.typography.labelSmall, color = MamaoOrange)
-                            OutlinedTextField(
-                                value = username,
-                                onValueChange = { username = normalizeUsername(it) },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("felipe_oliveira", color = Stone400) },
-                                prefix = {
-                                    Text(
-                                        "@",
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Stone400
-                                    )
-                                },
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MamaoOrange,
-                                    unfocusedBorderColor = Stone200,
-                                    focusedContainerColor = Stone50,
-                                    unfocusedContainerColor = Stone50,
-                                    focusedTextColor = MamaoOrange,
-                                    unfocusedTextColor = MamaoOrange
-                                )
-                            )
-                        }
-
-                        // Email
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("E-MAIL", style = MaterialTheme.typography.labelSmall, color = Stone400)
-                            OutlinedTextField(
-                                value = email,
-                                onValueChange = { email = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("felipe@mamaocomacucar.com", color = Stone400) },
-                                leadingIcon = { Icon(Icons.Outlined.Email, null, tint = Stone400) },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MamaoOrange,
-                                    unfocusedBorderColor = Stone200,
-                                    focusedContainerColor = Stone50,
-                                    unfocusedContainerColor = Stone50
-                                )
-                            )
-                        }
-
-                        // Password
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("SENHA", style = MaterialTheme.typography.labelSmall, color = Stone400)
-                            OutlinedTextField(
-                                value = password,
-                                onValueChange = { password = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Mínimo 6 caracteres", color = Stone400) },
-                                leadingIcon = { Icon(Icons.Outlined.Lock, null, tint = Stone400) },
-                                trailingIcon = {
-                                    IconButton(onClick = { showPassword = !showPassword }) {
-                                        Icon(
-                                            if (showPassword) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                                            null, tint = Stone400
-                                        )
-                                    }
-                                },
-                                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                                keyboardActions = KeyboardActions(onDone = {
-                                    focusManager.clearFocus()
-                                    authViewModel.registerWithEmail(displayName, username, email, password)
-                                }),
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MamaoOrange,
-                                    unfocusedBorderColor = Stone200,
-                                    focusedContainerColor = Stone50,
-                                    unfocusedContainerColor = Stone50
-                                )
-                            )
-                        }
-
-                        // Register Button
-                        Button(
-                            onClick = { authViewModel.registerWithEmail(displayName, username, email, password) },
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            enabled = !isSubmitting && displayName.isNotBlank() && username.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MamaoOrange)
-                        ) {
-                            if (isSubmitting) {
-                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
-                            } else {
-                                Text("CRIAR PERFIL", style = MaterialTheme.typography.labelMedium, letterSpacing = 2.sp)
-                            }
-                        }
-
-                        HorizontalDivider(color = Stone100)
-
-                        TextButton(onClick = onNavigateToLogin, modifier = Modifier.fillMaxWidth()) {
-                            Text("Já possui uma conta? ", style = MaterialTheme.typography.bodySmall, color = Stone600)
-                            Text("Entrar", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.ExtraBold), color = MamaoOrange)
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(48.dp))
+                // Display Name
+                OutlinedTextField(
+                    value = displayName,
+                    onValueChange = { displayName = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Nome de exibição", color = Stone400) },
+                    leadingIcon = { Icon(Icons.Outlined.Person, null, tint = Stone400) },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Stone900,
+                        unfocusedTextColor = Stone900,
+                        cursorColor = MamaoOrange,
+                        focusedBorderColor = MamaoOrange,
+                        unfocusedBorderColor = Stone200,
+                        focusedContainerColor = Stone50,
+                        unfocusedContainerColor = Stone50
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Username
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = normalizeUsername(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("nome_de_usuario", color = Stone400) },
+                    prefix = {
+                        Text(
+                            "@",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            color = MamaoOrange
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MamaoOrange,
+                        unfocusedTextColor = MamaoOrange,
+                        cursorColor = MamaoOrange,
+                        focusedBorderColor = MamaoOrange,
+                        unfocusedBorderColor = Stone200,
+                        focusedContainerColor = Stone50,
+                        unfocusedContainerColor = Stone50
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Email
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("E-mail", color = Stone400) },
+                    leadingIcon = { Icon(Icons.Outlined.Email, null, tint = Stone400) },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Stone900,
+                        unfocusedTextColor = Stone900,
+                        cursorColor = MamaoOrange,
+                        focusedBorderColor = MamaoOrange,
+                        unfocusedBorderColor = Stone200,
+                        focusedContainerColor = Stone50,
+                        unfocusedContainerColor = Stone50
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Password
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Senha (mínimo 6 caracteres)", color = Stone400) },
+                    leadingIcon = { Icon(Icons.Outlined.Lock, null, tint = Stone400) },
+                    trailingIcon = {
+                        IconButton(onClick = { showPassword = !showPassword }) {
+                            Icon(
+                                if (showPassword) Icons.Outlined.VisibilityOff
+                                else Icons.Outlined.Visibility,
+                                null, tint = Stone400
+                            )
+                        }
+                    },
+                    visualTransformation = if (showPassword) VisualTransformation.None
+                    else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus()
+                            if (displayName.isNotBlank() && username.isNotBlank() &&
+                                email.isNotBlank() && password.isNotBlank()
+                            ) {
+                                authViewModel.registerWithEmail(displayName, username, email, password)
+                            }
+                        }
+                    ),
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Stone900,
+                        unfocusedTextColor = Stone900,
+                        cursorColor = MamaoOrange,
+                        focusedBorderColor = MamaoOrange,
+                        unfocusedBorderColor = Stone200,
+                        focusedContainerColor = Stone50,
+                        unfocusedContainerColor = Stone50
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Register Button
+                Button(
+                    onClick = {
+                        authViewModel.registerWithEmail(displayName, username, email, password)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    enabled = !isSubmitting && displayName.isNotBlank() &&
+                            username.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MamaoOrange,
+                        disabledContainerColor = MamaoOrange.copy(alpha = 0.35f)
+                    )
+                ) {
+                    if (isSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            "CRIAR PERFIL",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 1.5.sp
+                            ),
+                            color = Color.White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Bottom login link
+                HorizontalDivider(
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    color = Stone100
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Já tem uma conta? ",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Stone500
+                    )
+                    Text(
+                        "ENTRAR",
+                        modifier = Modifier.clickable(onClick = onNavigateToLogin),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.ExtraBold
+                        ),
+                        color = MamaoOrange
+                    )
+                }
+            }
         }
     }
 }
