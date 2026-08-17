@@ -1,0 +1,232 @@
+package com.felipelaurindo.mamaocomacucar.ui.auth
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
+import com.felipelaurindo.mamaocomacucar.data.repository.FirestoreRepository
+import com.felipelaurindo.mamaocomacucar.util.normalizeUsername
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+
+sealed class AuthState {
+    data object Loading : AuthState()
+    data object Unauthenticated : AuthState()
+    data class Authenticated(val user: LoggedUser) : AuthState()
+}
+
+class AuthViewModel : ViewModel() {
+
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val repository = FirestoreRepository()
+
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
+    val authState: StateFlow<AuthState> = _authState.asStateFlow()
+
+    private val _loginError = MutableStateFlow<String?>(null)
+    val loginError: StateFlow<String?> = _loginError.asStateFlow()
+
+    private val _registerError = MutableStateFlow<String?>(null)
+    val registerError: StateFlow<String?> = _registerError.asStateFlow()
+
+    private val _isSubmitting = MutableStateFlow(false)
+    val isSubmitting: StateFlow<Boolean> = _isSubmitting.asStateFlow()
+
+    private val _showVerificationSent = MutableStateFlow(false)
+    val showVerificationSent: StateFlow<Boolean> = _showVerificationSent.asStateFlow()
+
+    private val _registrationComplete = MutableStateFlow(false)
+    val registrationComplete: StateFlow<Boolean> = _registrationComplete.asStateFlow()
+
+    private val _resendSuccess = MutableStateFlow(false)
+    val resendSuccess: StateFlow<Boolean> = _resendSuccess.asStateFlow()
+
+    init {
+        observeAuthState()
+    }
+
+    private fun observeAuthState() {
+        auth.addAuthStateListener { firebaseAuth ->
+            val firebaseUser = firebaseAuth.currentUser
+            if (firebaseUser != null && firebaseUser.isEmailVerified) {
+                viewModelScope.launch {
+                    val username = try {
+                        val profile = repository.getUserProfile(firebaseUser.uid)
+                        profile?.username ?: normalizeUsername(
+                            firebaseUser.email?.substringBefore("@") ?: "usuario"
+                        )
+                    } catch (e: Exception) {
+                        normalizeUsername(
+                            firebaseUser.email?.substringBefore("@") ?: "usuario"
+                        )
+                    }
+
+                    _authState.value = AuthState.Authenticated(
+                        LoggedUser(
+                            uid = firebaseUser.uid,
+                            displayName = firebaseUser.displayName
+                                ?: firebaseUser.email?.substringBefore("@")
+                                ?: "Usuário",
+                            username = username,
+                            email = firebaseUser.email ?: ""
+                        )
+                    )
+                }
+            } else {
+                _authState.value = AuthState.Unauthenticated
+            }
+        }
+    }
+
+    fun loginWithEmail(email: String, password: String) {
+        _loginError.value = null
+        _resendSuccess.value = false
+        _showVerificationSent.value = false
+        _isSubmitting.value = true
+
+        viewModelScope.launch {
+            try {
+                val result = auth.signInWithEmailAndPassword(email, password).await()
+                val user = result.user
+
+                if (user != null && !user.isEmailVerified) {
+                    try {
+                        user.sendEmailVerification().await()
+                    } catch (_: Exception) { }
+                    auth.signOut()
+                    _loginError.value = "Confirmação de e-mail pendente.\nEnviamos um link de ativação para você agora mesmo.\n\nVerifique sua caixa de entrada e Spam."
+                    _showVerificationSent.value = true
+                    _isSubmitting.value = false
+                    return@launch
+                }
+
+                // Auth state listener will handle the rest
+            } catch (e: Exception) {
+                val message = when {
+                    e.message?.contains("no user record") == true ||
+                    e.message?.contains("password is invalid") == true ||
+                    e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true ->
+                        "Usuário ou senha incorretos."
+                    else -> e.message ?: "Ocorreu um erro na autenticação."
+                }
+                _loginError.value = message
+            } finally {
+                _isSubmitting.value = false
+            }
+        }
+    }
+
+    fun resendVerificationEmail(email: String, password: String) {
+        _loginError.value = null
+        _resendSuccess.value = false
+        _isSubmitting.value = true
+
+        viewModelScope.launch {
+            try {
+                val result = auth.signInWithEmailAndPassword(email, password).await()
+                result.user?.sendEmailVerification()?.await()
+                auth.signOut()
+                _resendSuccess.value = true
+            } catch (e: Exception) {
+                _loginError.value = "Erro ao reenviar e-mail de verificação. Verifique sua senha."
+            } finally {
+                _isSubmitting.value = false
+            }
+        }
+    }
+
+    fun registerWithEmail(
+        displayName: String,
+        username: String,
+        email: String,
+        password: String
+    ) {
+        _registerError.value = null
+        _isSubmitting.value = true
+        _registrationComplete.value = false
+
+        val normalizedUsername = normalizeUsername(username)
+        if (normalizedUsername.isEmpty()) {
+            _registerError.value = "Informe um nome de usuário válido."
+            _isSubmitting.value = false
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                // Check username uniqueness
+                val isUnique = repository.checkUsernameUnique(normalizedUsername)
+                if (!isUnique) {
+                    _registerError.value = "Este username já está sendo usado por outro usuário."
+                    _isSubmitting.value = false
+                    return@launch
+                }
+
+                // Create Firebase Auth user
+                val result = auth.createUserWithEmailAndPassword(email, password).await()
+                val user = result.user
+
+                if (user != null) {
+                    val resolvedName = displayName.trim().ifEmpty {
+                        user.email?.substringBefore("@") ?: "Usuário"
+                    }
+
+                    // Update display name
+                    try {
+                        user.updateProfile(
+                            UserProfileChangeRequest.Builder()
+                                .setDisplayName(resolvedName)
+                                .build()
+                        ).await()
+                    } catch (_: Exception) { }
+
+                    // Register username and profile in Firestore
+                    repository.registerUsername(user.uid, normalizedUsername, email, resolvedName)
+
+                    // Send email verification
+                    user.sendEmailVerification().await()
+
+                    // Sign out immediately
+                    auth.signOut()
+
+                    _registrationComplete.value = true
+                }
+            } catch (e: Exception) {
+                val message = when {
+                    e.message?.contains("email address is already in use") == true ->
+                        "O endereço de email já está em uso."
+                    e.message?.contains("badly formatted") == true ->
+                        "Informe um e-mail válido."
+                    e.message?.contains("at least 6 characters") == true ||
+                    e.message?.contains("WEAK_PASSWORD") == true ->
+                        "A senha precisa ter no mínimo 6 caracteres."
+                    else -> e.message ?: "Ocorreu um erro ao criar conta."
+                }
+                _registerError.value = message
+            } finally {
+                _isSubmitting.value = false
+            }
+        }
+    }
+
+    fun resetRegistrationState() {
+        _registrationComplete.value = false
+        _registerError.value = null
+    }
+
+    fun clearLoginError() {
+        _loginError.value = null
+        _showVerificationSent.value = false
+        _resendSuccess.value = false
+    }
+
+    fun logout() {
+        auth.signOut()
+        _authState.value = AuthState.Unauthenticated
+    }
+}

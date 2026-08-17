@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "808257197765",
+    "firebase_url": "https://free-frutas-default-rtdb.firebaseio.com",
+    "project_id": "free-frutas",
+    "storage_bucket": "free-frutas.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:808257197765:android:94dbe1eb3e7fd337a242ac",
+        "android_client_info": {
+          "package_name": "com.felipelaurindo.mamaocomacucar"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "808257197765-p86nr63r33ug032qq37u1ukpgcc3u425.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDn75SLJNlS-FhY6kEQB-YNxOpmQpna714"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "808257197765-p86nr63r33ug032qq37u1ukpgcc3u425.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    // Google services Gradle plugin
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -49,6 +52,25 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    // Firebase BoM (manages all Firebase library versions)
+    implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+
+    // osmdroid (OpenStreetMap nativo)
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
+
+    // Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.9.0")
+
+    // Lifecycle ViewModel Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
+
+    // Material Icons Extended (for icons like Visibility, Mail, etc.)
+    implementation("androidx.compose.material:material-icons-extended")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
