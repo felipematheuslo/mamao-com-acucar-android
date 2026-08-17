@@ -6,6 +6,7 @@ import android.location.LocationManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -92,6 +93,11 @@ fun MapScreen(
     var pinCoordinates by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
     val mapViewRef = remember { mutableStateOf<MapView?>(null) }
+
+    val bottomOffset by animateDpAsState(
+        targetValue = if (isAddingTree) 224.dp else 80.dp,
+        label = "bottomOffset"
+    )
 
     // Gamification
     val userTreeCount = mapViewModel.getUserMappedTreesCount(currentUser.uid)
@@ -411,7 +417,7 @@ fun MapScreen(
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 80.dp)
+                .padding(end = 16.dp, bottom = bottomOffset)
                 .navigationBarsPadding(),
             shape = CircleShape,
             containerColor = Color.White,
@@ -517,7 +523,7 @@ fun MapScreen(
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 80.dp)
+                .padding(bottom = bottomOffset)
                 .navigationBarsPadding()
         ) {
             ToastOverlay(message = toastMessage)
