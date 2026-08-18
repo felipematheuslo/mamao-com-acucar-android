@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
 import com.felipelaurindo.mamaocomacucar.data.model.TreeStatus
 import com.felipelaurindo.mamaocomacucar.ui.map.components.*
@@ -37,6 +39,7 @@ import com.felipelaurindo.mamaocomacucar.ui.settings.AccountSettingsSheet
 import com.felipelaurindo.mamaocomacucar.ui.settings.AppSettingsSheet
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.formatDistance
+import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.tileprovider.tilesource.XYTileSource
@@ -92,6 +95,17 @@ fun MapScreen(
     var isAppSettingsOpen by remember { mutableStateOf(false) }
     var pinCoordinates by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
+    var previewTree by remember { mutableStateOf<com.felipelaurindo.mamaocomacucar.data.model.TreeItem?>(null) }
+    var pulsingTreeId by remember { mutableStateOf<String?>(null) }
+
+    // Clear marker pulse effect after 2 seconds
+    LaunchedEffect(pulsingTreeId) {
+        if (pulsingTreeId != null) {
+            kotlinx.coroutines.delay(2000L)
+            pulsingTreeId = null
+        }
+    }
+
     val mapViewRef = remember { mutableStateOf<MapView?>(null) }
 
     val bottomOffset by animateDpAsState(
@@ -127,7 +141,7 @@ fun MapScreen(
 
     // Update map center when it changes
     LaunchedEffect(mapCenter) {
-        mapViewRef.value?.controller?.animateTo(GeoPoint(mapCenter.first, mapCenter.second))
+        mapViewRef.value?.controller?.animateTo(GeoPoint(mapCenter.first, mapCenter.second), 17.5, 1000L)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -160,16 +174,17 @@ fun MapScreen(
                 val filteredTrees = mapViewModel.getFilteredTrees()
                 for (tw in filteredTrees) {
                     val tree = tw.tree
-                    val meta = getStatusMeta(tree.currentStatus)
+                    val isPulsing = tree.id == pulsingTreeId
                     val marker = Marker(mapView).apply {
                         position = GeoPoint(tree.latitude, tree.longitude)
                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                         title = tree.species
                         snippet = tree.name
-                        icon = createEmojiDrawable(context, meta.emoji, tree.currentStatus == TreeStatus.PRONTO)
+                        icon = createFruitVectorDrawable(context, tree.species, tree.currentStatus, isPulsing = isPulsing)
                         setOnMarkerClickListener { _, _ ->
-                            mapViewModel.selectTree(tree)
-                            isTreeDetailOpen = true
+                            previewTree = tree
+                            pulsingTreeId = tree.id
+                            mapViewModel.setMapCenter(tree.latitude, tree.longitude)
                             true
                         }
                     }
@@ -383,9 +398,11 @@ fun MapScreen(
                 mapViewModel = mapViewModel,
                 creatorUsernames = creatorUsernames,
                 onSelectTree = { tree ->
-                    mapViewModel.selectTree(tree)
+                    previewTree = tree
+                    pulsingTreeId = tree.id
+                    mapViewModel.setMapCenter(tree.latitude, tree.longitude)
                     isTreeListOpen = false
-                    isTreeDetailOpen = true
+                    isTreeDetailOpen = false
                 },
                 onDismiss = { isTreeListOpen = false }
             )
@@ -407,23 +424,29 @@ fun MapScreen(
         }
 
         // ---- GPS FAB ----
-        FloatingActionButton(
-            onClick = {
-                requestCurrentLocation(context, mapViewModel) { lat, lng ->
-                    mapViewRef.value?.controller?.apply {
-                        animateTo(GeoPoint(lat, lng), 18.0, 1000L)
-                    }
-                }
-            },
+        AnimatedVisibility(
+            visible = !isTreeListOpen && !isTreeDetailOpen,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = bottomOffset)
                 .navigationBarsPadding(),
-            shape = CircleShape,
-            containerColor = Color.White,
-            contentColor = Stone900
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
         ) {
-            Icon(Icons.Outlined.MyLocation, contentDescription = "Minha localização")
+            FloatingActionButton(
+                onClick = {
+                    requestCurrentLocation(context, mapViewModel) { lat, lng ->
+                        mapViewRef.value?.controller?.apply {
+                            animateTo(GeoPoint(lat, lng), 18.0, 1000L)
+                        }
+                    }
+                },
+                shape = CircleShape,
+                containerColor = Color.White,
+                contentColor = Stone900
+            ) {
+                Icon(Icons.Outlined.MyLocation, contentDescription = "Minha localização")
+            }
         }
 
         // ---- Bottom Navigation ----
@@ -519,6 +542,32 @@ fun MapScreen(
             )
         }
 
+        // ---- Tree Quick Preview Card ----
+        if (previewTree != null && !isTreeListOpen && !isTreeDetailOpen && !isAddingTree) {
+            val previewCreatorUsername = mapViewModel.getCreatorUsername(previewTree!!.createdBy, previewTree!!.createdByName)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 72.dp)
+                    .navigationBarsPadding()
+            ) {
+                TreeQuickPreviewCard(
+                    tree = previewTree!!,
+                    userLocation = userLocation,
+                    creatorUsername = previewCreatorUsername,
+                    onOpenFullDetails = {
+                        mapViewModel.selectTree(previewTree)
+                        isTreeDetailOpen = true
+                        previewTree = null
+                    },
+                    onClose = {
+                        previewTree = null
+                        pulsingTreeId = null
+                    }
+                )
+            }
+        }
+
         // ---- Toast ----
         Box(
             modifier = Modifier
@@ -538,34 +587,32 @@ private fun BottomNavItem(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = if (selected) MamaoOrangeLight else Color.Transparent,
+        modifier = Modifier.defaultMinSize(minHeight = 48.dp)
     ) {
-        Surface(
-            shape = CircleShape,
-            color = if (selected) MamaoOrangeLight else Color.Transparent,
-            modifier = Modifier.size(32.dp)
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    icon, contentDescription = label,
-                    tint = if (selected) MamaoOrange else Stone400,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                icon,
+                contentDescription = label,
+                tint = if (selected) MamaoOrange else Stone400,
+                modifier = Modifier.size(22.dp)
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.sp,
+                    fontWeight = if (selected) FontWeight.Black else FontWeight.Bold
+                ),
+                color = if (selected) MamaoOrange else Stone500
+            )
         }
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
-                fontWeight = if (selected) FontWeight.Black else FontWeight.Bold
-            ),
-            color = if (selected) MamaoOrange else Stone400
-        )
     }
 }
 
@@ -602,46 +649,72 @@ private fun createCircleDrawable(context: Context, color: Int, radiusDp: Int): a
     return android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
 }
 
-// Helper to create an emoji marker drawable
-private fun createEmojiDrawable(context: Context, emoji: String, isPulsing: Boolean): android.graphics.drawable.Drawable {
+// Helper to create a fruit VectorDrawable map marker
+private fun createFruitVectorDrawable(
+    context: Context,
+    species: String,
+    status: TreeStatus,
+    isPulsing: Boolean = false
+): android.graphics.drawable.Drawable {
     val density = context.resources.displayMetrics.density
-    val sizePx = (36 * density).toInt()
+    val sizeDp = if (isPulsing) 52 else 40
+    val sizePx = (sizeDp * density).toInt()
     val bitmap = android.graphics.Bitmap.createBitmap(sizePx, sizePx, android.graphics.Bitmap.Config.ARGB_8888)
     val canvas = android.graphics.Canvas(bitmap)
     val centerX = sizePx / 2f
     val centerY = sizePx / 2f
-    val radius = sizePx * 0.38f
+    val radius = sizePx * (if (isPulsing) 0.36f else 0.44f)
 
-    // Background circle
-    val bgColor = when (emoji) {
-        "🍎" -> android.graphics.Color.parseColor("#EF4444")
-        "🍏" -> android.graphics.Color.parseColor("#22C55E")
-        "🌸" -> android.graphics.Color.parseColor("#EC4899")
-        else -> android.graphics.Color.parseColor("#78716C")
+    // Background color based on status
+    val bgColor = when (status) {
+        TreeStatus.PRONTO -> android.graphics.Color.parseColor("#FEF2F2")
+        TreeStatus.CRESCENDO -> android.graphics.Color.parseColor("#F0FDF4")
+        TreeStatus.FLORINDO -> android.graphics.Color.parseColor("#FDF2F8")
+        TreeStatus.VAZIO -> android.graphics.Color.parseColor("#F5F5F4")
     }
 
+    val strokeColor = when (status) {
+        TreeStatus.PRONTO -> android.graphics.Color.parseColor("#EF4444")
+        TreeStatus.CRESCENDO -> android.graphics.Color.parseColor("#22C55E")
+        TreeStatus.FLORINDO -> android.graphics.Color.parseColor("#EC4899")
+        TreeStatus.VAZIO -> android.graphics.Color.parseColor("#78716C")
+    }
+
+    // Glowing pulsing outer ring
+    if (isPulsing) {
+        val haloPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.argb(120, 249, 115, 22) // MamaoOrange glowing halo
+            isAntiAlias = true
+        }
+        canvas.drawCircle(centerX, centerY, sizePx * 0.48f, haloPaint)
+    }
+
+    // Background Circle
     val bgPaint = android.graphics.Paint().apply {
         color = bgColor
         isAntiAlias = true
     }
     canvas.drawCircle(centerX, centerY, radius, bgPaint)
 
-    // White border
+    // Border
     val borderPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.WHITE
+        color = if (isPulsing) android.graphics.Color.parseColor("#F97316") else strokeColor
         style = android.graphics.Paint.Style.STROKE
-        strokeWidth = 2f * density
+        strokeWidth = (if (isPulsing) 3.5f else 2.5f) * density
         isAntiAlias = true
     }
     canvas.drawCircle(centerX, centerY, radius, borderPaint)
 
-    // Emoji text
-    val textPaint = android.graphics.Paint().apply {
-        textSize = 16f * density
-        textAlign = android.graphics.Paint.Align.CENTER
-        isAntiAlias = true
+    // VectorDrawable Icon
+    val drawableRes = getFruitDrawableRes(species)
+    val vectorDrawable = ContextCompat.getDrawable(context, drawableRes)
+    if (vectorDrawable != null) {
+        val iconSize = ((if (isPulsing) 26 else 24) * density).toInt()
+        val left = (centerX - iconSize / 2f).toInt()
+        val top = (centerY - iconSize / 2f).toInt()
+        vectorDrawable.setBounds(left, top, left + iconSize, top + iconSize)
+        vectorDrawable.draw(canvas)
     }
-    canvas.drawText(emoji, centerX, centerY + 6 * density, textPaint)
 
     return android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
 }

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <path d="M12 16 C 24 10, 48 18, 54 46 C 44 48, 22 44, 12 16 Z" fill="#FACC15" stroke="#CA8A04" stroke-width="2"/>
+  <path d="M14 18 C 24 24, 42 28, 50 44 C 44 46, 26 42, 14 18 Z" fill="#FEF08A"/>
+  <!-- Stem & Tip -->
+  <path d="M12 16 L6 10" stroke="#713F12" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="54" cy="46" r="2.5" fill="#713F12"/>
+</svg>

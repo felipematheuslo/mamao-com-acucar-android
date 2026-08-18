@@ -8,6 +8,9 @@ val MamaoOrangeDark = Color(0xFFE04A00)
 val MamaoOrangeLight = Color(0xFFFFF3ED)
 val MamaoOrangeContainer = Color(0xFFFFE8D6)
 
+val MamaoGreen = Color(0xFF16A34A)
+val MamaoGreenLight = Color(0xFFF0FDF4)
+
 // Stone palette (neutral tones from the web app)
 val Stone50 = Color(0xFFFAFAF9)
 val Stone100 = Color(0xFFF5F5F4)

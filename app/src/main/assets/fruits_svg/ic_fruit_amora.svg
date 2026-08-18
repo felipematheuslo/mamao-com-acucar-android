@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Berry Clusters -->
+  <g fill="#581C87" stroke="#3B0764" stroke-width="1.5">
+    <circle cx="32" cy="22" r="7"/>
+    <circle cx="23" cy="27" r="7"/>
+    <circle cx="41" cy="27" r="7"/>
+    <circle cx="20" cy="37" r="7"/>
+    <circle cx="32" cy="35" r="8"/>
+    <circle cx="44" cy="37" r="7"/>
+    <circle cx="24" cy="46" r="7"/>
+    <circle cx="40" cy="46" r="7"/>
+    <circle cx="32" cy="52" r="6"/>
+  </g>
+  <!-- Highlights -->
+  <g fill="#A855F7">
+    <circle cx="30" cy="20" r="2"/>
+    <circle cx="21" cy="25" r="2"/>
+    <circle cx="39" cy="25" r="2"/>
+    <circle cx="30" cy="33" r="2.5"/>
+  </g>
+  <!-- Leaves & Stem -->
+  <path d="M32 16 L32 6" stroke="#15803D" stroke-width="3" stroke-linecap="round"/>
+  <path d="M32 14 C22 10 20 18 27 18 Z" fill="#22C55E"/>
+  <path d="M32 14 C42 10 44 18 37 18 Z" fill="#16A34A"/>
+</svg>

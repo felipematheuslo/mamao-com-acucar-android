@@ -16,11 +16,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import com.felipelaurindo.mamaocomacucar.data.ALLOWED_FRUITS
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
 import com.felipelaurindo.mamaocomacucar.data.model.TreeStatus
 import com.felipelaurindo.mamaocomacucar.ui.map.components.getStatusMeta
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
+import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
 
 @Composable
 fun AddTreeDialog(
@@ -124,6 +127,52 @@ fun AddTreeDialog(
                             unfocusedContainerColor = Stone50
                         )
                     )
+
+                    // Quick suggestion chips for popular fruits
+                    val quickSuggestions = listOf("Pitanga 🍒", "Amora 🫐", "Goiaba 🍐", "Mangueira 🥭", "Mamão 🍈", "Jabuticaba 🟣", "Pitomba 🟡")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        quickSuggestions.forEach { item ->
+                            val cleanName = item.split(" ").first()
+                            val isSelected = selectedSpecies.equals(cleanName, ignoreCase = true)
+                            val fruitRes = getFruitDrawableRes(cleanName)
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = if (isSelected) MamaoOrangeLight else Stone50,
+                                border = BorderStroke(1.dp, if (isSelected) MamaoOrange else Stone200),
+                                onClick = {
+                                    selectedSpecies = cleanName
+                                    speciesSearchQuery = cleanName
+                                    showSpeciesDropdown = false
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = fruitRes),
+                                        contentDescription = cleanName,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        cleanName,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 10.sp,
+                                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold
+                                        ),
+                                        color = if (isSelected) MamaoOrange else Stone600
+                                    )
+                                }
+                            }
+                        }
+                    }
 
                     // Dropdown
                     if (showSpeciesDropdown && filteredFruits.isNotEmpty()) {

@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import com.felipelaurindo.mamaocomacucar.data.model.CommentUpdate
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
 import com.felipelaurindo.mamaocomacucar.data.model.TreeItem
@@ -25,6 +27,7 @@ import com.felipelaurindo.mamaocomacucar.data.model.TreeStatus
 import com.felipelaurindo.mamaocomacucar.ui.map.components.StatusChip
 import com.felipelaurindo.mamaocomacucar.ui.map.components.getStatusMeta
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
+import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -81,11 +84,21 @@ fun TreeDetailSheet(
                             verticalAlignment = Alignment.Top
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "${statusMeta.emoji} ${tree.species}",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = Color.White
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = getFruitDrawableRes(tree.species)),
+                                        contentDescription = tree.species,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                    Text(
+                                        tree.species,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = Color.White
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     tree.name,

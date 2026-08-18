@@ -19,11 +19,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import com.felipelaurindo.mamaocomacucar.data.model.TreeItem
 import com.felipelaurindo.mamaocomacucar.ui.map.components.StatusChip
 import com.felipelaurindo.mamaocomacucar.ui.map.components.getStatusMeta
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.formatDistance
+import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
 
 @Composable
 fun TreeListSheet(
@@ -52,7 +55,7 @@ fun TreeListSheet(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .fillMaxHeight(0.65f)
+                .fillMaxHeight(0.85f)
                 .padding(bottom = 64.dp)
                 .navigationBarsPadding()
                 .clickable(enabled = false, onClick = {}),
@@ -65,7 +68,7 @@ fun TreeListSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 12.dp, bottom = 8.dp),
+                        .padding(top = 10.dp, bottom = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
@@ -77,7 +80,7 @@ fun TreeListSheet(
                 }
 
                 // Header
-                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -99,17 +102,36 @@ fun TreeListSheet(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    // Tree search
+                    // Unified Smart Search Bar (Tree + Geo Search)
                     OutlinedTextField(
                         value = searchQuery,
-                        onValueChange = { mapViewModel.setSearchQuery(it) },
+                        onValueChange = { query ->
+                            mapViewModel.setSearchQuery(query)
+                        },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Buscar por nome, espécie ou criador...", color = Stone400) },
-                        leadingIcon = { Icon(Icons.Outlined.Search, null, tint = Stone400) },
+                        placeholder = { Text("Buscar fruta, espécie ou endereço...", color = Stone400, fontSize = 13.sp) },
+                        leadingIcon = { Icon(Icons.Outlined.Search, null, tint = MamaoOrange) },
+                        trailingIcon = {
+                            if (searchQuery.isNotBlank()) {
+                                IconButton(onClick = {
+                                    mapViewModel.setSearchQuery("")
+                                    focusManager.clearFocus()
+                                }) {
+                                    Icon(Icons.Outlined.Close, "Limpar busca", tint = Stone400, modifier = Modifier.size(18.dp))
+                                }
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = {
+                            if (searchQuery.isNotBlank()) {
+                                mapViewModel.searchLocation(searchQuery)
+                            }
+                            focusManager.clearFocus()
+                        }),
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MamaoOrange,
                             unfocusedBorderColor = Stone200,
@@ -119,40 +141,6 @@ fun TreeListSheet(
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
-
-                    // Geo search
-                    OutlinedTextField(
-                        value = geoSearchQuery,
-                        onValueChange = { geoSearchQuery = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Buscar endereço ou cidade...", color = Stone400) },
-                        leadingIcon = { Icon(Icons.Outlined.LocationOn, null, tint = Stone400) },
-                        trailingIcon = {
-                            if (geoSearchQuery.isNotBlank()) {
-                                IconButton(onClick = {
-                                    mapViewModel.searchLocation(geoSearchQuery)
-                                    focusManager.clearFocus()
-                                }) {
-                                    Icon(Icons.Outlined.ArrowForward, null, tint = MamaoOrange, modifier = Modifier.size(18.dp))
-                                }
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = {
-                            mapViewModel.searchLocation(geoSearchQuery)
-                            focusManager.clearFocus()
-                        }),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MamaoOrange,
-                            unfocusedBorderColor = Stone200,
-                            focusedContainerColor = Stone50,
-                            unfocusedContainerColor = Stone50
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Filter chips
                     Row(
@@ -227,7 +215,11 @@ fun TreeListSheet(
                                         modifier = Modifier.size(40.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Text(meta.emoji, fontSize = 18.sp)
+                                            Image(
+                                                painter = painterResource(id = getFruitDrawableRes(tree.species)),
+                                                contentDescription = tree.species,
+                                                modifier = Modifier.size(24.dp)
+                                            )
                                         }
                                     }
 

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Nut (Cashew Nut on Top) -->
+  <path d="M28 6 C24 6 22 10 24 14 C26 18 32 18 36 14 C38 10 36 6 32 6 Z" fill="#A16207" stroke="#713F12" stroke-width="2"/>
+  <!-- Pseudo-fruit (Apple/Pedicel) -->
+  <path d="M30 14 C18 14 12 28 14 42 C16 54 26 60 34 60 C42 60 48 52 46 38 C44 24 38 14 30 14 Z" fill="#EF4444" stroke="#B91C1C" stroke-width="2"/>
+  <path d="M30 14 C22 14 18 26 19 40 C20 50 26 56 34 56 C30 46 28 30 30 14 Z" fill="#F59E0B"/>
+  <!-- Stem -->
+  <path d="M30 6 L30 2" stroke="#15803D" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <path d="M32 6 C18 6 10 20 12 36 C14 50 24 58 32 58 C40 58 50 50 52 36 C54 20 46 6 32 6 Z" fill="#9A3412" stroke="#7C2D12" stroke-width="2"/>
+  <!-- Ridges -->
+  <path d="M32 6 C24 20 24 44 32 58 M22 12 C16 24 16 42 22 52 M42 12 C48 24 48 42 42 52" stroke="#EA580C" stroke-width="2" fill="none"/>
+  <!-- Stem -->
+  <path d="M32 6 L32 2" stroke="#15803D" stroke-width="3" stroke-linecap="round"/>
+</svg>
