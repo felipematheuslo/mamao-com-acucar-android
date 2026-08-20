@@ -3,26 +3,57 @@
     android:height="64dp"
     android:viewportWidth="64"
     android:viewportHeight="64">
+  <!-- Outer Main Papaya Body (Closed Fruit) -->
   <path
-      android:pathData="M32,4C18,4 10,18 10,36C10,50 20,60 32,60C44,60 54,50 54,36C54,18 46,4 32,4Z"
+      android:pathData="M32,8C20,8 12,20 12,38C12,52 21,60 32,60C43,60 52,52 52,38C52,20 44,8 32,8Z"
       android:fillColor="#F97316"
       android:strokeColor="#C2410C"
       android:strokeWidth="2"/>
+
+  <!-- Left Greenish Ripening Shade (Natural papaya green-orange blend) -->
   <path
-      android:pathData="M32,8C22,8 15,20 15,36C15,47 22,55 32,55C42,55 49,47 49,36C49,20 42,8 32,8Z"
-      android:fillColor="#FB923C"/>
+      android:pathData="M32,8C22,8 14,18 13,32C12,44 19,54 28,58C22,52 17,44 18,34C19,24 25,14 32,8Z"
+      android:fillColor="#65A30D"/>
+
+  <!-- Right Darker Orange Depth Shadow -->
   <path
-      android:pathData="M32,16C25,16 20,25 20,36C20,44 25,50 32,50C39,50 44,44 44,36C44,25 39,16 32,16Z"
-      android:fillColor="#FEF08A"/>
+      android:pathData="M32,8C40,10 48,20 49,34C50,44 45,54 39,58C45,54 50,46 50,36C50,22 43,10 32,8Z"
+      android:fillColor="#EA580C"/>
+
+  <!-- Center Longitudinal Ridge Lines -->
   <path
-      android:pathData="M32,28m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0 M28,32m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0 M36,32m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0 M30,37m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0 M34,37m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0 M32,42m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"
-      android:fillColor="#1C1917"/>
-  <path
-      android:pathData="M32,4L32,1"
-      android:strokeColor="#15803D"
-      android:strokeWidth="3"
+      android:pathData="M32,10C31,24 31,42 32,58"
+      android:strokeColor="#C2410C"
+      android:strokeWidth="1.5"
       android:strokeLineCap="round"/>
+
   <path
-      android:pathData="M32,3C36,0 42,2 44,5C39,7 35,6 32,3Z"
+      android:pathData="M24,14C22,26 23,40 26,52"
+      android:strokeColor="#84CC16"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"/>
+
+  <!-- Glossy Soft Highlight -->
+  <path
+      android:pathData="M38,16C42,22 43,30 42,42"
+      android:strokeColor="#FED7AA"
+      android:strokeWidth="2.5"
+      android:strokeLineCap="round"/>
+
+  <!-- Top Stem -->
+  <path
+      android:pathData="M32,8L32,2"
+      android:strokeColor="#15803D"
+      android:strokeWidth="3.5"
+      android:strokeLineCap="round"/>
+
+  <!-- Top Stem Calyx -->
+  <path
+      android:pathData="M32,8L27,11L30,8L28,5L32,7L36,5L34,8L37,11Z"
+      android:fillColor="#15803D"/>
+
+  <!-- Top Green Leaf -->
+  <path
+      android:pathData="M32,4C37,0 44,2 46,6C40,8 35,7 32,4Z"
       android:fillColor="#22C55E"/>
 </vector>

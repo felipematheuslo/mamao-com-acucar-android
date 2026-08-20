@@ -209,7 +209,14 @@ fun AppSettingsSheet(
                     Text("Confirmar Ajustes", style = MaterialTheme.typography.labelMedium)
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Mamão com Açúcar • v1.0 (Build 1)",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                    color = Stone400,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }

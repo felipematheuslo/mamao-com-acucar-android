@@ -117,3 +117,4 @@ O progresso do usuário é determinado pela contagem de árvores cadastradas no 
 
 5. **Compatibilidade de Dependências**:
    - Não atualize a versão do `firebase-bom` ou dependências do `AndroidX` de maneira arbitrária sem checar a compatibilidade com o Kotlin 2.0+ e o `compileSdk 36`.
+

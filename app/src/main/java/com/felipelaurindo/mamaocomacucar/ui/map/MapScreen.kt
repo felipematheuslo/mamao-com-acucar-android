@@ -611,7 +611,8 @@ fun MapScreen(
         }
 
         // ---- Tree Quick Preview Card ----
-        if (previewTree != null && !isTreeListOpen && !isTreeDetailOpen && !isAddingTree) {
+        val isAnySheetOrDialogActive = isTreeListOpen || isTreeDetailOpen || isAddingTree || isAddDialogOpen || isAccountSettingsOpen || isAppSettingsOpen
+        if (previewTree != null && !isAnySheetOrDialogActive) {
             val previewCreatorUsername = mapViewModel.getCreatorUsername(previewTree!!.createdBy, previewTree!!.createdByName)
             Box(
                 modifier = Modifier

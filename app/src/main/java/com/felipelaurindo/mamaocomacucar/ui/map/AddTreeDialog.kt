@@ -132,7 +132,7 @@ fun AddTreeDialog(
                     )
 
                     // Quick suggestion chips for popular fruits
-                    val quickSuggestions = listOf("Pitanga 🍒", "Amora 🫐", "Goiaba 🍐", "Mangueira 🥭", "Mamão 🍈", "Jabuticaba 🟣", "Pitomba 🟡")
+                    val quickSuggestions = listOf("Pitanga 🍒", "Amora 🫐", "Goiaba 🍐", "Mangueira 🥭", "Mamão 🥭", "Jabuticaba 🟣", "Pitomba 🟡")
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

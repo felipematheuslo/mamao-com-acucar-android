@@ -26,6 +26,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.felipelaurindo.mamaocomacucar.R
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 
 @Composable
@@ -60,8 +63,12 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(80.dp))
 
-            // Emoji logo
-            Text("🍈", fontSize = 48.sp)
+            // Logo
+            Image(
+                painter = painterResource(id = R.drawable.ic_fruit_mamao),
+                contentDescription = "Logo Mamão com Açúcar",
+                modifier = Modifier.size(64.dp)
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 

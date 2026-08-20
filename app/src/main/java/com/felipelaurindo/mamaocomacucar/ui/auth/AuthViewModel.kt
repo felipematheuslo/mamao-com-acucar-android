@@ -83,7 +83,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun loginWithEmail(email: String, password: String) {
+    fun loginWithEmail(emailOrUsername: String, password: String) {
         _loginError.value = null
         _resendSuccess.value = false
         _showVerificationSent.value = false
@@ -91,7 +91,26 @@ class AuthViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val result = auth.signInWithEmailAndPassword(email, password).await()
+                val input = emailOrUsername.trim()
+                if (input.isBlank() || password.isBlank()) {
+                    _loginError.value = "Preencha todos os campos."
+                    _isSubmitting.value = false
+                    return@launch
+                }
+
+                val targetEmail = if (input.contains("@")) {
+                    input
+                } else {
+                    val resolvedEmail = repository.getEmailByUsername(input)
+                    if (resolvedEmail == null) {
+                        _loginError.value = "Nome de usuário não encontrado. Verifique o nome digitado ou entre usando seu e-mail."
+                        _isSubmitting.value = false
+                        return@launch
+                    }
+                    resolvedEmail
+                }
+
+                val result = auth.signInWithEmailAndPassword(targetEmail, password).await()
                 val user = result.user
 
                 if (user != null && !user.isEmailVerified) {
@@ -121,14 +140,20 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun resendVerificationEmail(email: String, password: String) {
+    fun resendVerificationEmail(emailOrUsername: String, password: String) {
         _loginError.value = null
         _resendSuccess.value = false
         _isSubmitting.value = true
 
         viewModelScope.launch {
             try {
-                val result = auth.signInWithEmailAndPassword(email, password).await()
+                val input = emailOrUsername.trim()
+                val targetEmail = if (input.contains("@")) {
+                    input
+                } else {
+                    repository.getEmailByUsername(input) ?: input
+                }
+                val result = auth.signInWithEmailAndPassword(targetEmail, password).await()
                 result.user?.sendEmailVerification()?.await()
                 auth.signOut()
                 _resendSuccess.value = true

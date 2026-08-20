@@ -118,6 +118,70 @@ class FirestoreRepository {
         }
     }
 
+    suspend fun getEmailByUsername(usernameOrEmail: String): String? {
+        val trimmed = usernameOrEmail.trim()
+        if (trimmed.isEmpty()) return null
+        if (trimmed.contains("@")) return trimmed
+
+        val normalized = normalizeUsername(trimmed)
+        val lower = trimmed.lowercase()
+        val withoutAt = if (trimmed.startsWith("@")) trimmed.drop(1) else trimmed
+        val withoutAtNormalized = normalizeUsername(withoutAt)
+
+        val keysToCheck = listOfNotNull(
+            normalized.ifEmpty { null },
+            withoutAtNormalized.ifEmpty { null },
+            lower.ifEmpty { null },
+            withoutAt.lowercase().ifEmpty { null }
+        ).distinct()
+
+        for (key in keysToCheck) {
+            try {
+                val usernameDoc = db.collection("usernames").document(key).get().await()
+                if (usernameDoc.exists()) {
+                    val directEmail = usernameDoc.getString("email")
+                    if (!directEmail.isNullOrBlank()) return directEmail
+
+                    val uid = usernameDoc.getString("uid")
+                    if (!uid.isNullOrBlank()) {
+                        val userDoc = db.collection("users").document(uid).get().await()
+                        val userEmail = userDoc.getString("email")
+                        if (!userEmail.isNullOrBlank()) return userEmail
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("FirestoreRepo", "Error checking usernames doc for key: $key", e)
+            }
+        }
+
+        val queriesToTry = listOfNotNull(
+            normalized.ifEmpty { null },
+            withoutAtNormalized.ifEmpty { null },
+            trimmed.ifEmpty { null },
+            lower.ifEmpty { null },
+            withoutAt.ifEmpty { null },
+            "@$normalized",
+            "@$withoutAtNormalized"
+        ).distinct()
+
+        for (queryVal in queriesToTry) {
+            try {
+                val snap = db.collection("users")
+                    .whereEqualTo("username", queryVal)
+                    .limit(1)
+                    .get().await()
+                if (!snap.isEmpty) {
+                    val email = snap.documents[0].getString("email")
+                    if (!email.isNullOrBlank()) return email
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("FirestoreRepo", "Error querying users for username: $queryVal", e)
+            }
+        }
+
+        return null
+    }
+
     suspend fun checkUsernameUnique(username: String): Boolean {
         val normalized = normalizeUsername(username)
         return try {
@@ -133,7 +197,7 @@ class FirestoreRepository {
         val normalized = normalizeUsername(username)
         try {
             db.collection("usernames").document(normalized)
-                .set(mapOf("uid" to uid)).await()
+                .set(mapOf("uid" to uid, "email" to email, "username" to normalized)).await()
             db.collection("users").document(uid).set(
                 mapOf(
                     "id" to uid,
@@ -167,7 +231,7 @@ class FirestoreRepository {
 
             // Create new username document
             db.collection("usernames").document(normalizedNew)
-                .set(mapOf("uid" to uid)).await()
+                .set(mapOf("uid" to uid, "email" to email, "username" to normalizedNew)).await()
 
             // Update user profile
             db.collection("users").document(uid).set(

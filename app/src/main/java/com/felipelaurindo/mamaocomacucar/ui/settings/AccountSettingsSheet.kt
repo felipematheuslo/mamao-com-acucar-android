@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
 import com.felipelaurindo.mamaocomacucar.data.repository.FirestoreRepository
 import com.felipelaurindo.mamaocomacucar.ui.map.NextBadgeInfo
@@ -307,7 +308,7 @@ fun AccountSettingsSheet(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MamaoOrange,
                             contentColor = Color.White,
-                            disabledContainerColor = Stone200,
+                            disabledContainerColor = Stone100,
                             disabledContentColor = Stone400
                         )
                     ) {
@@ -361,7 +362,7 @@ fun AccountSettingsSheet(
                 HorizontalDivider(color = Stone200)
 
                 // Stats & Gamification Section
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Text(
                         "PROGRESSO & EMBLEMAS",
                         style = MaterialTheme.typography.labelSmall.copy(
@@ -382,7 +383,7 @@ fun AccountSettingsSheet(
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Text(
                                     "ÁRVORES MAPEADAS",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
                                     color = Stone400
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -398,7 +399,7 @@ fun AccountSettingsSheet(
                                     Text(
                                         "pins",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = Stone400,
+                                        color = Stone500,
                                         modifier = Modifier.padding(bottom = 4.dp)
                                     )
                                 }
@@ -414,29 +415,43 @@ fun AccountSettingsSheet(
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Text(
                                     "NÍVEL DA COMUNIDADE",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
                                     color = Stone400
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    "${badge.icon} ${badge.title}",
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
-                                    color = MamaoOrange
-                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        badge.icon,
+                                        fontSize = 14.sp
+                                    )
+                                    Text(
+                                        badge.title,
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 11.sp
+                                        ),
+                                        color = MamaoOrange,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
                         }
                     }
 
                     // Badge details card
                     Surface(
-                        shape = RoundedCornerShape(18.dp),
+                        shape = RoundedCornerShape(20.dp),
                         color = MamaoOrangeLight,
                         border = BorderStroke(1.dp, MamaoOrangeContainer),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
-                            modifier = Modifier.padding(14.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -445,16 +460,16 @@ fun AccountSettingsSheet(
                                 Surface(
                                     shape = RoundedCornerShape(14.dp),
                                     color = MamaoOrangeContainer,
-                                    modifier = Modifier.size(44.dp)
+                                    modifier = Modifier.size(46.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        Text(badge.icon, fontSize = 22.sp)
+                                        Text(badge.icon, fontSize = 24.sp)
                                     }
                                 }
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         "Emblema Atual: ${badge.title}",
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
                                         color = Stone900
                                     )
                                     Text(
@@ -467,23 +482,54 @@ fun AccountSettingsSheet(
 
                             // Progress to next badge
                             if (nextBadgeInfo != null) {
-                                HorizontalDivider(color = MamaoOrangeContainer)
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                HorizontalDivider(color = MamaoOrangeContainer.copy(alpha = 0.7f))
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(
-                                            "Próximo nível: ${nextBadgeInfo.nextIcon} ${nextBadgeInfo.nextTitle}",
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                            color = MamaoOrangeDark
-                                        )
-                                        Text(
-                                            "$userTreeCount / ${nextBadgeInfo.targetCount}",
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                            color = Stone600
-                                        )
+                                        Column(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(end = 8.dp)
+                                        ) {
+                                            Text(
+                                                "Próximo Nível",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.SemiBold
+                                                ),
+                                                color = Stone500
+                                            )
+                                            Text(
+                                                "${nextBadgeInfo.nextIcon} ${nextBadgeInfo.nextTitle}",
+                                                style = MaterialTheme.typography.labelMedium.copy(
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontSize = 12.sp
+                                                ),
+                                                color = MamaoOrangeDark,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = Color.White.copy(alpha = 0.9f),
+                                            border = BorderStroke(1.dp, MamaoOrangeContainer)
+                                        ) {
+                                            Text(
+                                                "$userTreeCount / ${nextBadgeInfo.targetCount}",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontSize = 11.sp
+                                                ),
+                                                color = MamaoOrangeDark,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                maxLines = 1
+                                            )
+                                        }
                                     }
 
                                     LinearProgressIndicator(
@@ -499,8 +545,8 @@ fun AccountSettingsSheet(
                                     val remaining = nextBadgeInfo.targetCount - userTreeCount
                                     Text(
                                         "Faltam apenas $remaining ${if (remaining == 1) "fruteira" else "fruteiras"} para avançar de nível! 🚀",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                        color = Stone500
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium),
+                                        color = Stone600
                                     )
                                 }
                             } else {
