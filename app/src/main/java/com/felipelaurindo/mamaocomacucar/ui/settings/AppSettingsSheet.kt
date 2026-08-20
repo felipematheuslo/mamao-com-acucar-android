@@ -22,9 +22,6 @@ fun AppSettingsSheet(
     onShowToast: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var notifyNewTrees by remember { mutableStateOf(true) }
-    var notifyComments by remember { mutableStateOf(true) }
-
     val mapStyles = listOf(
         MapStyleOption("voyager", "Voyager (Claro)", "🛰️"),
         MapStyleOption("dark", "Dark Matter (Escuro)", "🌌"),
@@ -127,78 +124,6 @@ fun AppSettingsSheet(
                     }
                 }
 
-                // Notifications
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        "NOTIFICAÇÕES COMUNITÁRIAS",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Stone400,
-                        letterSpacing = 2.sp
-                    )
-
-                    // New trees notification
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "Novas fruteiras no bairro",
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                color = Stone900
-                            )
-                            Text(
-                                "Avise-me quando um pé for mapeado por perto",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                color = Stone400
-                            )
-                        }
-                        Switch(
-                            checked = notifyNewTrees,
-                            onCheckedChange = {
-                                notifyNewTrees = it
-                                onShowToast(if (it) "🔔 Alertas de novas fruteiras ativados!" else "🔕 Alertas silenciados.")
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MamaoOrange,
-                                checkedThumbColor = Color.White
-                            )
-                        )
-                    }
-
-                    // Comments notification
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "Comentários em minhas marcações",
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                color = Stone900
-                            )
-                            Text(
-                                "Alertar sobre novos status dos meus pins",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                color = Stone400
-                            )
-                        }
-                        Switch(
-                            checked = notifyComments,
-                            onCheckedChange = {
-                                notifyComments = it
-                                onShowToast(if (it) "🔔 Notificações de comentários ativadas!" else "🔕 Comentários silenciados.")
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MamaoOrange,
-                                checkedThumbColor = Color.White
-                            )
-                        )
-                    }
-                }
-
                 // Confirm button
                 Button(
                     onClick = onDismiss,
@@ -210,7 +135,7 @@ fun AppSettingsSheet(
                 }
 
                 Text(
-                    text = "Mamão com Açúcar • v1.0 (Build 1)",
+                    text = "Mamão com Açúcar • v1.0",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
                     color = Stone400,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -227,3 +152,4 @@ private data class MapStyleOption(
     val label: String,
     val emoji: String
 )
+
