@@ -166,21 +166,26 @@ fun TreeDetailSheet(
                         ) {
                             TreeStatus.entries.forEach { status ->
                                 val meta = getStatusMeta(status)
-                                val isSelected = selectedPhase == status
                                 val isCurrent = tree.currentStatus == status
+                                val isSelected = selectedPhase == status
+                                val isActive = isSelected || isCurrent
 
                                 Surface(
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(16.dp),
-                                    color = if (isSelected) meta.bgColor else Stone50,
+                                    color = if (isActive) meta.bgColor else Stone50,
                                     border = BorderStroke(
-                                        width = if (isSelected) 2.dp else 1.dp,
-                                        color = if (isSelected) meta.textColor else Stone200
+                                        width = if (isSelected) 2.dp else if (isCurrent) 1.5.dp else 1.dp,
+                                        color = when {
+                                            isSelected -> meta.textColor
+                                            isCurrent -> meta.textColor.copy(alpha = 0.5f)
+                                            else -> Stone200
+                                        }
                                     ),
                                     onClick = { selectedPhase = status }
                                 ) {
                                     Column(
-                                        modifier = Modifier.padding(12.dp),
+                                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
@@ -188,18 +193,27 @@ fun TreeDetailSheet(
                                         Text(
                                             meta.labelText,
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 9.sp,
-                                                fontWeight = FontWeight.Bold
+                                                fontSize = 10.sp,
+                                                fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium
                                             ),
-                                            color = if (isSelected) meta.textColor else Stone500,
+                                            color = if (isActive) meta.textColor else Stone500,
                                             textAlign = TextAlign.Center
                                         )
                                         if (isCurrent) {
-                                            Text(
-                                                "Atual",
-                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
-                                                color = Stone400
-                                            )
+                                            Surface(
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = meta.textColor.copy(alpha = 0.15f)
+                                            ) {
+                                                Text(
+                                                    "Atual",
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontSize = 8.sp,
+                                                        fontWeight = FontWeight.ExtraBold
+                                                    ),
+                                                    color = meta.textColor,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
                                         }
                                     }
                                 }
