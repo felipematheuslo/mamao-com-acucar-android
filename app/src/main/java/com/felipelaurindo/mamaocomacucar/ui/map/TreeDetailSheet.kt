@@ -58,6 +58,7 @@ fun TreeDetailSheet(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .fillMaxHeight(0.75f)
+                .statusBarsPadding()
                 .padding(bottom = 64.dp)
                 .navigationBarsPadding()
                 .clickable(enabled = false, onClick = {}),
@@ -328,6 +329,8 @@ fun TreeDetailSheet(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }

@@ -110,7 +110,6 @@ class MapViewModel : ViewModel() {
     fun setStatusFilter(filter: String) { _statusFilter.value = filter }
     fun setUserLocation(lat: Double, lng: Double) {
         _userLocation.value = Pair(lat, lng)
-        _mapCenter.value = Pair(lat, lng)
     }
     fun setMapCenter(lat: Double, lng: Double) { _mapCenter.value = Pair(lat, lng) }
     fun setIsAddingTree(adding: Boolean) { _isAddingTree.value = adding }

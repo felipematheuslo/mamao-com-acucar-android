@@ -56,7 +56,10 @@ fun AddTreeDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
                 .clickable(enabled = false, onClick = {}),
             shape = RoundedCornerShape(28.dp),
             color = Color.White,
@@ -343,6 +346,8 @@ fun AddTreeDialog(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

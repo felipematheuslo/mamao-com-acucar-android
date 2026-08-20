@@ -76,7 +76,10 @@ fun AccountSettingsSheet(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 24.dp)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
                 .clickable(enabled = false, onClick = {}),
             shape = RoundedCornerShape(28.dp),
             color = Color.White,
@@ -642,6 +645,7 @@ fun AccountSettingsSheet(
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

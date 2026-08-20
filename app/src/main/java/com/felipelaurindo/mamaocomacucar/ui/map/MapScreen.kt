@@ -40,13 +40,19 @@ import com.felipelaurindo.mamaocomacucar.ui.settings.AppSettingsSheet
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.formatDistance
 import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
+import androidx.compose.ui.draw.rotate
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.MapTileIndex
+import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 
 // Map tile sources matching the web app's styles
 private fun getCartoVoyager() = XYTileSource(
@@ -88,6 +94,7 @@ fun MapScreen(
     val creatorUsernames by mapViewModel.creatorUsernames.collectAsState()
 
     var mapStyle by remember { mutableStateOf("voyager") }
+    var mapOrientation by remember { mutableFloatStateOf(0f) }
     var isTreeDetailOpen by remember { mutableStateOf(false) }
     var isTreeListOpen by remember { mutableStateOf(false) }
     var isAddDialogOpen by remember { mutableStateOf(false) }
@@ -109,7 +116,7 @@ fun MapScreen(
     val mapViewRef = remember { mutableStateOf<MapView?>(null) }
 
     val bottomOffset by animateDpAsState(
-        targetValue = if (isAddingTree) 224.dp else 80.dp,
+        targetValue = if (isAddingTree) 248.dp else 80.dp,
         label = "bottomOffset"
     )
 
@@ -124,7 +131,9 @@ fun MapScreen(
         val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (fineGranted || coarseGranted) {
-            requestCurrentLocation(context, mapViewModel)
+            requestCurrentLocation(context, mapViewModel) { lat, lng ->
+                mapViewModel.setMapCenter(lat, lng)
+            }
         }
     }
 
@@ -147,19 +156,42 @@ fun MapScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         // ---- OSMDroid Map ----
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 64.dp)
+                .navigationBarsPadding(),
             factory = { ctx ->
                 MapView(ctx).apply {
                     setMultiTouchControls(true)
+                    setBuiltInZoomControls(false)
+                    zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
                     controller.setZoom(15.0)
                     controller.setCenter(GeoPoint(mapCenter.first, mapCenter.second))
                     setTileSource(getCartoVoyager())
+
+                    addMapListener(object : MapListener {
+                        override fun onScroll(event: ScrollEvent?): Boolean {
+                            mapOrientation = this@apply.mapOrientation
+                            return false
+                        }
+                        override fun onZoom(event: ZoomEvent?): Boolean {
+                            mapOrientation = this@apply.mapOrientation
+                            return false
+                        }
+                    })
+
                     mapViewRef.value = this
                 }
             },
             update = { mapView ->
                 // Clear existing overlays and re-add markers
                 mapView.overlays.clear()
+
+                // Rotation gesture overlay
+                val rotationOverlay = RotationGestureOverlay(mapView).apply {
+                    isEnabled = true
+                }
+                mapView.overlays.add(rotationOverlay)
 
                 // User location marker
                 val userMarker = Marker(mapView).apply {
@@ -288,7 +320,10 @@ fun MapScreen(
         if (isAddingTree && pinCoordinates != null) {
             // Center pin
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 64.dp)
+                    .navigationBarsPadding(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -421,6 +456,39 @@ fun MapScreen(
                     mapViewModel.selectTree(null)
                 }
             )
+        }
+
+        // ---- Compass / Reset North FAB ----
+        AnimatedVisibility(
+            visible = kotlin.math.abs(mapOrientation) > 1f && !isTreeListOpen && !isTreeDetailOpen,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 16.dp, top = 88.dp)
+                .statusBarsPadding(),
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
+            FloatingActionButton(
+                onClick = {
+                    mapViewRef.value?.let { mv ->
+                        mv.mapOrientation = 0f
+                        mapOrientation = 0f
+                    }
+                },
+                shape = CircleShape,
+                containerColor = Color.White,
+                contentColor = Stone900,
+                modifier = Modifier.size(44.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.Navigation,
+                    contentDescription = "Redefinir Norte",
+                    tint = Rose600,
+                    modifier = Modifier
+                        .size(22.dp)
+                        .rotate(-mapOrientation)
+                )
+            }
         }
 
         // ---- GPS FAB ----
@@ -571,9 +639,9 @@ fun MapScreen(
         // ---- Toast ----
         Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = bottomOffset)
-                .navigationBarsPadding()
+                .align(Alignment.TopCenter)
+                .padding(top = 80.dp)
+                .statusBarsPadding()
         ) {
             ToastOverlay(message = toastMessage)
         }
@@ -744,7 +812,9 @@ private fun requestCurrentLocation(
             LocationManager.GPS_PROVIDER,
             { location ->
                 mapViewModel.setUserLocation(location.latitude, location.longitude)
-                onLocationFound?.invoke(location.latitude, location.longitude)
+                if (lastKnown == null) {
+                    onLocationFound?.invoke(location.latitude, location.longitude)
+                }
             },
             null
         )

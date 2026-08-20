@@ -56,6 +56,7 @@ fun TreeListSheet(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
+                .statusBarsPadding()
                 .padding(bottom = 64.dp)
                 .navigationBarsPadding()
                 .clickable(enabled = false, onClick = {}),
@@ -269,7 +270,7 @@ fun TreeListSheet(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }

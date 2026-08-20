@@ -25,8 +25,8 @@ fun ToastOverlay(
     AnimatedVisibility(
         visible = message != null,
         modifier = modifier,
-        enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
-        exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
+        enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
+        exit = fadeOut() + slideOutVertically(targetOffsetY = { -it })
     ) {
         Row(
             modifier = Modifier
