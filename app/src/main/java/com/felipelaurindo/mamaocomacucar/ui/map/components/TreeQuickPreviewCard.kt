@@ -118,7 +118,7 @@ fun TreeQuickPreviewCard(
                     ) {
                         Icon(
                             Icons.Outlined.Close,
-                            contentDescription = "Fechar pré-visualização",
+                            contentDescription = "Fechar detalhes",
                             tint = Stone400,
                             modifier = Modifier.size(18.dp)
                         )
@@ -171,7 +171,7 @@ fun TreeQuickPreviewCard(
                         horizontalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
                         Text(
-                            text = "por",
+                            text = "Mapeado por",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                             color = Stone400
                         )

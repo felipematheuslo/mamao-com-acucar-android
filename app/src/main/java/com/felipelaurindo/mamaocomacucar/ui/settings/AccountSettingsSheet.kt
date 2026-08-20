@@ -104,7 +104,7 @@ fun AccountSettingsSheet(
                     ) {
                         Text("👤", fontSize = 22.sp)
                         Text(
-                            "Configurações da Conta",
+                            "Configurações do Perfil",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = Stone900
                         )
@@ -154,7 +154,7 @@ fun AccountSettingsSheet(
 
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
-                                text = currentUser.displayName.ifBlank { "Membro Frutífero" },
+                                text = currentUser.displayName.ifBlank { "Membro da Comunidade" },
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                 color = Stone900
                             )
@@ -177,7 +177,7 @@ fun AccountSettingsSheet(
                 // Form Section
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        "INFORMAÇÕES DE PERFIL",
+                        "SEUS DADOS DE PERFIL",
                         style = MaterialTheme.typography.labelSmall.copy(
                             letterSpacing = 1.5.sp,
                             fontWeight = FontWeight.Bold
@@ -193,7 +193,7 @@ fun AccountSettingsSheet(
                             isProfileUpdated = false
                             profileError = ""
                         },
-                        label = { Text("Nome de Exibição") },
+                        label = { Text("Nome de exibição") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         shape = RoundedCornerShape(14.dp),
@@ -218,7 +218,7 @@ fun AccountSettingsSheet(
                             isProfileUpdated = false
                             profileError = ""
                         },
-                        label = { Text("Username") },
+                        label = { Text("Nome de usuário (username)") },
                         modifier = Modifier.fillMaxWidth(),
                         prefix = {
                             Text(
@@ -247,7 +247,7 @@ fun AccountSettingsSheet(
                     OutlinedTextField(
                         value = currentUser.email,
                         onValueChange = {},
-                        label = { Text("E-mail de Cadastro") },
+                        label = { Text("E-mail cadastrado") },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = false,
                         singleLine = true,
@@ -278,7 +278,7 @@ fun AccountSettingsSheet(
                                     if (newUsername != currentUser.username) {
                                         val isUnique = repository.checkUsernameUnique(newUsername)
                                         if (!isUnique) {
-                                            profileError = "Este username já está em uso por outro membro."
+                                            profileError = "Este nome de usuário já está em uso por outro membro."
                                             isSavingProfile = false
                                             return@launch
                                         }
@@ -294,7 +294,7 @@ fun AccountSettingsSheet(
 
                                     isProfileUpdated = true
                                 } catch (e: Exception) {
-                                    profileError = "Erro ao salvar alterações do perfil."
+                                    profileError = "Não foi possível salvar as alterações do perfil."
                                 } finally {
                                     isSavingProfile = false
                                 }
@@ -350,7 +350,7 @@ fun AccountSettingsSheet(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                "✨ Alterações salvas com sucesso no seu perfil!",
+                                "✨ Perfil atualizado com sucesso!",
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                                 color = Emerald600,
                                 modifier = Modifier.padding(10.dp)
@@ -364,7 +364,7 @@ fun AccountSettingsSheet(
                 // Stats & Gamification Section
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Text(
-                        "PROGRESSO & EMBLEMAS",
+                        "SEU PROGRESSO E CONQUISTAS",
                         style = MaterialTheme.typography.labelSmall.copy(
                             letterSpacing = 1.5.sp,
                             fontWeight = FontWeight.Bold
@@ -397,7 +397,7 @@ fun AccountSettingsSheet(
                                         color = Stone900
                                     )
                                     Text(
-                                        "pins",
+                                        if (userTreeCount == 1) "árvore" else "árvores",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                         color = Stone500,
                                         modifier = Modifier.padding(bottom = 4.dp)
@@ -468,7 +468,7 @@ fun AccountSettingsSheet(
                                 }
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        "Emblema Atual: ${badge.title}",
+                                        "Nível Atual: ${badge.title}",
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
                                         color = Stone900
                                     )
@@ -544,14 +544,14 @@ fun AccountSettingsSheet(
 
                                     val remaining = nextBadgeInfo.targetCount - userTreeCount
                                     Text(
-                                        "Faltam apenas $remaining ${if (remaining == 1) "fruteira" else "fruteiras"} para avançar de nível! 🚀",
+                                        "Faltam apenas $remaining ${if (remaining == 1) "fruteira" else "fruteiras"} para você subir de nível! 🚀",
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium),
                                         color = Stone600
                                     )
                                 }
                             } else {
                                 Text(
-                                    "🏆 Parabéns! Você atingiu o nível máximo de mapeamento urbano!",
+                                    "🏆 Parabéns! Você alcançou o nível máximo de contribuição no mapa!",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                     color = MamaoOrangeDark
                                 )
@@ -583,7 +583,7 @@ fun AccountSettingsSheet(
                             border = BorderStroke(1.dp, Rose200)
                         ) {
                             Text(
-                                "Deletar Perfil Definitivamente",
+                                "Excluir Minha Conta",
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -598,7 +598,7 @@ fun AccountSettingsSheet(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Text(
-                                    "⚠️ Tem certeza absoluta? Esta ação apagará permanentemente sua conta, seus dados de perfil e todas as árvores que você mapeou no sistema. Esta ação não pode ser desfeita.",
+                                    "⚠️ Atenção: esta ação apagará permanentemente sua conta, seu perfil e o histórico de fruteiras que você catalogou. Esta operação não poderá ser desfeita.",
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                                     color = Rose700
                                 )
@@ -606,7 +606,7 @@ fun AccountSettingsSheet(
                                 OutlinedTextField(
                                     value = deletePassword,
                                     onValueChange = { deletePassword = it },
-                                    label = { Text("Senha Atual para Confirmar") },
+                                    label = { Text("Digite sua senha atual para confirmar") },
                                     modifier = Modifier.fillMaxWidth(),
                                     visualTransformation = PasswordVisualTransformation(),
                                     singleLine = true,
@@ -655,7 +655,7 @@ fun AccountSettingsSheet(
                                                     val msg = when {
                                                         e.message?.contains("wrong-password") == true ||
                                                         e.message?.contains("invalid-credential") == true -> "Senha incorreta."
-                                                        else -> "Erro ao deletar o perfil."
+                                                        else -> "Não foi possível excluir a conta."
                                                     }
                                                     profileError = msg
                                                 } finally {
@@ -681,7 +681,7 @@ fun AccountSettingsSheet(
                                             )
                                         } else {
                                             Text(
-                                                "Sim, Deletar",
+                                                "Sim, excluir conta",
                                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
                                             )
                                         }

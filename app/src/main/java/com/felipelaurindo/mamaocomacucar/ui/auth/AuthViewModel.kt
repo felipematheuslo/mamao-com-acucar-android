@@ -93,7 +93,7 @@ class AuthViewModel : ViewModel() {
             try {
                 val input = emailOrUsername.trim()
                 if (input.isBlank() || password.isBlank()) {
-                    _loginError.value = "Preencha todos os campos."
+                    _loginError.value = "Por favor, preencha todos os campos."
                     _isSubmitting.value = false
                     return@launch
                 }
@@ -103,7 +103,7 @@ class AuthViewModel : ViewModel() {
                 } else {
                     val resolvedEmail = repository.getEmailByUsername(input)
                     if (resolvedEmail == null) {
-                        _loginError.value = "Nome de usuário não encontrado. Verifique o nome digitado ou entre usando seu e-mail."
+                        _loginError.value = "Nome de usuário não encontrado. Verifique a digitação ou entre com seu e-mail."
                         _isSubmitting.value = false
                         return@launch
                     }
@@ -118,7 +118,7 @@ class AuthViewModel : ViewModel() {
                         user.sendEmailVerification().await()
                     } catch (_: Exception) { }
                     auth.signOut()
-                    _loginError.value = "Confirmação de e-mail pendente.\nEnviamos um link de ativação para você agora mesmo.\n\nVerifique sua caixa de entrada e Spam."
+                    _loginError.value = "Confirmação de e-mail pendente.\nEnviamos um link de ativação para você.\n\nPor favor, confira sua caixa de entrada e a pasta de spam."
                     _showVerificationSent.value = true
                     _isSubmitting.value = false
                     return@launch
@@ -130,8 +130,8 @@ class AuthViewModel : ViewModel() {
                     e.message?.contains("no user record") == true ||
                     e.message?.contains("password is invalid") == true ||
                     e.message?.contains("INVALID_LOGIN_CREDENTIALS") == true ->
-                        "Usuário ou senha incorretos."
-                    else -> e.message ?: "Ocorreu um erro na autenticação."
+                        "E-mail/usuário ou senha incorretos."
+                    else -> e.message ?: "Ocorreu um erro na autenticação. Tente novamente."
                 }
                 _loginError.value = message
             } finally {
@@ -158,7 +158,7 @@ class AuthViewModel : ViewModel() {
                 auth.signOut()
                 _resendSuccess.value = true
             } catch (e: Exception) {
-                _loginError.value = "Erro ao reenviar e-mail de verificação. Verifique sua senha."
+                _loginError.value = "Não foi possível reenviar o e-mail de verificação. Verifique se a senha está correta."
             } finally {
                 _isSubmitting.value = false
             }
@@ -177,7 +177,7 @@ class AuthViewModel : ViewModel() {
 
         val normalizedUsername = normalizeUsername(username)
         if (normalizedUsername.isEmpty()) {
-            _registerError.value = "Informe um nome de usuário válido."
+            _registerError.value = "Escolha um nome de usuário válido."
             _isSubmitting.value = false
             return
         }
@@ -187,7 +187,7 @@ class AuthViewModel : ViewModel() {
                 // Check username uniqueness
                 val isUnique = repository.checkUsernameUnique(normalizedUsername)
                 if (!isUnique) {
-                    _registerError.value = "Este username já está sendo usado por outro usuário."
+                    _registerError.value = "Este nome de usuário já está em uso por outra pessoa."
                     _isSubmitting.value = false
                     return@launch
                 }
@@ -224,13 +224,13 @@ class AuthViewModel : ViewModel() {
             } catch (e: Exception) {
                 val message = when {
                     e.message?.contains("email address is already in use") == true ->
-                        "O endereço de email já está em uso."
+                        "Este endereço de e-mail já está cadastrado."
                     e.message?.contains("badly formatted") == true ->
-                        "Informe um e-mail válido."
+                        "Por favor, informe um e-mail válido."
                     e.message?.contains("at least 6 characters") == true ||
                     e.message?.contains("WEAK_PASSWORD") == true ->
-                        "A senha precisa ter no mínimo 6 caracteres."
-                    else -> e.message ?: "Ocorreu um erro ao criar conta."
+                        "A senha deve ter pelo menos 6 caracteres."
+                    else -> e.message ?: "Ocorreu um erro ao criar sua conta. Tente novamente."
                 }
                 _registerError.value = message
             } finally {

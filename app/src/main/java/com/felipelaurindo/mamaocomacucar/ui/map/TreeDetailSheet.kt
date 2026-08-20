@@ -126,7 +126,7 @@ fun TreeDetailSheet(
                         ) {
                             StatusChip(status = tree.currentStatus)
                             Text(
-                                "por $creatorUsername",
+                                "Mapeado por $creatorUsername",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = Color.White.copy(alpha = 0.8f)
                             )
@@ -134,7 +134,7 @@ fun TreeDetailSheet(
 
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "COORDS: ${String.format("%.5f", tree.latitude)}, ${String.format("%.5f", tree.longitude)}",
+                            "COORDENADAS: ${String.format("%.5f", tree.latitude)}, ${String.format("%.5f", tree.longitude)}",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontFamily = FontFamily.Monospace, fontSize = 9.sp
                             ),
@@ -154,7 +154,7 @@ fun TreeDetailSheet(
                     // Phase Selector
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            "ATUALIZAR FASE",
+                            "ATUALIZAR FASE DA FRUTA",
                             style = MaterialTheme.typography.labelSmall,
                             color = Stone400,
                             letterSpacing = 2.sp
@@ -205,7 +205,7 @@ fun TreeDetailSheet(
                                                 color = meta.textColor.copy(alpha = 0.15f)
                                             ) {
                                                 Text(
-                                                    "Atual",
+                                                    "Fase Atual",
                                                     style = MaterialTheme.typography.labelSmall.copy(
                                                         fontSize = 8.sp,
                                                         fontWeight = FontWeight.ExtraBold
@@ -239,7 +239,7 @@ fun TreeDetailSheet(
                                 enabled = !isSubmitting
                             ) {
                                 Text(
-                                    if (isSubmitting) "Enviando..." else "Confirmar Nova Fase ✅",
+                                    if (isSubmitting) "Enviando..." else "Salvar Nova Fase ✅",
                                     style = MaterialTheme.typography.labelMedium,
                                     letterSpacing = 1.sp
                                 )
@@ -330,12 +330,12 @@ fun TreeDetailSheet(
                             ) {
                                 Text("🌿", fontSize = 28.sp)
                                 Text(
-                                    "Ainda sem atualizações",
+                                    "Nenhuma atualização registrada",
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                     color = Stone600
                                 )
                                 Text(
-                                    "Seja o primeiro a informar a fase desta fruteira!",
+                                    "Seja a primeira pessoa a informar como está o fruto dessa árvore!",
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                     color = Stone400,
                                     textAlign = TextAlign.Center

@@ -112,7 +112,7 @@ fun TreeListSheet(
                             mapViewModel.setSearchQuery(query)
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Buscar fruta, espécie ou endereço...", color = Stone400, fontSize = 13.sp) },
+                        placeholder = { Text("Buscar por fruta, espécie, bairro ou endereço...", color = Stone400, fontSize = 13.sp) },
                         leadingIcon = { Icon(Icons.Outlined.Search, null, tint = MamaoOrange) },
                         trailingIcon = {
                             if (searchQuery.isNotBlank()) {
@@ -148,7 +148,7 @@ fun TreeListSheet(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        FilterChipItem("Todos", "todos", statusFilter) { mapViewModel.setStatusFilter(it) }
+                        FilterChipItem("Todas", "todos", statusFilter) { mapViewModel.setStatusFilter(it) }
                         FilterChipItem("🍎 Maduro", "pronto", statusFilter) { mapViewModel.setStatusFilter(it) }
                         FilterChipItem("🍏 Verde", "crescendo", statusFilter) { mapViewModel.setStatusFilter(it) }
                         FilterChipItem("🌸 Florindo", "florindo", statusFilter) { mapViewModel.setStatusFilter(it) }
@@ -157,8 +157,9 @@ fun TreeListSheet(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    val count = filteredTrees.size
                     Text(
-                        "${filteredTrees.size} fruteira(s) encontrada(s)",
+                        "$count ${if (count == 1) "fruteira encontrada" else "fruteiras encontradas"}",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                         color = Stone400
                     )
@@ -188,6 +189,11 @@ fun TreeListSheet(
                                 "Nenhuma fruteira encontrada",
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                 color = Stone600
+                            )
+                            Text(
+                                "Tente buscar por outro termo ou ajuste os filtros.",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = Stone400
                             )
                         }
                     } else {

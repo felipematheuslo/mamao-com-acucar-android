@@ -80,8 +80,14 @@ fun LoginScreen(
                 ),
                 color = Stone950
             )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                "Bem-vindo(a) de volta ao Mamão com Açúcar!",
+                style = MaterialTheme.typography.bodySmall,
+                color = Stone500
+            )
 
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Error message
             AnimatedVisibility(visible = loginError != null) {
@@ -106,7 +112,7 @@ fun LoginScreen(
                         if (showVerificationSent) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                if (isSubmitting) "Enviando..." else "Não recebeu? Toque para reenviar",
+                                if (isSubmitting) "Enviando..." else "Não recebeu o e-mail? Toque para reenviar",
                                 modifier = Modifier.clickable(
                                     enabled = !isSubmitting
                                 ) {
@@ -137,7 +143,7 @@ fun LoginScreen(
                     ) {
                         Text("✅ ", fontSize = 14.sp)
                         Text(
-                            "E-mail de confirmação reenviado com sucesso!",
+                            "E-mail de confirmação reenviado com sucesso! Cheque sua caixa de entrada.",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.SemiBold
                             ),
@@ -182,7 +188,7 @@ fun LoginScreen(
                 value = password,
                 onValueChange = { password = it; authViewModel.clearLoginError() },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Senha", color = Stone400) },
+                placeholder = { Text("Sua senha", color = Stone400) },
                 trailingIcon = {
                     IconButton(onClick = { showPassword = !showPassword }) {
                         Icon(
@@ -270,7 +276,7 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Não tem uma conta? ",
+                    "Ainda não tem uma conta? ",
                     style = MaterialTheme.typography.bodySmall,
                     color = Stone500
                 )

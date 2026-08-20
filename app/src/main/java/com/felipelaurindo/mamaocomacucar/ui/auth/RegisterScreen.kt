@@ -91,7 +91,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    "Confirme seu E-mail!",
+                    "Confirme seu e-mail!",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold
                     ),
@@ -102,7 +102,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    "Enviamos um link de confirmação para $email.",
+                    "Enviamos um link de ativação para $email.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Stone500,
                     textAlign = TextAlign.Center
@@ -111,7 +111,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    "Verifique sua caixa de entrada (e a pasta de spam) e clique no link para ativar sua conta.",
+                    "Acesse sua caixa de entrada (ou pasta de spam) e clique no link para ativar sua conta.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Stone400,
                     textAlign = TextAlign.Center
@@ -158,7 +158,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    "Mapeie fruteiras urbanas e ganhe medalhas",
+                    "Mapeie fruteiras na sua cidade e ganhe conquistas",
                     style = MaterialTheme.typography.bodySmall,
                     color = Stone500
                 )
@@ -195,7 +195,7 @@ fun RegisterScreen(
                     value = displayName,
                     onValueChange = { displayName = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Nome de exibição", color = Stone400) },
+                    placeholder = { Text("Nome de exibição (ex: Ana Silva)", color = Stone400) },
                     leadingIcon = { Icon(Icons.Outlined.Person, null, tint = Stone400) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(
@@ -254,7 +254,7 @@ fun RegisterScreen(
                     value = email,
                     onValueChange = { email = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("E-mail", color = Stone400) },
+                    placeholder = { Text("Seu e-mail", color = Stone400) },
                     leadingIcon = { Icon(Icons.Outlined.Email, null, tint = Stone400) },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
@@ -283,7 +283,7 @@ fun RegisterScreen(
                     value = password,
                     onValueChange = { password = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Senha (mínimo 6 caracteres)", color = Stone400) },
+                    placeholder = { Text("Senha (mínimo de 6 caracteres)", color = Stone400) },
                     leadingIcon = { Icon(Icons.Outlined.Lock, null, tint = Stone400) },
                     trailingIcon = {
                         IconButton(onClick = { showPassword = !showPassword }) {
@@ -349,7 +349,7 @@ fun RegisterScreen(
                         )
                     } else {
                         Text(
-                            "CRIAR PERFIL",
+                            "CRIAR MINHA CONTA",
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 letterSpacing = 1.5.sp

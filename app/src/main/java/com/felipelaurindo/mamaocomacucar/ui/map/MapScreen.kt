@@ -197,7 +197,7 @@ fun MapScreen(
                 val userMarker = Marker(mapView).apply {
                     position = GeoPoint(userLocation.first, userLocation.second)
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                    title = "Você está por aqui! 📍"
+                    title = "Você está aqui! 📍"
                     icon = createCircleDrawable(context, android.graphics.Color.parseColor("#2563EB"), 12)
                 }
                 mapView.overlays.add(userMarker)
@@ -375,17 +375,17 @@ fun MapScreen(
                         Text("📍", fontSize = 20.sp)
                         Column {
                             Text(
-                                "Posicionar Fruteira",
+                                "Posicionar a Fruteira",
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
                                 color = Stone950
                             )
                             Text(
-                                "Arraste o mapa para posicionar a fruteira exatamente sob o pin, depois confirme.",
+                                "Arraste o mapa para centralizar a árvore exatamente sobre o marcador e confirme o local.",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                 color = MamaoOrange
                             )
                             Text(
-                                "COORDS: ${String.format("%.5f", pinCoordinates!!.first)}, ${String.format("%.5f", pinCoordinates!!.second)}",
+                                "COORDENADAS: ${String.format("%.5f", pinCoordinates!!.first)}, ${String.format("%.5f", pinCoordinates!!.second)}",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontFamily = FontFamily.Monospace,
                                     fontSize = 9.sp
@@ -482,7 +482,7 @@ fun MapScreen(
             ) {
                 Icon(
                     Icons.Outlined.Navigation,
-                    contentDescription = "Redefinir Norte",
+                    contentDescription = "Redefinir orientação para o Norte",
                     tint = Rose600,
                     modifier = Modifier
                         .size(22.dp)
@@ -566,7 +566,7 @@ fun MapScreen(
                         val next = !isAddingTree
                         mapViewModel.setIsAddingTree(next)
                         if (next) {
-                            mapViewModel.showToast("📍 Mova o mapa para posicionar a árvore sob o pin.")
+                            mapViewModel.showToast("📍 Mova o mapa para alinhar a árvore com o marcador.")
                         } else {
                             pinCoordinates = null
                         }

@@ -25,7 +25,7 @@ fun AppSettingsSheet(
     val mapStyles = listOf(
         MapStyleOption("voyager", "Voyager (Claro)", "🛰️"),
         MapStyleOption("dark", "Dark Matter (Escuro)", "🌌"),
-        MapStyleOption("positron", "Positron (Claro)", "❄️"),
+        MapStyleOption("positron", "Positron (Suave)", "❄️"),
         MapStyleOption("osm", "OSM Clássico", "🗺️")
     )
 
@@ -66,7 +66,7 @@ fun AppSettingsSheet(
                     ) {
                         Text("⚙️", fontSize = 20.sp)
                         Text(
-                            "Ajustes do App",
+                            "Configurações do App",
                             style = MaterialTheme.typography.titleSmall,
                             color = Stone950
                         )
@@ -81,7 +81,7 @@ fun AppSettingsSheet(
                 // Map Style Selector
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "ESTILO DO MAPA (TEMA)",
+                        "ESTILO DO MAPA",
                         style = MaterialTheme.typography.labelSmall,
                         color = Stone400,
                         letterSpacing = 2.sp
@@ -103,7 +103,7 @@ fun AppSettingsSheet(
                                         ),
                                         onClick = {
                                             onMapStyleChange(style.id)
-                                            onShowToast("🗺️ Tema de mapa alterado para: ${style.label}")
+                                            onShowToast("🗺️ Estilo do mapa alterado para: ${style.label}")
                                         }
                                     ) {
                                         Column(
@@ -131,11 +131,11 @@ fun AppSettingsSheet(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Stone900)
                 ) {
-                    Text("Confirmar Ajustes", style = MaterialTheme.typography.labelMedium)
+                    Text("Concluir", style = MaterialTheme.typography.labelMedium)
                 }
 
                 Text(
-                    text = "Mamão com Açúcar • v1.0",
+                    text = "Mamão com Açúcar • Versão 1.0",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
                     color = Stone400,
                     modifier = Modifier.align(Alignment.CenterHorizontally)

@@ -84,12 +84,12 @@ fun AddTreeDialog(
                         Text("🌳", fontSize = 22.sp)
                         Column {
                             Text(
-                                "Catalogar Fruteira",
+                                "Cadastrar Fruteira",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Stone950
                             )
                             Text(
-                                "Adicione um pé de árvore frutífera ao acervo",
+                                "Adicione uma nova árvore frutífera ao mapa coletivo",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                 color = Stone400
                             )
@@ -119,7 +119,7 @@ fun AddTreeDialog(
                             showSpeciesDropdown = true
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Buscar espécie...", color = Stone400) },
+                        placeholder = { Text("Pesquisar espécie (ex: Pitanga, Amora)...", color = Stone400) },
                         leadingIcon = { Icon(Icons.Outlined.Search, null, tint = Stone400) },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
@@ -132,7 +132,7 @@ fun AddTreeDialog(
                     )
 
                     // Quick suggestion chips for popular fruits
-                    val quickSuggestions = listOf("Pitanga 🍒", "Amora 🫐", "Goiaba 🍐", "Mangueira 🥭", "Mamão 🥭", "Jabuticaba 🟣", "Pitomba 🟡")
+                    val quickSuggestions = listOf("Pitanga 🍒", "Amora 🫐", "Goiaba 🍐", "Manga 🥭", "Mamão 🥭", "Jabuticaba 🟣", "Pitomba 🟡")
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -214,7 +214,7 @@ fun AddTreeDialog(
                 // Reference name
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        "REFERÊNCIA / NOME",
+                        "NOME OU REFERÊNCIA",
                         style = MaterialTheme.typography.labelSmall,
                         color = Stone400,
                         letterSpacing = 2.sp
@@ -223,7 +223,7 @@ fun AddTreeDialog(
                         value = referenceName,
                         onValueChange = { referenceName = it },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Ex: Pé de Manga da esquina, Praça João...", color = Stone400) },
+                        placeholder = { Text("Ex: Pé de manga na esquina da praça", color = Stone400) },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -238,7 +238,7 @@ fun AddTreeDialog(
                 // Status selector
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        "ESTADO ATUAL",
+                        "FASE/ESTADO ATUAL",
                         style = MaterialTheme.typography.labelSmall,
                         color = Stone400,
                         letterSpacing = 2.sp
@@ -296,7 +296,7 @@ fun AddTreeDialog(
                         Text("📍", fontSize = 14.sp)
                         Column {
                             Text(
-                                "Coordenadas do Pin",
+                                "Coordenadas do local",
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                 color = Stone700
                             )
@@ -341,7 +341,7 @@ fun AddTreeDialog(
                         enabled = selectedSpecies.isNotBlank() && !isSubmitting
                     ) {
                         Text(
-                            if (isSubmitting) "Salvando..." else "Salvar 🌳",
+                            if (isSubmitting) "Salvando..." else "Salvar Fruteira 🌳",
                             style = MaterialTheme.typography.labelMedium
                         )
                     }

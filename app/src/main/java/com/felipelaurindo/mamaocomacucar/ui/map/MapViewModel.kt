@@ -173,10 +173,10 @@ class MapViewModel : ViewModel() {
                 )
                 repository.addTree(tree)
                 _isAddingTree.value = false
-                showToast("🌳 Pé de árvore mapeado com sucesso na comunidade!")
+                showToast("🌳 Fruteira cadastrada com sucesso no mapa comunitário!")
             } catch (e: Exception) {
                 Log.e("MapViewModel", "Error adding tree", e)
-                showToast("Falha ao salvar árvore no banco.")
+                showToast("Não foi possível salvar a fruteira. Tente novamente.")
             }
         }
     }
@@ -212,7 +212,7 @@ class MapViewModel : ViewModel() {
                 showToast("✅ Fase da fruteira atualizada com sucesso!")
             } catch (e: Exception) {
                 Log.e("MapViewModel", "Error submitting report", e)
-                showToast("Falha ao registrar atualização.")
+                showToast("Não foi possível registrar a atualização.")
             }
         }
     }
@@ -232,11 +232,11 @@ class MapViewModel : ViewModel() {
                     val lon = obj.getDouble("lon")
                     _mapCenter.value = Pair(lat, lon)
                 } else {
-                    showToast("Localização não encontrada.")
+                    showToast("Localização não encontrada. Tente buscar por outro endereço ou ponto de referência.")
                 }
             } catch (e: Exception) {
                 Log.e("MapViewModel", "Error searching location", e)
-                showToast("Houve uma falha ao buscar a localização.")
+                showToast("Não foi possível realizar a busca de localização.")
             }
         }
     }
@@ -270,32 +270,32 @@ class MapViewModel : ViewModel() {
         return when {
             count == 0 -> UserBadge(
                 "SEMENTINHA",
-                "Ainda não cadastrou fruteiras. Mapeie seu primeiro pé para começar a germinar!",
+                "Você ainda não cadastrou nenhuma fruteira. Mapeie sua primeira árvore para começar a germinar!",
                 "🌱"
             )
             count in 1..4 -> UserBadge(
                 "BROTINHO",
-                "Cadastrou suas primeiras árvores no acervo coletivo do bairro.",
+                "Você começou a contribuir com o acervo comunitário de fruteiras do seu bairro.",
                 "🌿"
             )
             count in 5..9 -> UserBadge(
                 "CULTIVADOR",
-                "Membro ativo ajudando a expandir o mapa urbano de frutas.",
+                "Membro ativo que ajuda a expandir e manter o mapa urbano de frutas sempre vivo.",
                 "🪴"
             )
             count in 10..24 -> UserBadge(
                 "PROTETOR DA FLORESTA",
-                "Cuida da comunidade e mantém o mapa urbano sempre atualizado!",
+                "Referência na comunidade, mantendo o mapa local rico e bem cuidado.",
                 "🌳"
             )
             count in 25..49 -> UserBadge(
                 "GUARDIÃO DAS FRUTAS",
-                "Referência no mapeamento urbano e na segurança alimentar coletiva.",
+                "Grande guardião urbano, promovendo a colheita coletiva e sustentável!",
                 "🍊"
             )
             else -> UserBadge(
                 "MESTRE FRUTÍFERO",
-                "Uma lenda viva da colheita e do mapeamento urbano coletivo!",
+                "Uma verdadeira lenda do mapeamento e da colheita comunitária!",
                 "🍒"
             )
         }

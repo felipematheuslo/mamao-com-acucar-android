@@ -123,7 +123,7 @@ private fun SplashScreen() {
             // App logo with pulse
             Image(
                 painter = painterResource(id = R.drawable.ic_fruit_mamao),
-                contentDescription = "Logo Mamão com Açúcar",
+                contentDescription = "Logo do Mamão com Açúcar",
                 modifier = Modifier.size((64 * scale).dp)
             )
 
@@ -143,7 +143,7 @@ private fun SplashScreen() {
                     color = Stone900
                 )
                 Text(
-                    "mapeando fruteiras urbanas 🌳",
+                    "Mapeamento colaborativo de fruteiras urbanas 🌳",
                     style = MaterialTheme.typography.bodySmall,
                     color = Stone400
                 )
