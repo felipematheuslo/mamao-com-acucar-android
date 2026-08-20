@@ -13,4 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
-app/release/app-release.aab
+
+# Signing keys and Release Builds (SECURITY)
+*.jks
+*.keystore
+*.aab
+
