@@ -2,43 +2,58 @@
 
 # Mamão com Açúcar
 
-**Collaborative mobile application for mapping public fruit trees across Brazilian cities.**
+**A community-driven urban mapping mobile application designed with a focus on UI/UX engineering, real-time synchronization, and local food sustainability.**
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0%2B-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%26%20Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![OpenStreetMap](https://img.shields.io/badge/OpenStreetMap-OSMDroid-7EBC6F?style=for-the-badge&logo=openstreetmap&logoColor=white)](https://github.com/osmdroid/osmdroid)
-[![Android SDK](https://img.shields.io/badge/API-24%2B%20%7C%20Target%2036-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
+[![UX/UI](https://img.shields.io/badge/UX%2FUI-Mobile--First-8A2BE2?style=for-the-badge)]()
 [![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%2B%20StateFlow-F97316?style=for-the-badge)]()
 
 </div>
 
 ---
 
-## Overview
+## Product Vision & Community Impact
 
-**Mamão com Açúcar** is a community-driven Android application built to map and monitor public fruit trees in urban areas across Brazil.
+In many Brazilian cities, public parks and streets are filled with fruit-bearing trees—mangoes, papayas, pitangas, avocados, and jambos—whose harvests frequently go ungathered or wasted due to a lack of visibility.
 
-In many Brazilian cities, public streets and parks feature fruit-bearing trees—such as mango, papaya, pitanga, avocado, and jambo—whose harvest often goes unnoticed or spoiled. This project connects local communities by enabling citizens to register tree coordinates, track fruiting stages in real time (blooming, growing, ripe, or out of season), and share updates with neighbor foragers.
+**Mamão com Açúcar** was created to bridge this gap. The platform empowers citizens to discover, map, and monitor urban fruit trees in real time, turning passive city spaces into active, shared community food sources.
 
-Originally created as a React/Vite web prototype, this repository contains the native Android application rebuilt from the ground up using **Kotlin** and **Jetpack Compose**.
-
----
-
-## Key Features
-
-- **Interactive Map & Tile Sources**: Vector map powered by OSMDroid with support for multiple map styles (CartoDB Voyager, Dark, Positron, and OpenStreetMap Mapnik).
-- **Proximity-Based Discovery**: Dynamic tree list sorted by geodesic distance (Haversine formula) relative to the user's current GPS location.
-- **Fruiting Lifecycle Tracking**: Community status reports indicating whether trees are blooming, producing green fruit, ripe for picking, or out of season.
-- **Collaborative Updates**: Real-time status logs and community comments stored in Cloud Firestore.
-- **User Progression**: Gamification system awarding profile badges based on total tree contributions (from *Sementinha* to *Mestre Frutífero*).
-- **Edge-to-Edge Interface**: Material Design 3 implementation with adaptive status and navigation bar insets, paired with a custom brand palette (`MamaoOrange` and `MamaoGreen`).
+### From Prototype to Native Execution
+This project demonstrates end-to-end product ownership and architectural evolution:
+- **Concept Validation**: Initially prototyped as a React/Vite web application to test interaction flows and validate user demand.
+- **Native Re-Engineering**: Rebuilt as a native Android application in **Kotlin** and **Jetpack Compose** to achieve 60fps vector map performance, offline tile caching, precise GPS integration, and smooth edge-to-edge UI transitions.
 
 ---
 
-## Technical Architecture
+## UI/UX Engineering & Design Decisions
 
-The application follows standard Android architecture guidelines using the **MVVM (Model-View-ViewModel)** pattern with unidirectional data flow (UDF).
+As a frontend and mobile engineer, every visual and structural choice was guided by human-centered design principles for real-world outdoor usage:
+
+1. **Low Cognitive Load & High Contrast (Outdoor Readability)**:
+   - Designed for users on the move under direct sunlight. Map tiles support 4 distinct contrast themes (CartoDB Voyager, Dark, Positron, and OpenStreetMap).
+   - Biological fruiting stages use distinct color-coded indicators and universal symbols (🌸 Blooming, 🍏 Growing, 🍎 Ripe, 🍂 Dry) so users can assess tree status instantly.
+
+2. **Mobile-First & Edge-to-Edge Hierarchy**:
+   - Built with strict Material Design 3 guidelines using floating cards, custom elevation, and zero-clutter overlays.
+   - System bar insets (`statusBarsPadding`, `navigationBarsPadding`) ensure full edge-to-edge canvas execution without blocking interactive map controls or floating action buttons.
+
+3. **Custom Design System & Tokens**:
+   - Interface colors follow a strict design system based on `MamaoOrange` (`#F97316`) for primary actions, `MamaoGreen` (`#16A34A`) for nature accents, and a warm neutral `Stone` palette (`Stone50` to `Stone950`) to eliminate stark, unrefined blacks and grays.
+
+4. **Frictionless Proximity Discovery**:
+   - Eliminates complex manual filtering. Nearby trees are automatically calculated and sorted using geodesic distance formulas (Haversine algorithm) in real time relative to the user's live coordinates.
+
+5. **Gamification for User Retention**:
+   - Progressive contributor badges (*Sementinha* to *Mestre Frutífero*) reward continuous user engagement and encourage community-driven data collection.
+
+---
+
+## Technical Architecture & State Management
+
+The application adheres to clean Android architecture using **MVVM (Model-View-ViewModel)** with unidirectional state flows.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -48,7 +63,7 @@ The application follows standard Android architecture guidelines using the **MVV
                             │ StateFlow / UI States
 ┌───────────────────────────▼─────────────────────────────┐
 │                      MapViewModel                       │
-│             (Business Logic & Location Utilities)       │
+│             (Business Logic & Proximity Calculations)   │
 └───────────────────────────┬─────────────────────────────┘
                             │ Data Flow
 ┌───────────────────────────▼─────────────────────────────┐
@@ -57,39 +72,28 @@ The application follows standard Android architecture guidelines using the **MVV
 └─────────────────────────────────────────────────────────┘
 ```
 
-### Tech Stack Specifications
+### Key Technical Specs
 
-- **Language**: Kotlin 2.0+
-- **UI Framework**: Jetpack Compose with Material Design 3
-- **Navigation**: Navigation Compose with `ComponentActivity.enableEdgeToEdge()`
-- **Map Engine**: OSMDroid (`org.osmdroid:osmdroid-android:6.1.20`) with disk tile caching via `Configuration.getInstance().load()`
-- **Backend**: Firebase Auth and Cloud Firestore
-- **State Management**: Kotlin `StateFlow` and `collectAsState()`
-- **Target SDK**: API 36 (Minimum SDK 24)
+- **Language & Framework**: Kotlin 2.0+, Jetpack Compose, Material Design 3
+- **Map Vector Engine**: OSMDroid (`org.osmdroid:osmdroid-android:6.1.20`) with disk tile caching (`Configuration.getInstance().load()`) for instant map loads
+- **Real-Time Data Layer**: Firebase Cloud Firestore for live community status updates and comment streaming
+- **Auth & Security**: Firebase Auth session persistence
+- **Geospatial Processing**: Real-time Haversine distance sorting and smooth camera interpolation (`animateTo`)
+- **Target SDK**: API 36 (Min SDK 24)
 
 ---
 
-## Tree Status & Gamification Rules
+## System Features
 
-### Fruiting Cycle (`TreeStatus`)
+### Client & Map Experience
+- Real-time interactive map with custom pins reflecting tree species and biological status.
+- Single-tap GPS recentering with fluid camera interpolation.
+- Live tile style selector sheet (Voyager, Dark, Positron, OSM Mapnik).
 
-| Status | Symbol | Description |
-| :--- | :---: | :--- |
-| **FLOR** | 🌸 | Tree is flowering / blooming. |
-| **VERDE** | 🍏 | Fruit is growing, currently green. |
-| **PRONTO** | 🍎 | Fruit is ripe and ready for picking. |
-| **SECO** | 🍂 | Tree is out of season or without fruit. |
-
-### Contributor Badges (`UserBadge`)
-
-User profiles display progress ranks based on total tree additions recorded in Firestore:
-
-- **Sementinha**: 0 trees registered
-- **Brotinho**: 1+ tree registered
-- **Cultivador**: 5+ trees registered
-- **Protetor da Floresta**: 10+ trees registered
-- **Guardião das Frutas**: 25+ trees registered
-- **Mestre Frutífero**: 50+ trees registered
+### Tree Registration & Community Logs
+- Quick-add modal for pinpointing new fruit trees with custom metadata.
+- Interactive detail sheet (`TreeDetailSheet`) featuring historical community logs and update forms.
+- Dynamic search and status filter sheet (`TreeListSheet`) with live distance display.
 
 ---
 
@@ -131,15 +135,14 @@ app/src/main/java/com/felipelaurindo/mamaocomacucar/
 
 ---
 
-## Local Setup & Development
+## Local Setup
 
 ### Prerequisites
-
 - **Android Studio** (Jellyfish / Koala or newer).
 - **JDK 17** configured in your environment.
 - **Android Device or Emulator** running Android 7.0+ (API 24+) with location services enabled.
 
-### Setup Steps
+### Build Instructions
 
 1. **Clone the repository**:
    ```bash
@@ -148,21 +151,19 @@ app/src/main/java/com/felipelaurindo/mamaocomacucar/
    ```
 
 2. **Configure Firebase**:
-   - Download the `google-services.json` file from your Firebase console.
-   - Place `google-services.json` in the `app/` directory:
+   - Download `google-services.json` from your Firebase console.
+   - Place it inside the `app/` folder:
      ```text
      mamao-com-acucar-android/
      └── app/
          └── google-services.json
      ```
 
-3. **Build and Run**:
-   - Open the project folder in Android Studio.
-   - Wait for Gradle sync to complete.
-   - Run the application on your device or emulator (`Shift + F10`).
+3. **Build & Run**:
+   - Open the project in Android Studio, allow Gradle sync to complete, and run (`Shift + F10`).
 
 ---
 
 ## License
 
-This project is open-source and intended for community use. Contributions, issue reports, and pull requests are welcome.
+This project is open-source and intended for community use. Contributions and feedback are welcome.
