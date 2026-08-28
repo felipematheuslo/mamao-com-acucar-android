@@ -23,10 +23,8 @@ fun AppSettingsSheet(
     onDismiss: () -> Unit
 ) {
     val mapStyles = listOf(
-        MapStyleOption("voyager", "Voyager (Claro)", "🛰️"),
-        MapStyleOption("dark", "Dark Matter (Escuro)", "🌌"),
-        MapStyleOption("positron", "Positron (Suave)", "❄️"),
-        MapStyleOption("osm", "OSM Clássico", "🗺️")
+        MapStyleOption("osm", "OSM Clássico", "🗺️"),
+        MapStyleOption("satellite", "Satélite Real", "🛰️")
     )
 
     Box(
@@ -135,7 +133,7 @@ fun AppSettingsSheet(
                 }
 
                 Text(
-                    text = "Mamão com Açúcar • Versão 1.0",
+                    text = "Mamão com Açúcar • Versão 1.1",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
                     color = Stone400,
                     modifier = Modifier.align(Alignment.CenterHorizontally)

@@ -16,7 +16,7 @@ Este arquivo serve como contexto base, diretrizes de arquitetura, regras de neg�
 - **Linguagem**: Kotlin (2.0+)
 - **UI Framework**: Jetpack Compose com Material Design 3 (Material 3)
 - **Navegação & Edge-to-Edge**: `androidx.navigation:navigation-compose:2.9.0` e `ComponentActivity.enableEdgeToEdge()`
-- **Mapas**: OSMDroid (`org.osmdroid:osmdroid-android:6.1.20`) com `XYTileSource` para mapas CartoDB (*Voyager*, *Dark*, *Positron*) e OpenStreetMap (*Mapnik*).
+- **Mapas**: OSMDroid (`org.osmdroid:osmdroid-android:6.1.20`) com suporte a OpenStreetMap (*Mapnik* / Clássico) e imagens de Satélite (*Esri World Imagery*), ambos livres e sem marcas d'água.
 - **Backend & Persistence**: Firebase Auth (Autenticação) e Cloud Firestore (Banco de Dados NoSQL em tempo real).
 - **Arquitetura**: MVVM (Model-View-ViewModel) com `StateFlow`, `collectAsState()` e `ViewModel`.
 - **Target / Compile SDK**: API 36 (Min SDK 24).

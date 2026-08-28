@@ -41,40 +41,120 @@ import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.formatDistance
 import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
 import androidx.compose.ui.draw.rotate
+import android.view.MotionEvent
 import org.osmdroid.config.Configuration
-import org.osmdroid.events.MapListener
-import org.osmdroid.events.ScrollEvent
-import org.osmdroid.events.ZoomEvent
+import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.MapTileIndex
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
+import org.osmdroid.views.overlay.Overlay
+import kotlin.math.abs
+import kotlin.math.atan2
 
-// Map tile sources matching the web app's styles
-private fun getCartoVoyager() = XYTileSource(
-    "CartoVoyager", 0, 19, 256, ".png",
-    arrayOf("https://a.basemaps.cartocdn.com/rastertiles/voyager/",
-            "https://b.basemaps.cartocdn.com/rastertiles/voyager/",
-            "https://c.basemaps.cartocdn.com/rastertiles/voyager/")
-)
+// Overlay de rotação com ativação por ângulo inicial (threshold) e rotação contínua e suave.
+// Previne que o zoom em pinça gire o mapa acidentalmente, e garante 60fps sem engasgos ou saltos.
+private class ThresholdRotationGestureOverlay(
+    private val thresholdDegrees: Float = 8f,
+    private val onOrientationChanged: ((Float) -> Unit)? = null
+) : Overlay() {
+    private var initialFingerAngle: Float = 0f
+    private var rotationPivotAngle: Float = 0f
+    private var rotationPivotOrientation: Float = 0f
+    private var isRotating: Boolean = false
+    private var pointerId1: Int = MotionEvent.INVALID_POINTER_ID
+    private var pointerId2: Int = MotionEvent.INVALID_POINTER_ID
 
-private fun getCartoDark() = XYTileSource(
-    "CartoDark", 0, 19, 256, ".png",
-    arrayOf("https://a.basemaps.cartocdn.com/dark_all/",
-            "https://b.basemaps.cartocdn.com/dark_all/",
-            "https://c.basemaps.cartocdn.com/dark_all/")
-)
+    override fun onTouchEvent(event: MotionEvent, mapView: MapView): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                if (event.pointerCount == 2) {
+                    pointerId1 = event.getPointerId(0)
+                    pointerId2 = event.getPointerId(1)
+                    val idx1 = event.findPointerIndex(pointerId1)
+                    val idx2 = event.findPointerIndex(pointerId2)
+                    if (idx1 != -1 && idx2 != -1) {
+                        initialFingerAngle = calculateAngle(event, idx1, idx2)
+                        isRotating = false
+                    }
+                } else {
+                    isRotating = false
+                }
+            }
 
-private fun getCartoPositron() = XYTileSource(
-    "CartoPositron", 0, 19, 256, ".png",
-    arrayOf("https://a.basemaps.cartocdn.com/light_all/",
-            "https://b.basemaps.cartocdn.com/light_all/",
-            "https://c.basemaps.cartocdn.com/light_all/")
-)
+            MotionEvent.ACTION_MOVE -> {
+                if (event.pointerCount == 2 && pointerId1 != MotionEvent.INVALID_POINTER_ID && pointerId2 != MotionEvent.INVALID_POINTER_ID) {
+                    val idx1 = event.findPointerIndex(pointerId1)
+                    val idx2 = event.findPointerIndex(pointerId2)
+
+                    if (idx1 != -1 && idx2 != -1) {
+                        val currentAngle = calculateAngle(event, idx1, idx2)
+
+                        if (!isRotating) {
+                            val diff = normalizeDelta(currentAngle - initialFingerAngle)
+                            // Verifica se o usuário iniciou um movimento intencional de rotação
+                            if (abs(diff) >= thresholdDegrees) {
+                                isRotating = true
+                                rotationPivotAngle = currentAngle
+                                rotationPivotOrientation = mapView.mapOrientation
+                            }
+                        }
+
+                        // Após iniciar a rotação, desabilita a verificação e acompanha os dedos com precisão contínua
+                        if (isRotating) {
+                            val deltaFromPivot = normalizeDelta(currentAngle - rotationPivotAngle)
+                            var newOrientation = (rotationPivotOrientation + deltaFromPivot + 360f) % 360f
+
+                            // Snapping suave para o Norte se estiver a menos de 2°
+                            if (newOrientation < 2f || newOrientation > 358f) {
+                                newOrientation = 0f
+                            }
+                            mapView.mapOrientation = newOrientation
+                        }
+                    }
+                }
+            }
+
+            MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (isRotating) {
+                    onOrientationChanged?.invoke(mapView.mapOrientation)
+                }
+                isRotating = false
+                pointerId1 = MotionEvent.INVALID_POINTER_ID
+                pointerId2 = MotionEvent.INVALID_POINTER_ID
+            }
+        }
+        return false // Permite que o zoom nativo em pinça continue sem interferência
+    }
+
+    private fun normalizeDelta(angle: Float): Float {
+        var delta = angle % 360f
+        if (delta > 180f) delta -= 360f
+        if (delta < -180f) delta += 360f
+        return delta
+    }
+
+    private fun calculateAngle(event: MotionEvent, idx1: Int, idx2: Int): Float {
+        val xDiff = event.getX(idx2) - event.getX(idx1)
+        val yDiff = event.getY(idx2) - event.getY(idx1)
+        return Math.toDegrees(atan2(yDiff.toDouble(), xDiff.toDouble())).toFloat()
+    }
+}
+
+// Fonte de mapa de Satélite (Esri World Imagery)
+private fun getEsriSatellite() = object : OnlineTileSourceBase(
+    "EsriSatellite", 0, 18, 256, ".jpg",
+    arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/")
+) {
+    override fun getTileURLString(pMapTileIndex: Long): String {
+        return baseUrl +
+                MapTileIndex.getZoom(pMapTileIndex) + "/" +
+                MapTileIndex.getY(pMapTileIndex) + "/" +
+                MapTileIndex.getX(pMapTileIndex)
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,7 +173,7 @@ fun MapScreen(
     val isAddingTree by mapViewModel.isAddingTree.collectAsState()
     val creatorUsernames by mapViewModel.creatorUsernames.collectAsState()
 
-    var mapStyle by remember { mutableStateOf("voyager") }
+    var mapStyle by remember { mutableStateOf("osm") }
     var mapOrientation by remember { mutableFloatStateOf(0f) }
     var isTreeDetailOpen by remember { mutableStateOf(false) }
     var isTreeListOpen by remember { mutableStateOf(false) }
@@ -167,31 +247,23 @@ fun MapScreen(
                     zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
                     controller.setZoom(15.0)
                     controller.setCenter(GeoPoint(mapCenter.first, mapCenter.second))
-                    setTileSource(getCartoVoyager())
+                    setTileSource(TileSourceFactory.MAPNIK)
 
-                    addMapListener(object : MapListener {
-                        override fun onScroll(event: ScrollEvent?): Boolean {
-                            mapOrientation = this@apply.mapOrientation
-                            return false
+                    // Overlay de rotação persistente com ativação por ângulo e rastreamento contínuo
+                    val rotationOverlay = ThresholdRotationGestureOverlay(
+                        thresholdDegrees = 8f,
+                        onOrientationChanged = { newOrientation ->
+                            mapOrientation = newOrientation
                         }
-                        override fun onZoom(event: ZoomEvent?): Boolean {
-                            mapOrientation = this@apply.mapOrientation
-                            return false
-                        }
-                    })
+                    )
+                    overlays.add(rotationOverlay)
 
                     mapViewRef.value = this
                 }
             },
             update = { mapView ->
-                // Clear existing overlays and re-add markers
-                mapView.overlays.clear()
-
-                // Rotation gesture overlay
-                val rotationOverlay = RotationGestureOverlay(mapView).apply {
-                    isEnabled = true
-                }
-                mapView.overlays.add(rotationOverlay)
+                // Remove apenas os marcadores antigos sem destruir os overlays persistentes
+                mapView.overlays.removeAll { it is Marker }
 
                 // User location marker
                 val userMarker = Marker(mapView).apply {
@@ -224,12 +296,7 @@ fun MapScreen(
                 }
 
                 // Update tile source based on style
-                val tileSource = when (mapStyle) {
-                    "dark" -> getCartoDark()
-                    "positron" -> getCartoPositron()
-                    "osm" -> TileSourceFactory.MAPNIK
-                    else -> getCartoVoyager()
-                }
+                val tileSource = if (mapStyle == "satellite") getEsriSatellite() else TileSourceFactory.MAPNIK
                 if (mapView.tileProvider.tileSource.name() != tileSource.name()) {
                     mapView.setTileSource(tileSource)
                 }
