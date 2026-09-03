@@ -16,7 +16,7 @@ Este arquivo serve como contexto base, diretrizes de arquitetura, regras de neg�
 - **Linguagem**: Kotlin (2.0+)
 - **UI Framework**: Jetpack Compose com Material Design 3 (Material 3)
 - **Navegação & Edge-to-Edge**: `androidx.navigation:navigation-compose:2.9.0` e `ComponentActivity.enableEdgeToEdge()`
-- **Mapas**: OSMDroid (`org.osmdroid:osmdroid-android:6.1.20`) com suporte a OpenStreetMap (*Mapnik* / Clássico) e imagens de Satélite (*Esri World Imagery*), ambos livres e sem marcas d'água.
+- **Mapas**: OSMDroid (`org.osmdroid:osmdroid-android:6.1.20`) com suporte a Relevo (*Esri World Topo Map*) e imagens de Satélite (*Esri World Imagery*), ambos livres e sem marcas d'água.
 - **Backend & Persistence**: Firebase Auth (Autenticação) e Cloud Firestore (Banco de Dados NoSQL em tempo real).
 - **Arquitetura**: MVVM (Model-View-ViewModel) com `StateFlow`, `collectAsState()` e `ViewModel`.
 - **Target / Compile SDK**: API 36 (Min SDK 24).
@@ -38,8 +38,12 @@ app/src/main/java/com/felipelaurindo/mamaocomacucar/
 │       └── UserBadge.kt           # Lógica de gamificação (nível/selo do usuário por contagem de árvores)
 ├── ui/
 │   ├── auth/
+│   │   ├── AuthViewModel.kt       # ViewModel de autenticação (Email, Google Sign-In, recuperação de senha)
 │   │   ├── LoginScreen.kt         # Tela de autenticação/login
-│   │   └── RegisterScreen.kt      # Tela de registro de novo usuário
+│   │   ├── RegisterScreen.kt      # Tela de registro de novo usuário
+│   │   └── components/
+│   │       ├── ForgotPasswordDialog.kt # Diálogo para envio de e-mail de redefinição de senha
+│   │       └── GoogleSignInButton.kt   # Botão de login com Google via Credential Manager
 │   ├── map/
 │   │   ├── MapScreen.kt           # Tela principal do mapa, com OSMDroid, FAB de GPS e overlays
 │   │   ├── MapViewModel.kt        # ViewModel gerenciador de árvores, localização e estados da UI
@@ -50,7 +54,7 @@ app/src/main/java/com/felipelaurindo/mamaocomacucar/
 │   │       └── ToastOverlay.kt    # Notificações estilo Toast animadas nativas
 │   ├── settings/
 │   │   ├── AccountSettingsSheet.kt # BottomSheet de perfil e estatísticas do usuário
-│   │   └── AppSettingsSheet.kt    # BottomSheet de troca de estilo do mapa (Voyager, Dark, Positron, OSM)
+│   │   └── AppSettingsSheet.kt    # BottomSheet de troca de estilo do mapa (Relevo, Satélite)
 │   └── theme/
 │       ├── Color.kt               # Cores da marca (MamaoOrange, MamaoGreen) e paleta Stone (Stone50..Stone950)
 │       ├── Theme.kt               # Tema principal `MamaoComAcucarTheme`

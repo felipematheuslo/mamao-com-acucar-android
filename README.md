@@ -33,7 +33,7 @@ This project demonstrates end-to-end product ownership and architectural evoluti
 As a frontend and mobile engineer, every visual and structural choice was guided by human-centered design principles for real-world outdoor usage:
 
 1. **Low Cognitive Load & High Contrast (Outdoor Readability)**:
-   - Designed for users on the move under direct sunlight. Map tiles support 4 distinct contrast themes (CartoDB Voyager, Dark, Positron, and OpenStreetMap).
+   - Designed for users on the move under direct sunlight. Map tiles support high-contrast, clean and watermark-free themes: **Relevo** (*Esri World Topo Map*) and **Satélite** (*Esri World Imagery*).
    - Biological fruiting stages use distinct color-coded indicators and universal symbols (🌸 Blooming, 🍏 Growing, 🍎 Ripe, 🍂 Dry) so users can assess tree status instantly.
 
 2. **Mobile-First & Edge-to-Edge Hierarchy**:
@@ -88,7 +88,7 @@ The application adheres to clean Android architecture using **MVVM (Model-View-V
 ### Client & Map Experience
 - Real-time interactive map with custom pins reflecting tree species and biological status.
 - Single-tap GPS recentering with fluid camera interpolation.
-- Live tile style selector sheet (Voyager, Dark, Positron, OSM Mapnik).
+- Live tile style selector sheet (Relevo / Topo, Satélite).
 
 ### Tree Registration & Community Logs
 - Quick-add modal for pinpointing new fruit trees with custom metadata.
@@ -112,8 +112,12 @@ app/src/main/java/com/felipelaurindo/mamaocomacucar/
 │       └── UserBadge.kt           # User badge ranks & contribution logic
 ├── ui/
 │   ├── auth/
+│   │   ├── AuthViewModel.kt       # Auth state management (Email, Google Sign-In, Password Reset)
 │   │   ├── LoginScreen.kt         # Firebase authentication screen
-│   │   └── RegisterScreen.kt      # User registration screen
+│   │   ├── RegisterScreen.kt      # User registration screen
+│   │   └── components/
+│   │       ├── ForgotPasswordDialog.kt # Password reset dialog with validation
+│   │       └── GoogleSignInButton.kt   # Credential Manager Google Sign-In button
 │   ├── map/
 │   │   ├── MapScreen.kt           # Main map screen with OSMDroid overlays & FAB controls
 │   │   ├── MapViewModel.kt        # Map state management & location handling
@@ -124,7 +128,7 @@ app/src/main/java/com/felipelaurindo/mamaocomacucar/
 │   │       └── ToastOverlay.kt    # Native animated notification overlay
 │   ├── settings/
 │   │   ├── AccountSettingsSheet.kt # User profile, stats & badge display
-│   │   └── AppSettingsSheet.kt    # Map tile style selection sheet
+│   │   └── AppSettingsSheet.kt    # Map tile style selection sheet (Relevo, Satélite)
 │   └── theme/
 │       ├── Color.kt               # Color tokens (MamaoOrange, MamaoGreen, Stone palette)
 │       ├── Theme.kt               # Material Design 3 theme wrapper
