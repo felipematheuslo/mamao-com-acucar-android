@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Catch-all default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+    
+    // --- USER SCHEMAS & HELPERS ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'email', 'displayName', 'username', 'createdAt'])
+        && data.keys().size() == 5
+        && data.id is string && data.id.size() <= 128
+        && data.email is string && data.email.size() <= 256
+        && data.displayName is string && data.displayName.size() <= 100
+        && data.username is string && data.username.size() <= 100 && data.username.matches('^[a-z0-9_.-]+$')
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    match /users/{userId} {
+      allow get: if true;
+      allow create: if isSignedIn() && userId == request.auth.uid && isValidId(userId) && isValidUser(incoming());
+      allow update: if isSignedIn() && userId == request.auth.uid && isValidId(userId) && isValidUser(incoming())
+        && incoming().id == existing().id 
+        && incoming().email == existing().email 
+        && incoming().createdAt == existing().createdAt;
+      allow delete: if isSignedIn() && userId == request.auth.uid;
+    }
+
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if isSignedIn() && incoming().uid == request.auth.uid && username.matches('^[a-z0-9_.-]+$');
+      allow delete: if isSignedIn() && (resource == null || existing().uid == request.auth.uid);
+      allow update: if false;
+    }
+
+    // --- TREE SCHEMAS & HELPERS ---
+    function isValidTree(data) {
+      return data.keys().hasAll(['createdBy', 'createdByName', 'species', 'name', 'latitude', 'longitude', 'currentStatus', 'createdAt'])
+        && (data.keys().size() == 8 || (data.keys().size() == 9 && data.keys().hasAll(['mainImage'])))
+        && data.createdBy is string && data.createdBy.size() <= 128
+        && data.createdByName is string && data.createdByName.size() <= 100
+        && data.species is string && data.species.size() <= 100
+        && data.name is string && data.name.size() <= 150
+        && data.latitude is number && data.longitude is number
+        && data.currentStatus in ['florindo', 'crescendo', 'pronto', 'vazio']
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    match /trees/{treeId} {
+      allow read, list: if true; // Any visitor can view nearby trees
+      allow create: if isSignedIn() && isValidId(treeId) && isValidTree(incoming()) && incoming().createdBy == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(treeId) && isValidTree(incoming())
+        && incoming().createdBy == existing().createdBy // Creator is immutable
+        && incoming().createdAt == existing().createdAt // Date is immutable
+        && (
+          // Action 1: Creator updating their own tree details
+          (incoming().createdBy == request.auth.uid) ||
+          // Action 2: Regular community member only updating the ripening status of the fruits
+          (incoming().diff(existing()).affectedKeys().hasOnly(['currentStatus']))
+        );
+      allow delete: if isSignedIn() && existing().createdBy == request.auth.uid;
+    }
+
+    // --- UPDATES/REPORTS SCHEMAS & HELPERS ---
+    function isValidUpdate(data) {
+      return data.keys().hasAll(['treeId', 'createdBy', 'createdByName', 'comment', 'statusAtReport', 'createdAt'])
+        && data.keys().size() == 6
+        && data.treeId is string && data.treeId.size() <= 128
+        && data.createdBy is string && data.createdBy.size() <= 128
+        && data.createdByName is string && data.createdByName.size() <= 100
+        && data.comment is string && data.comment.size() <= 1000
+        && data.statusAtReport in ['florindo', 'crescendo', 'pronto', 'vazio']
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    match /updates/{updateId} {
+      allow read, list: if true; // Feed is public
+      allow create: if isSignedIn() && isValidId(updateId) && isValidUpdate(incoming())
+        && incoming().createdBy == request.auth.uid
+        && exists(/databases/$(database)/documents/trees/$(incoming().treeId)); // Atomic verification that the fruit tree exists!
+      allow delete: if isSignedIn() && existing().createdBy == request.auth.uid;
+      allow update: if false;
+    }
+  }
+}
