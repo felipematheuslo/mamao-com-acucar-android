@@ -23,8 +23,8 @@ fun AppSettingsSheet(
     onDismiss: () -> Unit
 ) {
     val mapStyles = listOf(
-        MapStyleOption("osm", "OSM Clássico", "🗺️"),
-        MapStyleOption("satellite", "Satélite Real", "🛰️")
+        MapStyleOption("topo", "Padrão", "⛰️"),
+        MapStyleOption("satellite", "Satélite", "🛰️")
     )
 
     Box(

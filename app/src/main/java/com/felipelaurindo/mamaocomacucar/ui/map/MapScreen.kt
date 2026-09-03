@@ -156,6 +156,24 @@ private fun getEsriSatellite() = object : OnlineTileSourceBase(
     }
 }
 
+// Fonte de mapa Topográfico / Relevo (Esri World Topo Map - relevo suave, clean e sem marca d'água)
+private fun getEsriTopo() = object : OnlineTileSourceBase(
+    "EsriTopo", 0, 19, 256, ".jpg",
+    arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/")
+) {
+    override fun getTileURLString(pMapTileIndex: Long): String {
+        return baseUrl +
+                MapTileIndex.getZoom(pMapTileIndex) + "/" +
+                MapTileIndex.getY(pMapTileIndex) + "/" +
+                MapTileIndex.getX(pMapTileIndex)
+    }
+}
+
+private fun getTileSourceForStyle(style: String): org.osmdroid.tileprovider.tilesource.ITileSource = when (style) {
+    "satellite" -> getEsriSatellite()
+    else -> getEsriTopo()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
@@ -173,7 +191,9 @@ fun MapScreen(
     val isAddingTree by mapViewModel.isAddingTree.collectAsState()
     val creatorUsernames by mapViewModel.creatorUsernames.collectAsState()
 
-    var mapStyle by remember { mutableStateOf("osm") }
+    val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+    val savedStyle = prefs.getString("map_style", "topo")
+    var mapStyle by remember { mutableStateOf(if (savedStyle == "satellite") "satellite" else "topo") }
     var mapOrientation by remember { mutableFloatStateOf(0f) }
     var isTreeDetailOpen by remember { mutableStateOf(false) }
     var isTreeListOpen by remember { mutableStateOf(false) }
@@ -247,7 +267,7 @@ fun MapScreen(
                     zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
                     controller.setZoom(15.0)
                     controller.setCenter(GeoPoint(mapCenter.first, mapCenter.second))
-                    setTileSource(TileSourceFactory.MAPNIK)
+                    setTileSource(getTileSourceForStyle(mapStyle))
 
                     // Overlay de rotação persistente com ativação por ângulo e rastreamento contínuo
                     val rotationOverlay = ThresholdRotationGestureOverlay(
@@ -296,7 +316,7 @@ fun MapScreen(
                 }
 
                 // Update tile source based on style
-                val tileSource = if (mapStyle == "satellite") getEsriSatellite() else TileSourceFactory.MAPNIK
+                val tileSource = getTileSourceForStyle(mapStyle)
                 if (mapView.tileProvider.tileSource.name() != tileSource.name()) {
                     mapView.setTileSource(tileSource)
                 }
@@ -671,7 +691,10 @@ fun MapScreen(
         if (isAppSettingsOpen) {
             AppSettingsSheet(
                 currentMapStyle = mapStyle,
-                onMapStyleChange = { mapStyle = it },
+                onMapStyleChange = { newStyle ->
+                    mapStyle = newStyle
+                    prefs.edit().putString("map_style", newStyle).apply()
+                },
                 onShowToast = { mapViewModel.showToast(it) },
                 onDismiss = { isAppSettingsOpen = false }
             )
