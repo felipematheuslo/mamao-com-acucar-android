@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.felipelaurindo.mamaocomacucar.ui.auth.components.GoogleSignInButton
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.normalizeUsername
 
@@ -37,6 +39,7 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit
 ) {
     val isSubmitting by authViewModel.isSubmitting.collectAsState()
+    val isSubmittingGoogle by authViewModel.isSubmittingGoogle.collectAsState()
     val registerError by authViewModel.registerError.collectAsState()
     val registrationComplete by authViewModel.registrationComplete.collectAsState()
 
@@ -47,6 +50,7 @@ fun RegisterScreen(
     var showPassword by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
 
     // Reset state when navigating away
     DisposableEffect(Unit) {
@@ -333,7 +337,7 @@ fun RegisterScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    enabled = !isSubmitting && displayName.isNotBlank() &&
+                    enabled = !isSubmitting && !isSubmittingGoogle && displayName.isNotBlank() &&
                             username.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -358,6 +362,38 @@ fun RegisterScreen(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Or divider
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Stone200)
+                    Text(
+                        text = "OU",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        ),
+                        color = Stone400,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Stone200)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Google Sign In button
+                GoogleSignInButton(
+                    onClick = { authViewModel.loginWithGoogle(context) },
+                    isLoading = isSubmittingGoogle,
+                    enabled = !isSubmitting && !isSubmittingGoogle,
+                    text = "Cadastrar com o Google"
+                )
 
                 Spacer(modifier = Modifier.weight(1f))
 

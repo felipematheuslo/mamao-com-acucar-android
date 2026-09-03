@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -29,6 +30,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.felipelaurindo.mamaocomacucar.R
+import com.felipelaurindo.mamaocomacucar.ui.auth.components.ForgotPasswordDialog
+import com.felipelaurindo.mamaocomacucar.ui.auth.components.GoogleSignInButton
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 
 @Composable
@@ -37,15 +40,22 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit
 ) {
     val isSubmitting by authViewModel.isSubmitting.collectAsState()
+    val isSubmittingGoogle by authViewModel.isSubmittingGoogle.collectAsState()
     val loginError by authViewModel.loginError.collectAsState()
     val showVerificationSent by authViewModel.showVerificationSent.collectAsState()
     val resendSuccess by authViewModel.resendSuccess.collectAsState()
+
+    val isSendingPasswordReset by authViewModel.isSendingPasswordReset.collectAsState()
+    val passwordResetError by authViewModel.passwordResetError.collectAsState()
+    val passwordResetSuccess by authViewModel.passwordResetSuccess.collectAsState()
+    var showForgotPasswordDialog by remember { mutableStateOf(false) }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -226,7 +236,36 @@ fun LoginScreen(
                 )
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Links: Criar conta & Esqueceu a senha?
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Criar conta",
+                    modifier = Modifier.clickable(onClick = onNavigateToRegister),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MamaoOrange
+                )
+                Text(
+                    text = "Esqueceu a senha?",
+                    modifier = Modifier.clickable {
+                        authViewModel.clearPasswordResetState()
+                        showForgotPasswordDialog = true
+                    },
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MamaoOrange
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Login Button — full width, prominent
             Button(
@@ -234,7 +273,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                enabled = !isSubmitting && email.isNotBlank() && password.isNotBlank(),
+                enabled = !isSubmitting && !isSubmittingGoogle && email.isNotBlank() && password.isNotBlank(),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MamaoOrange,
@@ -259,36 +298,53 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Divider + bottom register link, pinned to bottom
-            HorizontalDivider(
-                modifier = Modifier.padding(bottom = 16.dp),
-                color = Stone100
-            )
-
+            // Or divider
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.Center,
+                    .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Stone200)
                 Text(
-                    "Ainda não tem uma conta? ",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Stone500
-                )
-                Text(
-                    "CRIAR CONTA",
-                    modifier = Modifier.clickable(onClick = onNavigateToRegister),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = FontWeight.ExtraBold
+                    text = "OU",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     ),
-                    color = MamaoOrange
+                    color = Stone400,
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Stone200)
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Google Sign In button
+            GoogleSignInButton(
+                onClick = { authViewModel.loginWithGoogle(context) },
+                isLoading = isSubmittingGoogle,
+                enabled = !isSubmitting && !isSubmittingGoogle,
+                text = "Entrar com o Google"
+            )
+
+            Spacer(modifier = Modifier.navigationBarsPadding().height(32.dp))
+        }
+
+        if (showForgotPasswordDialog) {
+            ForgotPasswordDialog(
+                initialEmailOrUsername = email,
+                isLoading = isSendingPasswordReset,
+                errorMessage = passwordResetError,
+                isSuccess = passwordResetSuccess,
+                onSendReset = { authViewModel.sendPasswordResetEmail(it) },
+                onDismiss = {
+                    showForgotPasswordDialog = false
+                    authViewModel.clearPasswordResetState()
+                }
+            )
         }
     }
 }

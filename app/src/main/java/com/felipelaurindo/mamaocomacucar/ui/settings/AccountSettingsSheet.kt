@@ -51,6 +51,11 @@ fun AccountSettingsSheet(
     var deletePassword by remember { mutableStateOf("") }
     var isDeletingProfile by remember { mutableStateOf(false) }
 
+    val isPasswordUser = remember {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.providerData?.any { it.providerId == "password" } ?: true
+    }
+
     val nextBadgeInfo = remember(userTreeCount) {
         when {
             userTreeCount == 0 -> NextBadgeInfo("BROTINHO", "🌿", targetCount = 1, currentCount = 0, progress = 0f)
@@ -603,23 +608,38 @@ fun AccountSettingsSheet(
                                     color = Rose700
                                 )
 
-                                OutlinedTextField(
-                                    value = deletePassword,
-                                    onValueChange = { deletePassword = it },
-                                    label = { Text("Digite sua senha atual para confirmar") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    visualTransformation = PasswordVisualTransformation(),
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedTextColor = Stone900,
-                                        unfocusedTextColor = Stone900,
-                                        focusedBorderColor = Rose600,
-                                        unfocusedBorderColor = Rose200,
-                                        focusedLabelColor = Rose600,
-                                        cursorColor = Rose600
+                                if (isPasswordUser) {
+                                    OutlinedTextField(
+                                        value = deletePassword,
+                                        onValueChange = { deletePassword = it },
+                                        label = { Text("Digite sua senha atual para confirmar") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        visualTransformation = PasswordVisualTransformation(),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedTextColor = Stone900,
+                                            unfocusedTextColor = Stone900,
+                                            focusedBorderColor = Rose600,
+                                            unfocusedBorderColor = Rose200,
+                                            focusedLabelColor = Rose600,
+                                            cursorColor = Rose600
+                                        )
                                     )
-                                )
+                                } else {
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Stone100,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            "Sua conta está conectada através do Google. Clique abaixo para confirmar a exclusão.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Stone600,
+                                            modifier = Modifier.padding(12.dp)
+                                        )
+                                    }
+                                }
 
                                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     OutlinedButton(
@@ -640,9 +660,11 @@ fun AccountSettingsSheet(
                                                     val auth = FirebaseAuth.getInstance()
                                                     val firebaseUser = auth.currentUser ?: return@launch
 
-                                                    // Re-authenticate
-                                                    val credential = EmailAuthProvider.getCredential(firebaseUser.email!!, deletePassword)
-                                                    firebaseUser.reauthenticate(credential).await()
+                                                    // Re-authenticate only if using password provider
+                                                    if (isPasswordUser) {
+                                                        val credential = EmailAuthProvider.getCredential(firebaseUser.email!!, deletePassword)
+                                                        firebaseUser.reauthenticate(credential).await()
+                                                    }
 
                                                     // Delete from Firestore
                                                     repository.deleteUserProfile(currentUser.uid, currentUser.username)
@@ -655,6 +677,8 @@ fun AccountSettingsSheet(
                                                     val msg = when {
                                                         e.message?.contains("wrong-password") == true ||
                                                         e.message?.contains("invalid-credential") == true -> "Senha incorreta."
+                                                        e.message?.contains("requires-recent-login") == true ->
+                                                            "Por segurança, faça login novamente com o Google antes de excluir sua conta."
                                                         else -> "Não foi possível excluir a conta."
                                                     }
                                                     profileError = msg
@@ -671,7 +695,7 @@ fun AccountSettingsSheet(
                                             containerColor = Rose600,
                                             contentColor = Color.White
                                         ),
-                                        enabled = !isDeletingProfile && deletePassword.isNotBlank()
+                                        enabled = !isDeletingProfile && (!isPasswordUser || deletePassword.isNotBlank())
                                     ) {
                                         if (isDeletingProfile) {
                                             CircularProgressIndicator(
