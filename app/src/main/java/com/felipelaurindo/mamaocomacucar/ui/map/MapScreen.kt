@@ -143,35 +143,39 @@ private class ThresholdRotationGestureOverlay(
     }
 }
 
-// Fonte de mapa de Satélite (Esri World Imagery)
-private fun getEsriSatellite() = object : OnlineTileSourceBase(
-    "EsriSatellite", 0, 18, 256, ".jpg",
-    arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/")
-) {
-    override fun getTileURLString(pMapTileIndex: Long): String {
-        return baseUrl +
-                MapTileIndex.getZoom(pMapTileIndex) + "/" +
-                MapTileIndex.getY(pMapTileIndex) + "/" +
-                MapTileIndex.getX(pMapTileIndex)
+// Fonte de mapa de Satélite (Esri World Imagery) com decodificação otimizada e RGB_565
+private val esriSatelliteSource: OnlineTileSourceBase by lazy {
+    object : OptimizedOnlineTileSource(
+        "EsriSatellite", 0, 18, 256, ".jpg",
+        arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/")
+    ) {
+        override fun getTileURLString(pMapTileIndex: Long): String {
+            return baseUrl +
+                    MapTileIndex.getZoom(pMapTileIndex) + "/" +
+                    MapTileIndex.getY(pMapTileIndex) + "/" +
+                    MapTileIndex.getX(pMapTileIndex)
+        }
     }
 }
 
-// Fonte de mapa Topográfico / Relevo (Esri World Topo Map - relevo suave, clean e sem marca d'água)
-private fun getEsriTopo() = object : OnlineTileSourceBase(
-    "EsriTopo", 0, 19, 256, ".jpg",
-    arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/")
-) {
-    override fun getTileURLString(pMapTileIndex: Long): String {
-        return baseUrl +
-                MapTileIndex.getZoom(pMapTileIndex) + "/" +
-                MapTileIndex.getY(pMapTileIndex) + "/" +
-                MapTileIndex.getX(pMapTileIndex)
+// Fonte de mapa Topográfico / Relevo (Esri World Topo Map) com decodificação otimizada e RGB_565
+private val esriTopoSource: OnlineTileSourceBase by lazy {
+    object : OptimizedOnlineTileSource(
+        "EsriTopo", 0, 19, 256, ".jpg",
+        arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/")
+    ) {
+        override fun getTileURLString(pMapTileIndex: Long): String {
+            return baseUrl +
+                    MapTileIndex.getZoom(pMapTileIndex) + "/" +
+                    MapTileIndex.getY(pMapTileIndex) + "/" +
+                    MapTileIndex.getX(pMapTileIndex)
+        }
     }
 }
 
 private fun getTileSourceForStyle(style: String): org.osmdroid.tileprovider.tilesource.ITileSource = when (style) {
-    "satellite" -> getEsriSatellite()
-    else -> getEsriTopo()
+    "satellite" -> esriSatelliteSource
+    else -> esriTopoSource
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
