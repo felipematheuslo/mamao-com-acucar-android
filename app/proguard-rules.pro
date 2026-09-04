@@ -20,3 +20,11 @@
 # OSMDroid (OpenStreetMap)
 -keep class org.osmdroid.** { *; }
 -dontwarn org.osmdroid.**
+
+# Google Mobile Ads (AdMob)
+-keep public class com.google.android.gms.ads.** {
+    public *;
+}
+-keep class com.google.ads.** {
+    public *;
+}

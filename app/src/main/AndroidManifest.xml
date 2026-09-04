@@ -17,6 +17,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MamãoComAçúcar"
         android:usesCleartextTraffic="true">
+
+        <!-- Google AdMob App ID -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="@string/admob_app_id" />
+
+        <!-- Resolução de conflito entre AdMob e Firebase Analytics no Android 14+ -->
+        <property
+            android:name="android.adservices.AD_SERVICES_CONFIG"
+            android:resource="@xml/gma_ad_services_config"
+            tools:replace="android:resource" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -34,6 +34,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
 import com.felipelaurindo.mamaocomacucar.data.model.TreeStatus
+import com.felipelaurindo.mamaocomacucar.ui.components.AdMobBanner
 import com.felipelaurindo.mamaocomacucar.ui.map.components.*
 import com.felipelaurindo.mamaocomacucar.ui.settings.AccountSettingsSheet
 import com.felipelaurindo.mamaocomacucar.ui.settings.AppSettingsSheet
@@ -219,8 +220,15 @@ fun MapScreen(
 
     val mapViewRef = remember { mutableStateOf<MapView?>(null) }
 
+    val isAnySheetOrDialogActive = isTreeListOpen || isTreeDetailOpen || isAddingTree || isAddDialogOpen || isAccountSettingsOpen || isAppSettingsOpen
+    val isBannerVisible = !isAnySheetOrDialogActive && previewTree == null
+
     val bottomOffset by animateDpAsState(
-        targetValue = if (isAddingTree) 248.dp else 80.dp,
+        targetValue = when {
+            isAddingTree -> 248.dp
+            previewTree != null -> 230.dp
+            else -> 144.dp
+        },
         label = "bottomOffset"
     )
 
@@ -608,6 +616,34 @@ fun MapScreen(
             }
         }
 
+        // ---- Floating AdMob Banner (Entre a barra inferior e o botão de GPS) ----
+        AnimatedVisibility(
+            visible = isBannerVisible,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 80.dp)
+                .navigationBarsPadding(),
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White,
+                shadowElevation = 6.dp,
+                border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
+                    width = 1.dp,
+                    brush = androidx.compose.ui.graphics.SolidColor(Stone200)
+                )
+            ) {
+                AdMobBanner(
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
         // ---- Bottom Navigation ----
         Surface(
             modifier = Modifier
@@ -705,7 +741,6 @@ fun MapScreen(
         }
 
         // ---- Tree Quick Preview Card ----
-        val isAnySheetOrDialogActive = isTreeListOpen || isTreeDetailOpen || isAddingTree || isAddDialogOpen || isAccountSettingsOpen || isAppSettingsOpen
         if (previewTree != null && !isAnySheetOrDialogActive) {
             val previewCreatorUsername = mapViewModel.getCreatorUsername(previewTree!!.createdBy, previewTree!!.createdByName)
             Box(

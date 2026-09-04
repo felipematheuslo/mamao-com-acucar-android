@@ -69,6 +69,9 @@ dependencies {
     // osmdroid (OpenStreetMap nativo)
     implementation("org.osmdroid:osmdroid-android:6.1.20")
 
+    // Google Mobile Ads (AdMob)
+    implementation("com.google.android.gms:play-services-ads:23.6.0")
+
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.9.0")
 
