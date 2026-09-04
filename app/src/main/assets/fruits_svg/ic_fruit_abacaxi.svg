@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Body -->
-  <ellipse cx="32" cy="40" rx="18" ry="20" fill="#F59E0B" stroke="#D97706" stroke-width="2"/>
-  <!-- Diamond grid lines -->
-  <path d="M20 28 L44 52 M20 52 L44 28 M16 40 L48 40 M32 20 L32 60" stroke="#B45309" stroke-width="1.5"/>
-  <!-- Crown/Leaves -->
-  <path d="M32 22 L24 4 L30 18 L32 2 L34 18 L40 4 L32 22 Z" fill="#16A34A" stroke="#14532D" stroke-width="1.5"/>
-  <path d="M32 22 L18 10 L26 20 L46 10 L38 20 Z" fill="#22C55E"/>
-</svg>

@@ -112,6 +112,11 @@ fun TreeListSheet(
                             mapViewModel.setSearchQuery(query)
                         },
                         modifier = Modifier.fillMaxWidth(),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(
+                            color = Stone950,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp
+                        ),
                         placeholder = { Text("Buscar por fruta, espécie, bairro ou endereço...", color = Stone400, fontSize = 13.sp) },
                         leadingIcon = { Icon(Icons.Outlined.Search, null, tint = MamaoOrange) },
                         trailingIcon = {
@@ -134,6 +139,9 @@ fun TreeListSheet(
                         singleLine = true,
                         shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Stone950,
+                            unfocusedTextColor = Stone950,
+                            cursorColor = MamaoOrange,
                             focusedBorderColor = MamaoOrange,
                             unfocusedBorderColor = Stone200,
                             focusedContainerColor = Stone50,

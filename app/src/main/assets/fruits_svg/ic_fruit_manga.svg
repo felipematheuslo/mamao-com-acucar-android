@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <path d="M30 10 C16 10 10 24 12 40 C14 54 26 60 38 58 C50 56 54 42 50 26 C46 14 38 10 30 10 Z" fill="#F59E0B" stroke="#D97706" stroke-width="2"/>
-  <path d="M30 10 C38 10 46 14 50 26 C54 42 50 56 38 58 C44 48 44 32 40 22 C36 14 32 11 30 10 Z" fill="#EF4444"/>
-  <path d="M30 10 C20 10 14 20 13 32 C12 44 20 54 30 56 C22 46 20 30 26 18 C28 14 29 11 30 10 Z" fill="#10B981"/>
-  <!-- Stem & Leaf -->
-  <path d="M30 10 L30 4" stroke="#15803D" stroke-width="3" stroke-linecap="round"/>
-  <path d="M30 7 C22 3 20 9 24 11 Z" fill="#22C55E"/>
-</svg>

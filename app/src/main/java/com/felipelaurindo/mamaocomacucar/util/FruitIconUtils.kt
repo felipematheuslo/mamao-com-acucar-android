@@ -2,52 +2,91 @@ package com.felipelaurindo.mamaocomacucar.util
 
 import androidx.annotation.DrawableRes
 import com.felipelaurindo.mamaocomacucar.R
+import java.text.Normalizer
+
+private fun normalizeFruitName(species: String): String {
+    val noAccents = Normalizer.normalize(species, Normalizer.Form.NFD)
+        .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+    return noAccents.lowercase().trim().replace("-", "_")
+}
 
 /**
  * Returns the Android VectorDrawable resource ID corresponding to a fruit species name.
- * Fallbacks to R.drawable.ic_fruit_default_fruta if not explicitly mapped.
+ * Every species in ALLOWED_FRUITS has its own dedicated, faithful vector drawable.
  */
 @DrawableRes
 fun getFruitDrawableRes(species: String): Int {
-    val normalized = species.lowercase().trim()
+    val norm = normalizeFruitName(species)
     return when {
-        normalized.contains("mamão") || normalized.contains("mamao") -> R.drawable.ic_fruit_mamao
-        normalized.contains("pitanga") -> R.drawable.ic_fruit_pitanga
-        normalized.contains("amora") -> R.drawable.ic_fruit_amora
-        normalized.contains("caju") || normalized.contains("cajá") || normalized.contains("ciriguela") || normalized.contains("seriguela") -> R.drawable.ic_fruit_caju
-        normalized.contains("goiaba") || normalized.contains("araçá") || normalized.contains("cambuci") -> R.drawable.ic_fruit_goiaba
-        normalized.contains("manga") -> R.drawable.ic_fruit_manga
-        normalized.contains("jabuticaba") || normalized.contains("grumixama") || normalized.contains("jambolão") -> R.drawable.ic_fruit_jabuticaba
-        normalized.contains("banana") -> R.drawable.ic_fruit_banana
-        normalized.contains("abacaxi") -> R.drawable.ic_fruit_abacaxi
-        normalized.contains("açaí") || normalized.contains("acai") || normalized.contains("carnaúba") -> R.drawable.ic_fruit_acai
-        normalized.contains("maracujá") || normalized.contains("maracuja") -> R.drawable.ic_fruit_maracuja
-        normalized.contains("coco") || normalized.contains("buriti") -> R.drawable.ic_fruit_coco
-        normalized.contains("cacau") || normalized.contains("cupuaçu") || normalized.contains("tamarindo") -> R.drawable.ic_fruit_cacau
-        else -> R.drawable.ic_fruit_default_fruta
+        norm.contains("abacaxi") -> R.drawable.ic_fruit_abacaxi
+        norm.contains("acai") -> R.drawable.ic_fruit_acai
+        norm.contains("acerola") -> R.drawable.ic_fruit_acerola
+        norm.contains("ameixa_da_mata") || norm.contains("ameixa_mata") -> R.drawable.ic_fruit_ameixa_mata
+        norm.contains("ameixa_amarela") -> R.drawable.ic_fruit_ameixa_amarela
+        norm.contains("amora") -> R.drawable.ic_fruit_amora
+        norm.contains("araca") -> R.drawable.ic_fruit_araca
+        norm.contains("araticum") -> R.drawable.ic_fruit_araticum
+        norm.contains("atemoia") -> R.drawable.ic_fruit_atemoia
+        norm.contains("bacuri") -> R.drawable.ic_fruit_bacuri
+        norm.contains("banana") -> R.drawable.ic_fruit_banana
+        norm.contains("biriba") -> R.drawable.ic_fruit_biriba
+        norm.contains("buriti") -> R.drawable.ic_fruit_buriti
+        norm.contains("cacau") -> R.drawable.ic_fruit_cacau
+        norm.contains("cagaita") -> R.drawable.ic_fruit_cagaita
+        norm.contains("cajaiba") -> R.drawable.ic_fruit_cajaiba
+        norm.contains("caja") -> R.drawable.ic_fruit_caja
+        norm.contains("caju") -> R.drawable.ic_fruit_caju
+        norm.contains("camu") -> R.drawable.ic_fruit_camu_camu
+        norm.contains("cambuci") -> R.drawable.ic_fruit_cambuci
+        norm.contains("carambola") -> R.drawable.ic_fruit_carambola
+        norm.contains("carnauba") -> R.drawable.ic_fruit_carnauba
+        norm.contains("cherimoia") -> R.drawable.ic_fruit_cherimoia
+        norm.contains("ciriguela") -> R.drawable.ic_fruit_ciriguela
+        norm.contains("coco") -> R.drawable.ic_fruit_coco
+        norm.contains("cupuacu") -> R.drawable.ic_fruit_cupuacu
+        norm.contains("fruta_pao") -> R.drawable.ic_fruit_fruta_pao
+        norm.contains("fruta_do_conde") || norm.contains("fruta_conde") -> R.drawable.ic_fruit_fruta_conde
+        norm.contains("gabiroba") -> R.drawable.ic_fruit_gabiroba
+        norm.contains("goiaba") -> R.drawable.ic_fruit_goiaba
+        norm.contains("graviola") -> R.drawable.ic_fruit_graviola
+        norm.contains("grumixama") -> R.drawable.ic_fruit_grumixama
+        norm.contains("guarana") -> R.drawable.ic_fruit_guarana
+        norm.contains("jabuticaba") -> R.drawable.ic_fruit_jabuticaba
+        norm.contains("jaca") -> R.drawable.ic_fruit_jaca
+        norm.contains("jambolao") -> R.drawable.ic_fruit_jambolao
+        norm.contains("jambo") -> R.drawable.ic_fruit_jambo
+        norm.contains("jandiroba") -> R.drawable.ic_fruit_jandiroba
+        norm.contains("jaracatia") -> R.drawable.ic_fruit_jaracatia
+        norm.contains("jatoba") -> R.drawable.ic_fruit_jatoba
+        norm.contains("jenipapo") -> R.drawable.ic_fruit_jenipapo
+        norm.contains("jua") -> R.drawable.ic_fruit_jua
+        norm.contains("maba") -> R.drawable.ic_fruit_maba
+        norm.contains("macauba") -> R.drawable.ic_fruit_macauba
+        norm.contains("mamao") -> R.drawable.ic_fruit_mamao
+        norm.contains("mangaba") -> R.drawable.ic_fruit_mangaba
+        norm.contains("manga") -> R.drawable.ic_fruit_manga
+        norm.contains("maracuja") -> R.drawable.ic_fruit_maracuja
+        norm.contains("melancia") -> R.drawable.ic_fruit_melancia
+        norm.contains("melao") -> R.drawable.ic_fruit_melao
+        norm.contains("mexerica") -> R.drawable.ic_fruit_mexerica
+        norm.contains("morango") -> R.drawable.ic_fruit_morango
+        norm.contains("murici") -> R.drawable.ic_fruit_murici
+        norm.contains("nespera") -> R.drawable.ic_fruit_nespera
+        norm.contains("pequi") -> R.drawable.ic_fruit_pequi
+        norm.contains("pinha") -> R.drawable.ic_fruit_pinha
+        norm.contains("pitaia") -> R.drawable.ic_fruit_pitaia
+        norm.contains("pitanga") -> R.drawable.ic_fruit_pitanga
+        norm.contains("pupunha") -> R.drawable.ic_fruit_pupunha
+        norm.contains("sapota") -> R.drawable.ic_fruit_sapota
+        norm.contains("sapoti") -> R.drawable.ic_fruit_sapoti
+        norm.contains("seriguela") -> R.drawable.ic_fruit_seriguela
+        norm.contains("tapereba") -> R.drawable.ic_fruit_tapereba
+        norm.contains("tamarindo") -> R.drawable.ic_fruit_tamarindo
+        norm.contains("tucuma") -> R.drawable.ic_fruit_tucuma
+        norm.contains("uvaia") -> R.drawable.ic_fruit_uvaia
+        norm.contains("uva") -> R.drawable.ic_fruit_uva
+        norm.contains("umbu") -> R.drawable.ic_fruit_umbu
+        else -> R.drawable.ic_fruit_mamao
     }
 }
 
-/**
- * Returns the asset path of the SVG icon for a fruit species.
- */
-fun getFruitSvgPath(species: String): String {
-    val normalized = species.lowercase().trim()
-    val key = when {
-        normalized.contains("mamão") || normalized.contains("mamao") -> "mamao"
-        normalized.contains("pitanga") -> "pitanga"
-        normalized.contains("amora") -> "amora"
-        normalized.contains("caju") || normalized.contains("cajá") || normalized.contains("ciriguela") || normalized.contains("seriguela") -> "caju"
-        normalized.contains("goiaba") || normalized.contains("araçá") || normalized.contains("cambuci") -> "goiaba"
-        normalized.contains("manga") -> "manga"
-        normalized.contains("jabuticaba") || normalized.contains("grumixama") || normalized.contains("jambolão") -> "jabuticaba"
-        normalized.contains("banana") -> "banana"
-        normalized.contains("abacaxi") -> "abacaxi"
-        normalized.contains("açaí") || normalized.contains("acai") || normalized.contains("carnaúba") -> "acai"
-        normalized.contains("maracujá") || normalized.contains("maracuja") -> "maracuja"
-        normalized.contains("coco") || normalized.contains("buriti") -> "coco"
-        normalized.contains("cacau") || normalized.contains("cupuaçu") || normalized.contains("tamarindo") -> "cacau"
-        else -> "default_fruta"
-    }
-    return "fruits_svg/ic_fruit_$key.svg"
-}

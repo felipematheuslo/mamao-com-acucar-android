@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -202,6 +203,7 @@ fun MapScreen(
     var mapOrientation by remember { mutableFloatStateOf(0f) }
     var isTreeDetailOpen by remember { mutableStateOf(false) }
     var isTreeListOpen by remember { mutableStateOf(false) }
+    var isFruitCatalogOpen by remember { mutableStateOf(false) }
     var isAddDialogOpen by remember { mutableStateOf(false) }
     var isAccountSettingsOpen by remember { mutableStateOf(false) }
     var isAppSettingsOpen by remember { mutableStateOf(false) }
@@ -220,7 +222,7 @@ fun MapScreen(
 
     val mapViewRef = remember { mutableStateOf<MapView?>(null) }
 
-    val isAnySheetOrDialogActive = isTreeListOpen || isTreeDetailOpen || isAddingTree || isAddDialogOpen || isAccountSettingsOpen || isAppSettingsOpen
+    val isAnySheetOrDialogActive = isTreeListOpen || isTreeDetailOpen || isFruitCatalogOpen || isAddingTree || isAddDialogOpen || isAccountSettingsOpen || isAppSettingsOpen
     val isBannerVisible = !isAnySheetOrDialogActive && previewTree == null
 
     val bottomOffset by animateDpAsState(
@@ -675,7 +677,7 @@ fun MapScreen(
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .height(64.dp)
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -683,9 +685,10 @@ fun MapScreen(
                 BottomNavItem(
                     icon = Icons.Outlined.Home,
                     label = "Explorar",
-                    selected = !isTreeListOpen && !isAddingTree,
+                    selected = !isTreeListOpen && !isAddingTree && !isFruitCatalogOpen,
                     onClick = {
                         isTreeListOpen = false
+                        isFruitCatalogOpen = false
                         mapViewModel.setIsAddingTree(false)
                         pinCoordinates = null
                     }
@@ -697,6 +700,19 @@ fun MapScreen(
                     selected = isTreeListOpen,
                     onClick = {
                         isTreeListOpen = !isTreeListOpen
+                        isFruitCatalogOpen = false
+                        mapViewModel.setIsAddingTree(false)
+                        pinCoordinates = null
+                    }
+                )
+                // Catálogo
+                BottomNavItem(
+                    icon = Icons.AutoMirrored.Outlined.MenuBook,
+                    label = "Catálogo",
+                    selected = isFruitCatalogOpen,
+                    onClick = {
+                        isFruitCatalogOpen = !isFruitCatalogOpen
+                        isTreeListOpen = false
                         mapViewModel.setIsAddingTree(false)
                         pinCoordinates = null
                     }
@@ -708,6 +724,7 @@ fun MapScreen(
                     selected = isAddingTree,
                     onClick = {
                         isTreeListOpen = false
+                        isFruitCatalogOpen = false
                         val next = !isAddingTree
                         mapViewModel.setIsAddingTree(next)
                         if (next) {
@@ -755,6 +772,19 @@ fun MapScreen(
                 },
                 onShowToast = { mapViewModel.showToast(it) },
                 onDismiss = { isAppSettingsOpen = false }
+            )
+        }
+
+        // ---- Fruit Catalog Sheet ----
+        if (isFruitCatalogOpen) {
+            FruitCatalogSheet(
+                onSearchFruitOnMap = { fruitName ->
+                    mapViewModel.setStatusFilter("todos")
+                    mapViewModel.setSearchQuery(fruitName)
+                    isFruitCatalogOpen = false
+                    isTreeListOpen = true
+                },
+                onDismiss = { isFruitCatalogOpen = false }
             )
         }
 
@@ -810,7 +840,7 @@ private fun BottomNavItem(
         modifier = Modifier.defaultMinSize(minHeight = 48.dp)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
