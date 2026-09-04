@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Mamão com Açúcar</string>
     <!-- AdMob IDs (IDs de teste padrão do Google - substitua pelos IDs de produção no lançamento) -->
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
-    <string name="admob_banner_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="admob_app_id">ca-app-pub-7364145551999763~5047496820</string>
+    <string name="admob_banner_unit_id">ca-app-pub-7364145551999763/8595859597</string>
 </resources>

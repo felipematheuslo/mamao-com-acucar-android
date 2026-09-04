@@ -1,10 +1,12 @@
 package com.felipelaurindo.mamaocomacucar.ui.settings
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
@@ -85,17 +87,17 @@ fun AccountSettingsSheet(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .clickable(enabled = false, onClick = {}),
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(24.dp),
             color = Color.White,
             shadowElevation = 24.dp
         ) {
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 // Header
                 Row(
@@ -107,7 +109,7 @@ fun AccountSettingsSheet(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("👤", fontSize = 22.sp)
+                        Text("👤", fontSize = 20.sp)
                         Text(
                             "Configurações do Perfil",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -129,49 +131,58 @@ fun AccountSettingsSheet(
                     }
                 }
 
-                // Profile Card Header
+                // Profile Card Header (compacto e elegante)
                 Surface(
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = MamaoOrangeLight,
                     border = BorderStroke(1.dp, MamaoOrangeContainer),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Surface(
                             shape = CircleShape,
                             color = MamaoOrange,
-                            modifier = Modifier.size(52.dp),
-                            shadowElevation = 4.dp
+                            modifier = Modifier.size(44.dp),
+                            shadowElevation = 2.dp
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = userInitial,
                                     color = Color.White,
-                                    fontSize = 22.sp,
+                                    fontSize = 18.sp,
                                     fontWeight = FontWeight.Black
                                 )
                             }
                         }
 
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(1.dp)
+                        ) {
                             Text(
                                 text = currentUser.displayName.ifBlank { "Membro da Comunidade" },
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = Stone900
+                                color = Stone900,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "@${currentUser.username}",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                                color = MamaoOrange
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                color = MamaoOrange,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = currentUser.email,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Stone500
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                color = Stone500,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -180,11 +191,14 @@ fun AccountSettingsSheet(
                 HorizontalDivider(color = Stone200)
 
                 // Form Section
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                val isFormChanged = tempDisplayName.trim() != currentUser.displayName || tempUsername.trim() != currentUser.username
+                val isFormValid = tempDisplayName.isNotBlank() && tempUsername.isNotBlank()
+
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        "SEUS DADOS DE PERFIL",
+                        "DADOS DO PERFIL",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 1.5.sp,
+                            letterSpacing = 1.2.sp,
                             fontWeight = FontWeight.Bold
                         ),
                         color = Stone400
@@ -201,7 +215,7 @@ fun AccountSettingsSheet(
                         label = { Text("Nome de exibição") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Stone900,
                             unfocusedTextColor = Stone900,
@@ -234,7 +248,7 @@ fun AccountSettingsSheet(
                             )
                         },
                         singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = MamaoOrange,
                             unfocusedTextColor = MamaoOrange,
@@ -248,86 +262,68 @@ fun AccountSettingsSheet(
                         )
                     )
 
-                    // Email (disabled)
-                    OutlinedTextField(
-                        value = currentUser.email,
-                        onValueChange = {},
-                        label = { Text("E-mail cadastrado") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = false,
-                        singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = Stone700,
-                            disabledBorderColor = Stone200,
-                            disabledContainerColor = Stone100,
-                            disabledLabelColor = Stone400
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    // Save Button
-                    val isFormChanged = tempDisplayName.trim() != currentUser.displayName || tempUsername.trim() != currentUser.username
-                    val isFormValid = tempDisplayName.isNotBlank() && tempUsername.isNotBlank()
-
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                isSavingProfile = true
-                                profileError = ""
-                                isProfileUpdated = false
-
-                                try {
-                                    val newUsername = tempUsername.trim()
-                                    if (newUsername != currentUser.username) {
-                                        val isUnique = repository.checkUsernameUnique(newUsername)
-                                        if (!isUnique) {
-                                            profileError = "Este nome de usuário já está em uso por outro membro."
-                                            isSavingProfile = false
-                                            return@launch
-                                        }
-                                    }
-
-                                    repository.updateUsername(
-                                        uid = currentUser.uid,
-                                        oldUsername = currentUser.username,
-                                        newUsername = newUsername,
-                                        email = currentUser.email,
-                                        displayName = tempDisplayName.trim()
-                                    )
-
-                                    isProfileUpdated = true
-                                } catch (e: Exception) {
-                                    profileError = "Não foi possível salvar as alterações do perfil."
-                                } finally {
-                                    isSavingProfile = false
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        enabled = !isSavingProfile && isFormChanged && isFormValid,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MamaoOrange,
-                            contentColor = Color.White,
-                            disabledContainerColor = Stone100,
-                            disabledContentColor = Stone400
-                        )
+                    // Save Button - surge quando houver alteração
+                    AnimatedVisibility(
+                        visible = isFormChanged,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
                     ) {
-                        if (isSavingProfile) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    isSavingProfile = true
+                                    profileError = ""
+                                    isProfileUpdated = false
+
+                                    try {
+                                        val newUsername = tempUsername.trim()
+                                        if (newUsername != currentUser.username) {
+                                            val isUnique = repository.checkUsernameUnique(newUsername)
+                                            if (!isUnique) {
+                                                profileError = "Este nome de usuário já está em uso por outro membro."
+                                                isSavingProfile = false
+                                                return@launch
+                                            }
+                                        }
+
+                                        repository.updateUsername(
+                                            uid = currentUser.uid,
+                                            oldUsername = currentUser.username,
+                                            newUsername = newUsername,
+                                            email = currentUser.email,
+                                            displayName = tempDisplayName.trim()
+                                        )
+
+                                        isProfileUpdated = true
+                                    } catch (e: Exception) {
+                                        profileError = "Não foi possível salvar as alterações do perfil."
+                                    } finally {
+                                        isSavingProfile = false
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp),
+                            enabled = !isSavingProfile && isFormValid,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MamaoOrange,
+                                contentColor = Color.White
                             )
-                        } else {
-                            Text(
-                                "Salvar Alterações",
-                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                            )
+                        ) {
+                            if (isSavingProfile) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    "Salvar Alterações",
+                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
                         }
                     }
 
@@ -366,152 +362,86 @@ fun AccountSettingsSheet(
 
                 HorizontalDivider(color = Stone200)
 
-                // Stats & Gamification Section
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                // Stats & Gamification Section (Card unificado e harmonioso)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        "SEU PROGRESSO E CONQUISTAS",
+                        "PROGRESSO E NÍVEL",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 1.5.sp,
+                            letterSpacing = 1.2.sp,
                             fontWeight = FontWeight.Bold
                         ),
                         color = Stone400
                     )
 
-                    // Stats Row
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Surface(
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(18.dp),
-                            color = Stone50,
-                            border = BorderStroke(1.dp, Stone200)
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text(
-                                    "ÁRVORES MAPEADAS",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
-                                    color = Stone400
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Row(
-                                    verticalAlignment = Alignment.Bottom,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        "$userTreeCount",
-                                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
-                                        color = Stone900
-                                    )
-                                    Text(
-                                        if (userTreeCount == 1) "árvore" else "árvores",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = Stone500,
-                                        modifier = Modifier.padding(bottom = 4.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Surface(
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(18.dp),
-                            color = Stone50,
-                            border = BorderStroke(1.dp, Stone200)
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text(
-                                    "NÍVEL DA COMUNIDADE",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
-                                    color = Stone400
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        badge.icon,
-                                        fontSize = 14.sp
-                                    )
-                                    Text(
-                                        badge.title,
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = FontWeight.ExtraBold,
-                                            fontSize = 11.sp
-                                        ),
-                                        color = MamaoOrange,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Badge details card
                     Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = MamaoOrangeLight,
-                        border = BorderStroke(1.dp, MamaoOrangeContainer),
+                        shape = RoundedCornerShape(16.dp),
+                        color = Stone50,
+                        border = BorderStroke(1.dp, Stone200),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
+                            // Linha do Nível Atual
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Surface(
-                                    shape = RoundedCornerShape(14.dp),
-                                    color = MamaoOrangeContainer,
-                                    modifier = Modifier.size(46.dp)
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = MamaoOrangeLight,
+                                    modifier = Modifier.size(44.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        Text(badge.icon, fontSize = 24.sp)
+                                        Text(badge.icon, fontSize = 22.sp)
                                     }
                                 }
+
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        "Nível Atual: ${badge.title}",
+                                        badge.title,
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
-                                        color = Stone900
+                                        color = Stone900,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
-                                        badge.desc,
-                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                                        color = Stone600
+                                        "$userTreeCount ${if (userTreeCount == 1) "fruteira catalogada" else "fruteiras catalogadas"}",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = MamaoOrange,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
                                     )
                                 }
                             }
 
-                            // Progress to next badge
+                            // Barra de Progresso para o Próximo Nível (se houver)
                             if (nextBadgeInfo != null) {
-                                HorizontalDivider(color = MamaoOrangeContainer.copy(alpha = 0.7f))
+                                HorizontalDivider(color = Stone200)
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .padding(end = 8.dp)
+                                        Row(
+                                            modifier = Modifier.weight(1f, fill = false),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                                         ) {
                                             Text(
-                                                "Próximo Nível",
+                                                "Próximo:",
                                                 style = MaterialTheme.typography.labelSmall.copy(
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.SemiBold
-                                                ),
-                                                color = Stone500
+                                                    color = Stone500,
+                                                    fontWeight = FontWeight.Medium
+                                                )
                                             )
                                             Text(
                                                 "${nextBadgeInfo.nextIcon} ${nextBadgeInfo.nextTitle}",
-                                                style = MaterialTheme.typography.labelMedium.copy(
-                                                    fontWeight = FontWeight.ExtraBold,
-                                                    fontSize = 12.sp
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = FontWeight.Bold
                                                 ),
                                                 color = MamaoOrangeDark,
                                                 maxLines = 1,
@@ -519,22 +449,17 @@ fun AccountSettingsSheet(
                                             )
                                         }
 
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = Color.White.copy(alpha = 0.9f),
-                                            border = BorderStroke(1.dp, MamaoOrangeContainer)
-                                        ) {
-                                            Text(
-                                                "$userTreeCount / ${nextBadgeInfo.targetCount}",
-                                                style = MaterialTheme.typography.labelSmall.copy(
-                                                    fontWeight = FontWeight.ExtraBold,
-                                                    fontSize = 11.sp
-                                                ),
-                                                color = MamaoOrangeDark,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                                maxLines = 1
-                                            )
-                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Text(
+                                            "$userTreeCount / ${nextBadgeInfo.targetCount}",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontFamily = FontFamily.Monospace,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp
+                                            ),
+                                            color = Stone600
+                                        )
                                     }
 
                                     LinearProgressIndicator(
@@ -548,51 +473,75 @@ fun AccountSettingsSheet(
                                     )
 
                                     val remaining = nextBadgeInfo.targetCount - userTreeCount
+                                    val countText = if (remaining == 1) "Falta apenas 1 fruteira" else "Faltam apenas $remaining fruteiras"
                                     Text(
-                                        "Faltam apenas $remaining ${if (remaining == 1) "fruteira" else "fruteiras"} para você subir de nível! 🚀",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium),
-                                        color = Stone600
+                                        "$countText para o próximo nível 🚀",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                        color = Stone500
                                     )
                                 }
                             } else {
+                                HorizontalDivider(color = Stone200)
                                 Text(
-                                    "🏆 Parabéns! Você alcançou o nível máximo de contribuição no mapa!",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = MamaoOrangeDark
+                                    "🏆 Você alcançou o nível máximo de contribuição no mapa!",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MamaoOrangeDark
+                                    )
                                 )
                             }
                         }
                     }
                 }
 
-                // Danger Zone
+                // Session / Logout Section
                 HorizontalDivider(color = Stone200)
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        "ZONA DE PERIGO",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 1.5.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Rose600
-                    )
+                OutlinedButton(
+                    onClick = {
+                        onDismiss()
+                        onLogout()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Stone800,
+                        containerColor = Stone50
+                    ),
+                    border = BorderStroke(1.dp, Stone200)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.Logout,
+                            contentDescription = null,
+                            tint = MamaoOrange,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            "Sair da Conta",
+                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                            color = Stone800
+                        )
+                    }
+                }
 
-                    if (!showDeleteConfirm) {
-                        OutlinedButton(
-                            onClick = { showDeleteConfirm = true },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(44.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Rose600),
-                            border = BorderStroke(1.dp, Rose200)
-                        ) {
-                            Text(
-                                "Excluir Minha Conta",
-                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                            )
-                        }
-                    } else {
+                // Danger Zone
+                if (!showDeleteConfirm) {
+                    TextButton(
+                        onClick = { showDeleteConfirm = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "Excluir Minha Conta",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = Rose600
+                        )
+                    }
+                } else {
                         Surface(
                             shape = RoundedCornerShape(18.dp),
                             color = Rose50,
@@ -714,7 +663,6 @@ fun AccountSettingsSheet(
                             }
                         }
                     }
-                }
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }

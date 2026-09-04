@@ -358,58 +358,76 @@ fun MapScreen(
             )
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // User info
-                Text("🍒", fontSize = 20.sp)
-                Spacer(modifier = Modifier.width(12.dp))
+                // User info avatar & name
+                Surface(
+                    shape = CircleShape,
+                    color = Stone100,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(badge.icon, fontSize = 20.sp)
+                    }
+                }
+                Spacer(modifier = Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         currentUser.displayName,
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                         color = Stone900,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                     Text(
                         "@${currentUser.username}",
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium),
                         color = MamaoOrange,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-                // Account settings
-                IconButton(
-                    onClick = { isAccountSettingsOpen = true },
-                    modifier = Modifier.size(36.dp)
+                // Action buttons row
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Outlined.Person, null, tint = Stone700, modifier = Modifier.size(18.dp))
-                }
+                    // Account settings / Profile
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Stone100,
+                        onClick = { isAccountSettingsOpen = true },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Outlined.Person,
+                                contentDescription = "Perfil",
+                                tint = Stone700,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
 
-                // App settings
-                IconButton(
-                    onClick = { isAppSettingsOpen = true },
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(Icons.Outlined.Settings, null, tint = Stone700, modifier = Modifier.size(18.dp))
-                }
-                
-                Spacer(modifier = Modifier.width(4.dp))
-
-                // Logout
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MamaoOrangeLight,
-                    onClick = onLogout,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Outlined.Logout, null, tint = MamaoOrange, modifier = Modifier.size(16.dp))
+                    // App settings
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Stone100,
+                        onClick = { isAppSettingsOpen = true },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Outlined.Settings,
+                                contentDescription = "Configurações",
+                                tint = Stone700,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                     }
                 }
             }
