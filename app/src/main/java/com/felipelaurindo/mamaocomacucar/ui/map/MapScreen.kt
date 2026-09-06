@@ -557,8 +557,16 @@ fun MapScreen(
                     mapViewModel.setMapCenter(tree.latitude, tree.longitude)
                     isTreeListOpen = false
                     isTreeDetailOpen = false
+                    // Limpa a busca para que todos os marcadores voltem ao mapa
+                    mapViewModel.setSearchQuery("")
+                    mapViewModel.setStatusFilter("todos")
                 },
-                onDismiss = { isTreeListOpen = false }
+                onDismiss = {
+                    isTreeListOpen = false
+                    // Limpa a busca para que todos os marcadores voltem ao mapa
+                    mapViewModel.setSearchQuery("")
+                    mapViewModel.setStatusFilter("todos")
+                }
             )
         }
 
