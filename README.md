@@ -1,15 +1,20 @@
 <div align="center">
 
-# Mamão com Açúcar
+# 🥭 Mamão com Açúcar
 
 **A community-driven urban mapping mobile application designed with a focus on UI/UX engineering, real-time synchronization, and local food sustainability.**
 
+[![Google Play](https://img.shields.io/badge/Google_Play-Live_on_Store-34A853?style=for-the-badge&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.felipelaurindo.mamaocomacucar)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0%2B-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%26%20Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![OpenStreetMap](https://img.shields.io/badge/OpenStreetMap-OSMDroid-7EBC6F?style=for-the-badge&logo=openstreetmap&logoColor=white)](https://github.com/osmdroid/osmdroid)
-[![UX/UI](https://img.shields.io/badge/UX%2FUI-Mobile--First-8A2BE2?style=for-the-badge)]()
-[![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%2B%20StateFlow-F97316?style=for-the-badge)]()
+
+<br /><br />
+
+<a href="https://play.google.com/store/apps/details?id=com.felipelaurindo.mamaocomacucar" target="_blank">
+  <img src="media-content/Screenshot2.jpg" alt="Mamão com Açúcar App Screenshot" width="280" style="border-radius: 16px;" />
+</a>
 
 </div>
 
@@ -94,6 +99,14 @@ The application adheres to clean Android architecture using **MVVM (Model-View-V
 - Quick-add modal for pinpointing new fruit trees with custom metadata.
 - Interactive detail sheet (`TreeDetailSheet`) featuring historical community logs and update forms.
 - Dynamic search and status filter sheet (`TreeListSheet`) with live distance display.
+
+### Native Botanical Guide (Guia Botânico)
+- Built-in catalog of **68 fruit tree species** featuring custom vector icons, biological fruiting timelines, and species-specific harvest tips.
+- Instant search and offline filtering for rapid outdoor tree identification.
+
+### Modern Auth & Non-Intrusive Monetization
+- **Google Credential Manager**: Seamless, secure one-tap authentication via modern Android Identity APIs (`androidx.credentials`).
+- **AdMob Banner Architecture**: Floating banner placement responsive to Android window insets, keeping map interaction and GPS buttons completely unobstructed.
 
 ---
 
