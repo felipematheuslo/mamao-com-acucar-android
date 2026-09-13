@@ -47,12 +47,16 @@ import android.view.MotionEvent
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.util.MapTileIndex
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
+import com.felipelaurindo.mamaocomacucar.data.model.TreeItem
 import kotlin.math.abs
 import kotlin.math.atan2
 
@@ -60,7 +64,8 @@ import kotlin.math.atan2
 // Previne que o zoom em pinça gire o mapa acidentalmente, e garante 60fps sem engasgos ou saltos.
 private class ThresholdRotationGestureOverlay(
     private val thresholdDegrees: Float = 8f,
-    private val onOrientationChanged: ((Float) -> Unit)? = null
+    private val onOrientationChanged: ((Float) -> Unit)? = null,
+    private val onGestureEnd: ((Double) -> Unit)? = null
 ) : Overlay() {
     private var initialFingerAngle: Float = 0f
     private var rotationPivotAngle: Float = 0f
@@ -126,6 +131,7 @@ private class ThresholdRotationGestureOverlay(
                 isRotating = false
                 pointerId1 = MotionEvent.INVALID_POINTER_ID
                 pointerId2 = MotionEvent.INVALID_POINTER_ID
+                onGestureEnd?.invoke(mapView.zoomLevelDouble)
             }
         }
         return false // Permite que o zoom nativo em pinça continue sem interferência
@@ -209,8 +215,9 @@ fun MapScreen(
     var isAppSettingsOpen by remember { mutableStateOf(false) }
     var pinCoordinates by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
-    var previewTree by remember { mutableStateOf<com.felipelaurindo.mamaocomacucar.data.model.TreeItem?>(null) }
+    var previewTree by remember { mutableStateOf<TreeItem?>(null) }
     var pulsingTreeId by remember { mutableStateOf<String?>(null) }
+    var currentMapZoom by remember { mutableDoubleStateOf(15.0) }
 
     // Clear marker pulse effect after 2 seconds
     LaunchedEffect(pulsingTreeId) {
@@ -288,9 +295,26 @@ fun MapScreen(
                         thresholdDegrees = 8f,
                         onOrientationChanged = { newOrientation ->
                             mapOrientation = newOrientation
+                        },
+                        onGestureEnd = { finalZoom ->
+                            if (abs(finalZoom - currentMapZoom) >= 0.05) {
+                                currentMapZoom = finalZoom
+                            }
                         }
                     )
                     overlays.add(rotationOverlay)
+
+                    // Monitora alterações de zoom para re-calcular agrupamento de marcadores
+                    addMapListener(object : MapListener {
+                        override fun onScroll(event: ScrollEvent?): Boolean = false
+                        override fun onZoom(event: ZoomEvent?): Boolean {
+                            val newZoom = zoomLevelDouble
+                            if (abs(newZoom - currentMapZoom) >= 0.3) {
+                                currentMapZoom = newZoom
+                            }
+                            return false
+                        }
+                    })
 
                     mapViewRef.value = this
                 }
@@ -308,25 +332,61 @@ fun MapScreen(
                 }
                 mapView.overlays.add(userMarker)
 
-                // Tree markers
+                // Marcadores de árvores agrupados (clusters) ou individuais
                 val filteredTrees = mapViewModel.getFilteredTrees()
-                for (tw in filteredTrees) {
-                    val tree = tw.tree
-                    val isPulsing = tree.id == pulsingTreeId
-                    val marker = Marker(mapView).apply {
-                        position = GeoPoint(tree.latitude, tree.longitude)
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        title = tree.species
-                        snippet = tree.name
-                        icon = createFruitVectorDrawable(context, tree.species, tree.currentStatus, isPulsing = isPulsing)
-                        setOnMarkerClickListener { _, _ ->
-                            previewTree = tree
-                            pulsingTreeId = tree.id
-                            mapViewModel.setMapCenter(tree.latitude, tree.longitude)
-                            true
+                val density = context.resources.displayMetrics.density
+                val clusterRadiusPx = 44f * density
+                val clusters = clusterTrees(
+                    items = filteredTrees,
+                    zoom = currentMapZoom,
+                    clusterRadiusPx = clusterRadiusPx,
+                    pulsingTreeId = pulsingTreeId
+                )
+
+                for (cluster in clusters) {
+                    if (cluster.trees.size == 1) {
+                        val tree = cluster.trees.first()
+                        val isPulsing = tree.id == pulsingTreeId
+                        val marker = Marker(mapView).apply {
+                            position = GeoPoint(tree.latitude, tree.longitude)
+                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            title = tree.species
+                            snippet = tree.name
+                            icon = createFruitVectorDrawable(context, tree.species, tree.currentStatus, isPulsing = isPulsing)
+                            setOnMarkerClickListener { _, _ ->
+                                previewTree = tree
+                                pulsingTreeId = tree.id
+                                mapViewModel.setMapCenter(tree.latitude, tree.longitude)
+                                true
+                            }
                         }
+                        mapView.overlays.add(marker)
+                    } else {
+                        val marker = Marker(mapView).apply {
+                            position = GeoPoint(cluster.centerLat, cluster.centerLng)
+                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                            title = "${cluster.trees.size} fruteiras"
+                            snippet = "Toque para aproximar"
+                            icon = createClusterVectorDrawable(context, cluster.trees.size, isPulsing = cluster.isPulsing)
+                            setOnMarkerClickListener { _, _ ->
+                                val currentZoom = mapView.zoomLevelDouble
+                                if (currentZoom < 18.0) {
+                                    mapView.controller.animateTo(
+                                        GeoPoint(cluster.centerLat, cluster.centerLng),
+                                        (currentZoom + 2.0).coerceAtMost(19.0),
+                                        500L
+                                    )
+                                } else {
+                                    val firstTree = cluster.trees.first()
+                                    previewTree = firstTree
+                                    pulsingTreeId = firstTree.id
+                                    mapViewModel.setMapCenter(cluster.centerLat, cluster.centerLng)
+                                }
+                                true
+                            }
+                        }
+                        mapView.overlays.add(marker)
                     }
-                    mapView.overlays.add(marker)
                 }
 
                 // Update tile source based on style
@@ -971,6 +1031,152 @@ private fun createFruitVectorDrawable(
     }
 
     return android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
+}
+
+// Helper to create a cluster VectorDrawable map marker showing the count of grouped trees
+private fun createClusterVectorDrawable(
+    context: Context,
+    count: Int,
+    isPulsing: Boolean = false
+): android.graphics.drawable.Drawable {
+    val density = context.resources.displayMetrics.density
+    val sizeDp = if (isPulsing) 52 else 42
+    val sizePx = (sizeDp * density).toInt()
+    val bitmap = android.graphics.Bitmap.createBitmap(sizePx, sizePx, android.graphics.Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(bitmap)
+    val centerX = sizePx / 2f
+    val centerY = sizePx / 2f
+    val radius = sizePx * (if (isPulsing) 0.36f else 0.44f)
+
+    // Halo pulsante quando a árvore selecionada está dentro deste agrupamento
+    if (isPulsing) {
+        val haloPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.argb(120, 249, 115, 22) // MamaoOrange glowing halo
+            isAntiAlias = true
+        }
+        canvas.drawCircle(centerX, centerY, sizePx * 0.48f, haloPaint)
+    }
+
+    // Sombra sutil externa para profundidade
+    val shadowPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.argb(35, 0, 0, 0)
+        isAntiAlias = true
+    }
+    canvas.drawCircle(centerX, centerY + 1.2f * density, radius, shadowPaint)
+
+    // Fundo circular (MamaoOrangeLight / creme suave)
+    val bgPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.parseColor("#FFF7ED")
+        isAntiAlias = true
+    }
+    canvas.drawCircle(centerX, centerY, radius, bgPaint)
+
+    // Borda vibrante (MamaoOrange)
+    val borderPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.parseColor("#F97316")
+        style = android.graphics.Paint.Style.STROKE
+        strokeWidth = (if (isPulsing) 3.5f else 2.6f) * density
+        isAntiAlias = true
+    }
+    canvas.drawCircle(centerX, centerY, radius, borderPaint)
+
+    // Texto com a quantidade condensada ("3", "4", "6", etc.)
+    val countText = if (count > 99) "99+" else count.toString()
+    val textPaint = android.graphics.Paint().apply {
+        color = android.graphics.Color.parseColor("#C2410C") // Laranja escuro de alto contraste
+        isAntiAlias = true
+        isFakeBoldText = true
+        textAlign = android.graphics.Paint.Align.CENTER
+        textSize = (if (countText.length > 2) 13f else 15f) * density
+        typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+    }
+
+    val fontMetrics = textPaint.fontMetrics
+    val textY = centerY - (fontMetrics.ascent + fontMetrics.descent) / 2f
+    canvas.drawText(countText, centerX, textY, textPaint)
+
+    return android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
+}
+
+// Representação de um agrupamento de árvores no mapa
+private data class TreeCluster(
+    val trees: List<TreeItem>,
+    val centerLat: Double,
+    val centerLng: Double,
+    val isPulsing: Boolean
+)
+
+// Projeção Web Mercator (EPSG:3857) de coordenadas para pixels globais no zoom determinado
+private fun projectToMercatorPixels(lat: Double, lng: Double, zoom: Double): Pair<Double, Double> {
+    val x = (lng + 180.0) / 360.0 * 256.0 * Math.pow(2.0, zoom)
+    val sinLat = Math.sin(Math.toRadians(lat)).coerceIn(-0.9999, 0.9999)
+    val y = (0.5 - Math.log((1.0 + sinLat) / (1.0 - sinLat)) / (4.0 * Math.PI)) * 256.0 * Math.pow(2.0, zoom)
+    return Pair(x, y)
+}
+
+// Algoritmo de agrupamento por raio euclidiano em pixels de tela
+private fun clusterTrees(
+    items: List<TreeWithDistance>,
+    zoom: Double,
+    clusterRadiusPx: Float,
+    pulsingTreeId: String?
+): List<TreeCluster> {
+    if (items.isEmpty()) return emptyList()
+
+    data class ProjectedItem(
+        val tree: TreeItem,
+        val x: Double,
+        val y: Double
+    )
+
+    val projected = items.map { tw ->
+        val (px, py) = projectToMercatorPixels(tw.tree.latitude, tw.tree.longitude, zoom)
+        ProjectedItem(tw.tree, px, py)
+    }
+
+    val visited = BooleanArray(projected.size)
+    val clusters = mutableListOf<TreeCluster>()
+    val radiusSq = (clusterRadiusPx * clusterRadiusPx).toDouble()
+
+    for (i in projected.indices) {
+        if (visited[i]) continue
+        visited[i] = true
+
+        val root = projected[i]
+        val clusterItems = mutableListOf(root.tree)
+        var sumLat = root.tree.latitude
+        var sumLng = root.tree.longitude
+        var hasPulsing = (root.tree.id == pulsingTreeId)
+
+        for (j in (i + 1) until projected.size) {
+            if (visited[j]) continue
+            val candidate = projected[j]
+            val dx = root.x - candidate.x
+            val dy = root.y - candidate.y
+            val distSq = dx * dx + dy * dy
+
+            if (distSq <= radiusSq) {
+                visited[j] = true
+                clusterItems.add(candidate.tree)
+                sumLat += candidate.tree.latitude
+                sumLng += candidate.tree.longitude
+                if (candidate.tree.id == pulsingTreeId) {
+                    hasPulsing = true
+                }
+            }
+        }
+
+        clusters.add(
+            TreeCluster(
+                trees = clusterItems,
+                centerLat = sumLat / clusterItems.size,
+                centerLng = sumLng / clusterItems.size,
+                isPulsing = hasPulsing
+            )
+        )
+    }
+
+    return clusters
 }
 
 private fun requestCurrentLocation(

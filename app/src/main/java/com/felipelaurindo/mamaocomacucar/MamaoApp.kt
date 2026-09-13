@@ -25,6 +25,7 @@ import com.felipelaurindo.mamaocomacucar.ui.auth.AuthState
 import com.felipelaurindo.mamaocomacucar.ui.auth.AuthViewModel
 import com.felipelaurindo.mamaocomacucar.ui.auth.LoginScreen
 import com.felipelaurindo.mamaocomacucar.ui.auth.RegisterScreen
+import com.felipelaurindo.mamaocomacucar.ui.auth.WelcomeScreen
 import com.felipelaurindo.mamaocomacucar.ui.map.MapScreen
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 
@@ -43,7 +44,7 @@ fun MamaoApp() {
                 }
             }
             is AuthState.Unauthenticated -> {
-                navController.navigate("auth/login") {
+                navController.navigate("auth/welcome") {
                     popUpTo(0) { inclusive = true }
                 }
             }
@@ -59,11 +60,26 @@ fun MamaoApp() {
             SplashScreen()
         }
 
+        composable("auth/welcome") {
+            WelcomeScreen(
+                authViewModel = authViewModel,
+                onNavigateToRegister = {
+                    navController.navigate("auth/register")
+                },
+                onNavigateToLogin = {
+                    navController.navigate("auth/login")
+                }
+            )
+        }
+
         composable("auth/login") {
             LoginScreen(
                 authViewModel = authViewModel,
                 onNavigateToRegister = {
                     navController.navigate("auth/register")
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -72,6 +88,11 @@ fun MamaoApp() {
             RegisterScreen(
                 authViewModel = authViewModel,
                 onNavigateToLogin = {
+                    navController.navigate("auth/login") {
+                        popUpTo("auth/welcome") { inclusive = false }
+                    }
+                },
+                onNavigateBack = {
                     navController.popBackStack()
                 }
             )

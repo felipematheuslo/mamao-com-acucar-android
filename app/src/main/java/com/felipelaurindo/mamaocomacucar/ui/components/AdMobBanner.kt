@@ -101,13 +101,6 @@ fun AdMobBanner(
     ) {
 
 
-        // Texto de fundo sutil caso o anúncio demore para carregar
-        Text(
-            text = "Anúncio",
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-            color = Stone400
-        )
-
         // Visualização nativa do anúncio
         AndroidView(
             factory = { adView },

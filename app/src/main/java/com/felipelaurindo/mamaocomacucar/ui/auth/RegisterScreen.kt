@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,7 +37,8 @@ import com.felipelaurindo.mamaocomacucar.util.normalizeUsername
 @Composable
 fun RegisterScreen(
     authViewModel: AuthViewModel,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onNavigateBack: () -> Unit = onNavigateToLogin
 ) {
     val isSubmitting by authViewModel.isSubmitting.collectAsState()
     val isSubmittingGoogle by authViewModel.isSubmittingGoogle.collectAsState()
@@ -63,6 +65,21 @@ fun RegisterScreen(
             .background(Color.White)
             .statusBarsPadding()
     ) {
+        if (!registrationComplete) {
+            IconButton(
+                onClick = onNavigateBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 12.dp, top = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = "Voltar",
+                    tint = Stone800
+                )
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()

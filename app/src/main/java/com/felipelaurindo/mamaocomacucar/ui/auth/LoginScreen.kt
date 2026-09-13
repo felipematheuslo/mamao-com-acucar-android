@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
@@ -37,7 +38,8 @@ import com.felipelaurindo.mamaocomacucar.ui.theme.*
 @Composable
 fun LoginScreen(
     authViewModel: AuthViewModel,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateBack: () -> Unit = {}
 ) {
     val isSubmitting by authViewModel.isSubmitting.collectAsState()
     val isSubmittingGoogle by authViewModel.isSubmittingGoogle.collectAsState()
@@ -63,6 +65,19 @@ fun LoginScreen(
             .background(Color.White)
             .statusBarsPadding()
     ) {
+        IconButton(
+            onClick = onNavigateBack,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 12.dp, top = 8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                contentDescription = "Voltar",
+                tint = Stone800
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -71,7 +86,7 @@ fun LoginScreen(
                 .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
             // Logo
             Image(
