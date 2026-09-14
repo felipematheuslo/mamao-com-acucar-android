@@ -1,9 +1,13 @@
 package com.felipelaurindo.mamaocomacucar.ui.map.components
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,11 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,31 +43,35 @@ import java.text.Normalizer
 
 @Composable
 fun FruitCatalogSheet(
+    isGuest: Boolean = false,
+    onRequestAuth: ((String) -> Unit)? = null,
     onSearchFruitOnMap: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("Todas") }
+    var selectedCategory by remember { mutableStateOf(if (isGuest) "Populares" else "Todas") }
     val focusManager = LocalFocusManager.current
 
     val categories = listOf(
         "Todas",
         "Populares",
-        "Cerrado & Caatinga",
+        "Cerrado",
+        "Caatinga",
         "Amazônia",
         "Mata Atlântica",
         "Nativas Raras"
     )
 
     // Filtering logic
-    val filteredList = remember(searchQuery, selectedCategory) {
+    val filteredList = remember(searchQuery, selectedCategory, isGuest) {
         val normalizedQuery = Normalizer.normalize(searchQuery, Normalizer.Form.NFD)
             .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
             .lowercase()
             .trim()
 
         FRUIT_CATALOG_LIST.filter { item ->
-            val matchesCategory = selectedCategory == "Todas" || item.category == selectedCategory
+            val effectiveCategory = if (isGuest && selectedCategory == "Todas") "Populares" else selectedCategory
+            val matchesCategory = effectiveCategory == "Todas" || item.category == effectiveCategory
 
             val normalizedName = Normalizer.normalize(item.name, Normalizer.Form.NFD)
                 .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
@@ -79,19 +89,28 @@ fun FruitCatalogSheet(
         }
     }
 
+    var isExpanded by remember { mutableStateOf(true) }
+
+    val sheetHeightFraction by animateFloatAsState(
+        targetValue = if (isExpanded) 0.88f else 0.52f,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 200, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "catalogHeightFraction"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(Stone950.copy(alpha = 0.5f))
             .clickable(onClick = onDismiss)
     ) {
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .fillMaxHeight(0.88f)
+                .fillMaxHeight(sheetHeightFraction)
                 .statusBarsPadding()
                 .padding(bottom = 64.dp)
+                .navigationBarsPadding()
                 .clickable(enabled = false) {}, // Prevent click propagation
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             color = Color.White,
@@ -100,18 +119,38 @@ fun FruitCatalogSheet(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
+                    .padding(horizontal = 20.dp, vertical = 10.dp)
             ) {
-                // Drag handle
+                // Barra de arrasto interativa para estender / comprimir o catálogo
                 Box(
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .width(40.dp)
-                        .height(4.dp)
-                        .background(Stone300, CircleShape)
-                )
+                        .fillMaxWidth()
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures { _, dragAmount ->
+                                if (dragAmount < -15) {
+                                    isExpanded = true
+                                } else if (dragAmount > 20) {
+                                    if (isExpanded) {
+                                        isExpanded = false
+                                    } else {
+                                        onDismiss()
+                                    }
+                                }
+                            }
+                        }
+                        .clickable { isExpanded = !isExpanded }
+                        .padding(vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(44.dp)
+                            .height(5.dp)
+                            .background(Stone300, RoundedCornerShape(2.5.dp))
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Header Row
                 Row(
@@ -119,7 +158,11 @@ fun FruitCatalogSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { isExpanded = !isExpanded }
+                    ) {
                         Text(
                             "Guia Botânico 📖",
                             style = MaterialTheme.typography.titleLarge.copy(
@@ -129,25 +172,47 @@ fun FruitCatalogSheet(
                             color = Stone900
                         )
                         Text(
-                            "68 espécies • Toque no card para detalhes",
+                            if (isGuest) "Espécies Populares • Cadastre-se para ver 68 espécies"
+                            else "68 espécies • Toque no card para detalhes",
                             style = MaterialTheme.typography.bodySmall,
                             color = Stone500
                         )
                     }
 
-                    Surface(
-                        shape = CircleShape,
-                        color = Stone100,
-                        onClick = onDismiss,
-                        modifier = Modifier.size(36.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Outlined.Close,
-                                contentDescription = "Fechar",
-                                tint = Stone600,
-                                modifier = Modifier.size(20.dp)
-                            )
+                        Surface(
+                            shape = CircleShape,
+                            color = Stone100,
+                            onClick = { isExpanded = !isExpanded },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = if (isExpanded) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
+                                    contentDescription = if (isExpanded) "Comprimir catálogo" else "Estender catálogo",
+                                    tint = Stone600,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = CircleShape,
+                            color = Stone100,
+                            onClick = onDismiss,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Outlined.Close,
+                                    contentDescription = "Fechar",
+                                    tint = Stone600,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -216,20 +281,36 @@ fun FruitCatalogSheet(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     categories.forEach { cat ->
+                        val isLocked = isGuest && cat != "Populares"
                         val isSelected = selectedCategory == cat
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) MamaoOrange else Stone100,
-                            modifier = Modifier.clickable { selectedCategory = cat }
+                            color = if (isSelected) MamaoOrange else if (isLocked) Stone50 else Stone100,
+                            border = if (isLocked) BorderStroke(1.dp, Stone200) else null,
+                            modifier = Modifier.clickable {
+                                if (isLocked) {
+                                    onRequestAuth?.invoke("Cadastre-se gratuitamente para explorar as espécies botânicas dos biomas brasileiros como Cerrado, Amazônia e Caatinga.")
+                                } else {
+                                    selectedCategory = cat
+                                }
+                            }
                         ) {
-                            Text(
-                                text = cat,
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                ),
-                                color = if (isSelected) Color.White else Stone700,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (isLocked) {
+                                    Text("🔒", fontSize = 10.sp)
+                                }
+                                Text(
+                                    text = cat,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    ),
+                                    color = if (isSelected) Color.White else if (isLocked) Stone500 else Stone700
+                                )
+                            }
                         }
                     }
                 }
@@ -276,6 +357,59 @@ fun FruitCatalogSheet(
                                     onSearchFruitOnMap(fruit.name)
                                 }
                             )
+                        }
+
+                        if (isGuest) {
+                            item {
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    shape = RoundedCornerShape(18.dp),
+                                    color = MamaoOrangeLight,
+                                    border = BorderStroke(1.dp, MamaoOrange.copy(alpha = 0.35f))
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Text("🌿", fontSize = 18.sp)
+                                            Text(
+                                                "Quer conhecer todos os biomas?",
+                                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
+                                                color = Stone900
+                                            )
+                                        }
+                                        Text(
+                                            "Cadastre-se gratuitamente para desbloquear as frutas nativas do Cerrado, Amazônia, Caatinga, Mata Atlântica e espécies raras.",
+                                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                                            color = Stone600,
+                                            textAlign = TextAlign.Center
+                                        )
+                                        Button(
+                                            onClick = {
+                                                onRequestAuth?.invoke("Cadastre-se gratuitamente para desbloquear o Guia Botânico completo com todas as 68 espécies.")
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(42.dp),
+                                            shape = RoundedCornerShape(12.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = MamaoOrange)
+                                        ) {
+                                            Text(
+                                                "Desbloquear Guia Completo 🌳",
+                                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

@@ -20,6 +20,8 @@ fun AppSettingsSheet(
     currentMapStyle: String,
     onMapStyleChange: (String) -> Unit,
     onShowToast: (String) -> Unit,
+    isGuest: Boolean = false,
+    onRequestAuth: ((String) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     val mapStyles = listOf(
@@ -91,28 +93,60 @@ fun AppSettingsSheet(
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 for (style in row) {
                                     val isSelected = currentMapStyle == style.id
+                                    val isLockedForGuest = isGuest && style.id == "satellite"
                                     Surface(
                                         modifier = Modifier.weight(1f),
                                         shape = RoundedCornerShape(16.dp),
-                                        color = if (isSelected) MamaoOrangeLight else Color.White,
+                                        color = when {
+                                            isSelected -> MamaoOrangeLight
+                                            isLockedForGuest -> Stone50
+                                            else -> Color.White
+                                        },
                                         border = BorderStroke(
                                             if (isSelected) 2.dp else 1.dp,
                                             if (isSelected) MamaoOrange else Stone200
                                         ),
                                         onClick = {
-                                            onMapStyleChange(style.id)
-                                            onShowToast("🗺️ Estilo do mapa alterado para: ${style.label}")
+                                            if (isLockedForGuest) {
+                                                onRequestAuth?.invoke("O modo Satélite de alta resolução é exclusivo para membros cadastrados. Conecte sua conta para explorar imagens orbitais!")
+                                            } else {
+                                                onMapStyleChange(style.id)
+                                                onShowToast("🗺️ Estilo do mapa alterado para: ${style.label}")
+                                            }
                                         }
                                     ) {
                                         Column(
                                             modifier = Modifier.padding(12.dp),
                                             verticalArrangement = Arrangement.spacedBy(4.dp)
                                         ) {
-                                            Text(
-                                                style.label,
-                                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
-                                                color = Stone900
-                                            )
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    style.label,
+                                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
+                                                    color = if (isLockedForGuest) Stone500 else Stone900
+                                                )
+                                                if (isLockedForGuest) {
+                                                    Surface(
+                                                        shape = RoundedCornerShape(6.dp),
+                                                        color = MamaoOrangeLight,
+                                                        border = BorderStroke(1.dp, MamaoOrange.copy(alpha = 0.3f))
+                                                    ) {
+                                                        Text(
+                                                            "🔒 Membros",
+                                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                                fontSize = 8.sp,
+                                                                fontWeight = FontWeight.Bold
+                                                            ),
+                                                            color = MamaoOrange,
+                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
                                             Text(style.emoji, fontSize = 16.sp)
                                         }
                                     }
@@ -133,7 +167,7 @@ fun AppSettingsSheet(
                 }
 
                 Text(
-                    text = "Mamão com Açúcar • Versão 1.1",
+                    text = "Mamão com Açúcar • Versão 1.3",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
                     color = Stone400,
                     modifier = Modifier.align(Alignment.CenterHorizontally)

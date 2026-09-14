@@ -410,6 +410,10 @@ class AuthViewModel : ViewModel() {
         _passwordResetSuccess.value = false
     }
 
+    fun continueAsGuest() {
+        _authState.value = AuthState.Authenticated(LoggedUser.Guest)
+    }
+
     fun logout() {
         auth.signOut()
         _authState.value = AuthState.Unauthenticated

@@ -17,5 +17,7 @@ local.properties
 # Signing keys and Release Builds (SECURITY)
 *.jks
 *.keystore
+*.apk
 *.aab
+
 

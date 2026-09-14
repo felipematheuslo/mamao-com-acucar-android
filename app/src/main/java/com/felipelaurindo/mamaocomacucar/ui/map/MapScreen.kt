@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +40,9 @@ import com.felipelaurindo.mamaocomacucar.ui.components.AdMobBanner
 import com.felipelaurindo.mamaocomacucar.ui.map.components.*
 import com.felipelaurindo.mamaocomacucar.ui.settings.AccountSettingsSheet
 import com.felipelaurindo.mamaocomacucar.ui.settings.AppSettingsSheet
+import com.felipelaurindo.mamaocomacucar.ui.auth.components.AuthPromptSheet
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
+import com.felipelaurindo.mamaocomacucar.util.calculateDistance
 import com.felipelaurindo.mamaocomacucar.util.formatDistance
 import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
 import androidx.compose.ui.draw.rotate
@@ -158,32 +161,34 @@ private val esriSatelliteSource: OnlineTileSourceBase by lazy {
         arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/")
     ) {
         override fun getTileURLString(pMapTileIndex: Long): String {
-            return baseUrl +
-                    MapTileIndex.getZoom(pMapTileIndex) + "/" +
-                    MapTileIndex.getY(pMapTileIndex) + "/" +
-                    MapTileIndex.getX(pMapTileIndex)
+            val zoom = MapTileIndex.getZoom(pMapTileIndex)
+            val x = MapTileIndex.getX(pMapTileIndex)
+            val y = MapTileIndex.getY(pMapTileIndex)
+            return "$baseUrl$zoom/$y/$x$mImageFilenameEnding"
         }
     }
 }
 
-// Fonte de mapa Topográfico / Relevo (Esri World Topo Map) com decodificação otimizada e RGB_565
+// Fonte de mapa de Relevo (Esri World Topo Map) livre e sem marcas d'água
 private val esriTopoSource: OnlineTileSourceBase by lazy {
     object : OptimizedOnlineTileSource(
         "EsriTopo", 0, 19, 256, ".jpg",
         arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/")
     ) {
         override fun getTileURLString(pMapTileIndex: Long): String {
-            return baseUrl +
-                    MapTileIndex.getZoom(pMapTileIndex) + "/" +
-                    MapTileIndex.getY(pMapTileIndex) + "/" +
-                    MapTileIndex.getX(pMapTileIndex)
+            val zoom = MapTileIndex.getZoom(pMapTileIndex)
+            val x = MapTileIndex.getX(pMapTileIndex)
+            val y = MapTileIndex.getY(pMapTileIndex)
+            return "$baseUrl$zoom/$y/$x$mImageFilenameEnding"
         }
     }
 }
 
-private fun getTileSourceForStyle(style: String): org.osmdroid.tileprovider.tilesource.ITileSource = when (style) {
-    "satellite" -> esriSatelliteSource
-    else -> esriTopoSource
+private fun getTileSourceForStyle(style: String): OnlineTileSourceBase {
+    return when (style) {
+        "satellite" -> esriSatelliteSource
+        else -> esriTopoSource
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -191,6 +196,10 @@ private fun getTileSourceForStyle(style: String): org.osmdroid.tileprovider.tile
 fun MapScreen(
     currentUser: LoggedUser,
     onLogout: () -> Unit,
+    onGoogleSignIn: () -> Unit = {},
+    isGoogleLoading: Boolean = false,
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToRegister: () -> Unit = {},
     mapViewModel: MapViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -202,6 +211,7 @@ fun MapScreen(
     val toastMessage by mapViewModel.toastMessage.collectAsState()
     val isAddingTree by mapViewModel.isAddingTree.collectAsState()
     val creatorUsernames by mapViewModel.creatorUsernames.collectAsState()
+    val searchQuery by mapViewModel.searchQuery.collectAsState()
 
     val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     val savedStyle = prefs.getString("map_style", "topo")
@@ -213,11 +223,20 @@ fun MapScreen(
     var isAddDialogOpen by remember { mutableStateOf(false) }
     var isAccountSettingsOpen by remember { mutableStateOf(false) }
     var isAppSettingsOpen by remember { mutableStateOf(false) }
+    var isAuthPromptOpen by remember { mutableStateOf(false) }
+    var authPromptSubtitle by remember { mutableStateOf<String?>(null) }
     var pinCoordinates by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
     var previewTree by remember { mutableStateOf<TreeItem?>(null) }
     var pulsingTreeId by remember { mutableStateOf<String?>(null) }
     var currentMapZoom by remember { mutableDoubleStateOf(15.0) }
+
+    // Close auth prompt if user logs in
+    LaunchedEffect(currentUser.isGuest) {
+        if (!currentUser.isGuest) {
+            isAuthPromptOpen = false
+        }
+    }
 
     // Clear marker pulse effect after 2 seconds
     LaunchedEffect(pulsingTreeId) {
@@ -229,15 +248,17 @@ fun MapScreen(
 
     val mapViewRef = remember { mutableStateOf<MapView?>(null) }
 
-    val isAnySheetOrDialogActive = isTreeListOpen || isTreeDetailOpen || isFruitCatalogOpen || isAddingTree || isAddDialogOpen || isAccountSettingsOpen || isAppSettingsOpen
+    val isAnySheetOrDialogActive = isTreeListOpen || isTreeDetailOpen || isFruitCatalogOpen || isAddingTree || isAddDialogOpen || isAccountSettingsOpen || isAppSettingsOpen || isAuthPromptOpen
     val isBannerVisible = !isAnySheetOrDialogActive && previewTree == null
 
     val bottomOffset by animateDpAsState(
         targetValue = when {
             isAddingTree -> 248.dp
-            previewTree != null -> 230.dp
-            else -> 144.dp
+            previewTree != null -> 232.dp
+            isBannerVisible -> 140.dp
+            else -> 80.dp
         },
+        animationSpec = androidx.compose.animation.core.tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing),
         label = "bottomOffset"
     )
 
@@ -347,27 +368,57 @@ fun MapScreen(
                     if (cluster.trees.size == 1) {
                         val tree = cluster.trees.first()
                         val isPulsing = tree.id == pulsingTreeId
+                        val distanceKm = calculateDistance(userLocation.first, userLocation.second, tree.latitude, tree.longitude)
+                        val isObfuscated = currentUser.isGuest && distanceKm > 2.0
+
                         val marker = Marker(mapView).apply {
                             position = GeoPoint(tree.latitude, tree.longitude)
                             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            title = tree.species
-                            snippet = tree.name
-                            icon = createFruitVectorDrawable(context, tree.species, tree.currentStatus, isPulsing = isPulsing)
+                            title = if (isObfuscated) "Fruteira fora do raio de 2 km 🔒" else tree.species
+                            snippet = if (isObfuscated) "Cadastre-se para ver os detalhes" else tree.name
+                            if (isObfuscated) {
+                                alpha = 0.40f
+                            }
+                            icon = createFruitVectorDrawable(
+                                context = context,
+                                species = tree.species,
+                                status = tree.currentStatus,
+                                isPulsing = isPulsing,
+                                isObfuscated = isObfuscated
+                            )
                             setOnMarkerClickListener { _, _ ->
-                                previewTree = tree
-                                pulsingTreeId = tree.id
-                                mapViewModel.setMapCenter(tree.latitude, tree.longitude)
+                                if (isObfuscated) {
+                                    val distFormatted = formatDistance(distanceKm)
+                                    authPromptSubtitle = "Esta fruteira está a $distFormatted de você, fora do raio de 2 km do modo visitante. Conecte sua conta gratuita para explorar árvores em qualquer cidade!"
+                                    isAuthPromptOpen = true
+                                } else {
+                                    previewTree = tree
+                                    pulsingTreeId = tree.id
+                                    mapViewModel.setMapCenter(tree.latitude, tree.longitude)
+                                }
                                 true
                             }
                         }
                         mapView.overlays.add(marker)
                     } else {
+                        val allTreesObfuscated = currentUser.isGuest && cluster.trees.all {
+                            calculateDistance(userLocation.first, userLocation.second, it.latitude, it.longitude) > 2.0
+                        }
+
                         val marker = Marker(mapView).apply {
                             position = GeoPoint(cluster.centerLat, cluster.centerLng)
                             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
                             title = "${cluster.trees.size} fruteiras"
-                            snippet = "Toque para aproximar"
-                            icon = createClusterVectorDrawable(context, cluster.trees.size, isPulsing = cluster.isPulsing)
+                            snippet = if (allTreesObfuscated) "Fora do raio de 2 km 🔒" else "Toque para aproximar"
+                            if (allTreesObfuscated) {
+                                alpha = 0.45f
+                            }
+                            icon = createClusterVectorDrawable(
+                                context = context,
+                                count = cluster.trees.size,
+                                isPulsing = cluster.isPulsing,
+                                isObfuscated = allTreesObfuscated
+                            )
                             setOnMarkerClickListener { _, _ ->
                                 val currentZoom = mapView.zoomLevelDouble
                                 if (currentZoom < 18.0) {
@@ -378,9 +429,16 @@ fun MapScreen(
                                     )
                                 } else {
                                     val firstTree = cluster.trees.first()
-                                    previewTree = firstTree
-                                    pulsingTreeId = firstTree.id
-                                    mapViewModel.setMapCenter(cluster.centerLat, cluster.centerLng)
+                                    val distKm = calculateDistance(userLocation.first, userLocation.second, firstTree.latitude, firstTree.longitude)
+                                    if (currentUser.isGuest && distKm > 2.0) {
+                                        val distFormatted = formatDistance(distKm)
+                                        authPromptSubtitle = "Estas fruteiras estão a $distFormatted de você, fora do raio de 2 km do modo visitante. Conecte sua conta gratuita para explorar árvores em qualquer cidade!"
+                                        isAuthPromptOpen = true
+                                    } else {
+                                        previewTree = firstTree
+                                        pulsingTreeId = firstTree.id
+                                        mapViewModel.setMapCenter(cluster.centerLat, cluster.centerLng)
+                                    }
                                 }
                                 true
                             }
@@ -405,95 +463,25 @@ fun MapScreen(
             }
         )
 
-        // ---- Floating Header ----
-        Surface(
+        // ---- Floating Search Bar ----
+        FloatingSearchBar(
+            query = searchQuery,
+            onQueryChange = { query -> mapViewModel.setSearchQuery(query) },
+            onClearQuery = { mapViewModel.setSearchQuery("") },
+            onProfileClick = {
+                if (currentUser.isGuest) {
+                    authPromptSubtitle = "Você está navegando como visitante. Conecte sua conta para salvar seu progresso!"
+                    isAuthPromptOpen = true
+                } else {
+                    isAccountSettingsOpen = true
+                }
+            },
+            isGuest = currentUser.isGuest,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .statusBarsPadding(),
-            shape = RoundedCornerShape(20.dp),
-            color = Color.White.copy(alpha = 0.95f),
-            shadowElevation = 8.dp,
-            border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
-                width = 1.dp,
-                brush = androidx.compose.ui.graphics.SolidColor(Stone200)
-            )
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // User info avatar & name
-                Surface(
-                    shape = CircleShape,
-                    color = Stone100,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(badge.icon, fontSize = 20.sp)
-                    }
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        currentUser.displayName,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Stone900,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
-                    Text(
-                        "@${currentUser.username}",
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium),
-                        color = MamaoOrange,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Action buttons row
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Account settings / Profile
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = Stone100,
-                        onClick = { isAccountSettingsOpen = true },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Outlined.Person,
-                                contentDescription = "Perfil",
-                                tint = Stone700,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                    }
-
-                    // App settings
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = Stone100,
-                        onClick = { isAppSettingsOpen = true },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Outlined.Settings,
-                                contentDescription = "Configurações",
-                                tint = Stone700,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
+                .align(Alignment.TopCenter)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .statusBarsPadding()
+        )
 
         // ---- Pin overlay for adding tree ----
         if (isAddingTree && pinCoordinates != null) {
@@ -607,19 +595,41 @@ fun MapScreen(
         }
 
         // ---- Tree List Bottom Sheet ----
-        if (isTreeListOpen) {
+        AnimatedVisibility(
+            visible = isTreeListOpen,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = androidx.compose.animation.core.tween(220, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+            ) + fadeIn(animationSpec = androidx.compose.animation.core.tween(150)),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = androidx.compose.animation.core.tween(180, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+            ) + fadeOut(animationSpec = androidx.compose.animation.core.tween(120))
+        ) {
             TreeListSheet(
                 mapViewModel = mapViewModel,
                 creatorUsernames = creatorUsernames,
+                isGuest = currentUser.isGuest,
+                onRequestAuth = { msg ->
+                    authPromptSubtitle = msg
+                    isAuthPromptOpen = true
+                },
                 onSelectTree = { tree ->
-                    previewTree = tree
-                    pulsingTreeId = tree.id
-                    mapViewModel.setMapCenter(tree.latitude, tree.longitude)
-                    isTreeListOpen = false
-                    isTreeDetailOpen = false
-                    // Limpa a busca para que todos os marcadores voltem ao mapa
-                    mapViewModel.setSearchQuery("")
-                    mapViewModel.setStatusFilter("todos")
+                    val distKm = calculateDistance(userLocation.first, userLocation.second, tree.latitude, tree.longitude)
+                    if (currentUser.isGuest && distKm > 2.0) {
+                        val distFormatted = formatDistance(distKm)
+                        authPromptSubtitle = "Esta fruteira está a $distFormatted de você, fora do raio de 2 km do modo visitante. Conecte sua conta gratuita para explorar árvores em qualquer lugar!"
+                        isAuthPromptOpen = true
+                    } else {
+                        previewTree = tree
+                        pulsingTreeId = tree.id
+                        mapViewModel.setMapCenter(tree.latitude, tree.longitude)
+                        isTreeListOpen = false
+                        isTreeDetailOpen = false
+                        // Limpa a busca para que todos os marcadores voltem ao mapa
+                        mapViewModel.setSearchQuery("")
+                        mapViewModel.setStatusFilter("todos")
+                    }
                 },
                 onDismiss = {
                     isTreeListOpen = false
@@ -631,13 +641,27 @@ fun MapScreen(
         }
 
         // ---- Tree Detail Sheet ----
-        if (isTreeDetailOpen && selectedTree != null) {
+        AnimatedVisibility(
+            visible = isTreeDetailOpen && selectedTree != null,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = androidx.compose.animation.core.tween(220, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+            ) + fadeIn(animationSpec = androidx.compose.animation.core.tween(150)),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = androidx.compose.animation.core.tween(180, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+            ) + fadeOut(animationSpec = androidx.compose.animation.core.tween(120))
+        ) {
             TreeDetailSheet(
                 tree = selectedTree!!,
                 updates = updates,
                 currentUser = currentUser,
                 creatorUsernames = creatorUsernames,
                 mapViewModel = mapViewModel,
+                onRequestAuth = { msg ->
+                    authPromptSubtitle = msg
+                    isAuthPromptOpen = true
+                },
                 onDismiss = {
                     isTreeDetailOpen = false
                     mapViewModel.selectTree(null)
@@ -645,36 +669,94 @@ fun MapScreen(
             )
         }
 
-        // ---- Compass / Reset North FAB ----
+        // ---- Fruit Catalog Sheet ----
         AnimatedVisibility(
-            visible = kotlin.math.abs(mapOrientation) > 1f && !isTreeListOpen && !isTreeDetailOpen,
+            visible = isFruitCatalogOpen,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = androidx.compose.animation.core.tween(220, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+            ) + fadeIn(animationSpec = androidx.compose.animation.core.tween(150)),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = androidx.compose.animation.core.tween(180, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+            ) + fadeOut(animationSpec = androidx.compose.animation.core.tween(120))
+        ) {
+            FruitCatalogSheet(
+                isGuest = currentUser.isGuest,
+                onRequestAuth = { msg ->
+                    authPromptSubtitle = msg
+                    isAuthPromptOpen = true
+                },
+                onSearchFruitOnMap = { fruitName ->
+                    mapViewModel.setStatusFilter("todos")
+                    mapViewModel.setSearchQuery(fruitName)
+                    isFruitCatalogOpen = false
+                },
+                onDismiss = { isFruitCatalogOpen = false }
+            )
+        }
+
+        // ---- Top Right Controls (Camadas e Bússola) ----
+        Column(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(end = 16.dp, top = 88.dp)
+                .padding(end = 16.dp, top = 76.dp)
                 .statusBarsPadding(),
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut()
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            FloatingActionButton(
-                onClick = {
-                    mapViewRef.value?.let { mv ->
-                        mv.mapOrientation = 0f
-                        mapOrientation = 0f
-                    }
-                },
-                shape = CircleShape,
-                containerColor = Color.White,
-                contentColor = Stone900,
-                modifier = Modifier.size(44.dp)
+            // Botão de Camadas do Mapa (Satélite / Relevo)
+            AnimatedVisibility(
+                visible = !isTreeListOpen && !isTreeDetailOpen,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
             ) {
-                Icon(
-                    Icons.Outlined.Navigation,
-                    contentDescription = "Redefinir orientação para o Norte",
-                    tint = Rose600,
-                    modifier = Modifier
-                        .size(22.dp)
-                        .rotate(-mapOrientation)
-                )
+                Surface(
+                    onClick = { isAppSettingsOpen = true },
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = 4.dp,
+                    border = BorderStroke(1.dp, Stone200),
+                    modifier = Modifier.size(42.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.Layers,
+                            contentDescription = "Estilo do mapa",
+                            tint = Stone700,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+
+            // Bússola (apenas quando mapa estiver rotacionado)
+            AnimatedVisibility(
+                visible = kotlin.math.abs(mapOrientation) > 1f && !isTreeListOpen && !isTreeDetailOpen,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        mapViewRef.value?.let { mv ->
+                            mv.mapOrientation = 0f
+                            mapOrientation = 0f
+                        }
+                    },
+                    shape = CircleShape,
+                    containerColor = Color.White,
+                    contentColor = Stone900,
+                    modifier = Modifier.size(42.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.Navigation,
+                        contentDescription = "Redefinir orientação para o Norte",
+                        tint = Rose600,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .rotate(-mapOrientation)
+                    )
+                }
             }
         }
 
@@ -704,106 +786,45 @@ fun MapScreen(
             }
         }
 
-        // ---- Floating AdMob Banner (Entre a barra inferior e o botão de GPS) ----
-        AnimatedVisibility(
-            visible = isBannerVisible,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 80.dp)
-                .navigationBarsPadding(),
-            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
-        ) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = Color.White,
-                shadowElevation = 6.dp,
-                border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
-                    width = 1.dp,
-                    brush = androidx.compose.ui.graphics.SolidColor(Stone200)
-                )
-            ) {
-                AdMobBanner(
-                    modifier = Modifier.fillMaxWidth()
-                )
+        // ---- Bottom Dock (AdMob + Navigation) ----
+        MapBottomBar(
+            isExploring = isTreeListOpen,
+            isAddingTree = isAddingTree,
+            isFruitCatalogOpen = isFruitCatalogOpen,
+            onExploreClick = {
+                isFruitCatalogOpen = false
+                mapViewModel.setIsAddingTree(false)
+                pinCoordinates = null
+                isTreeListOpen = !isTreeListOpen
+            },
+            onToggleAddTreeClick = {
+                if (currentUser.isGuest) {
+                    authPromptSubtitle = "Cadastre-se gratuitamente para marcar árvores frutíferas no mapa, registrar fotos e conquistar selos de cultivador."
+                    isAuthPromptOpen = true
+                } else {
+                    isTreeListOpen = false
+                    isFruitCatalogOpen = false
+                    val next = !isAddingTree
+                    mapViewModel.setIsAddingTree(next)
+                    if (next) {
+                        mapViewModel.showToast("📍 Mova o mapa para alinhar a árvore com o marcador.")
+                    } else {
+                        pinCoordinates = null
+                    }
+                }
+            },
+            onToggleFruitCatalogClick = {
+                isTreeListOpen = false
+                isFruitCatalogOpen = !isFruitCatalogOpen
+                mapViewModel.setIsAddingTree(false)
+                pinCoordinates = null
+            },
+            isBannerVisible = isBannerVisible,
+            modifier = Modifier.align(Alignment.BottomCenter),
+            adBannerContent = {
+                AdMobBanner(modifier = Modifier.fillMaxWidth())
             }
-        }
-
-        // ---- Bottom Navigation ----
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            color = Color.White.copy(alpha = 0.95f),
-            shadowElevation = 16.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .height(64.dp)
-                    .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Explorar
-                BottomNavItem(
-                    icon = Icons.Outlined.Home,
-                    label = "Explorar",
-                    selected = !isTreeListOpen && !isAddingTree && !isFruitCatalogOpen,
-                    onClick = {
-                        isTreeListOpen = false
-                        isFruitCatalogOpen = false
-                        mapViewModel.setIsAddingTree(false)
-                        pinCoordinates = null
-                    }
-                )
-                // Buscar
-                BottomNavItem(
-                    icon = Icons.Outlined.Search,
-                    label = "Buscar",
-                    selected = isTreeListOpen,
-                    onClick = {
-                        isTreeListOpen = !isTreeListOpen
-                        isFruitCatalogOpen = false
-                        mapViewModel.setIsAddingTree(false)
-                        pinCoordinates = null
-                    }
-                )
-                // Catálogo
-                BottomNavItem(
-                    icon = Icons.AutoMirrored.Outlined.MenuBook,
-                    label = "Catálogo",
-                    selected = isFruitCatalogOpen,
-                    onClick = {
-                        isFruitCatalogOpen = !isFruitCatalogOpen
-                        isTreeListOpen = false
-                        mapViewModel.setIsAddingTree(false)
-                        pinCoordinates = null
-                    }
-                )
-                // Mapear
-                BottomNavItem(
-                    icon = Icons.Outlined.Add,
-                    label = "Mapear",
-                    selected = isAddingTree,
-                    onClick = {
-                        isTreeListOpen = false
-                        isFruitCatalogOpen = false
-                        val next = !isAddingTree
-                        mapViewModel.setIsAddingTree(next)
-                        if (next) {
-                            mapViewModel.showToast("📍 Mova o mapa para alinhar a árvore com o marcador.")
-                        } else {
-                            pinCoordinates = null
-                        }
-                    }
-                )
-            }
-        }
+        )
 
         // ---- Add Tree Dialog ----
         if (isAddDialogOpen && pinCoordinates != null) {
@@ -839,20 +860,27 @@ fun MapScreen(
                     prefs.edit().putString("map_style", newStyle).apply()
                 },
                 onShowToast = { mapViewModel.showToast(it) },
+                isGuest = currentUser.isGuest,
+                onRequestAuth = { msg ->
+                    authPromptSubtitle = msg
+                    isAuthPromptOpen = true
+                },
                 onDismiss = { isAppSettingsOpen = false }
             )
         }
 
-        // ---- Fruit Catalog Sheet ----
-        if (isFruitCatalogOpen) {
-            FruitCatalogSheet(
-                onSearchFruitOnMap = { fruitName ->
-                    mapViewModel.setStatusFilter("todos")
-                    mapViewModel.setSearchQuery(fruitName)
-                    isFruitCatalogOpen = false
-                    isTreeListOpen = true
+        // ---- Auth Prompt Sheet (Guest Mode Soft-Gate) ----
+        if (isAuthPromptOpen) {
+            AuthPromptSheet(
+                title = "Faça parte da nossa colheita!",
+                subtitle = authPromptSubtitle ?: "Cadastre-se gratuitamente para marcar árvores frutíferas no mapa, registrar fotos e conquistar selos de cultivador.",
+                onGoogleSignIn = onGoogleSignIn,
+                isGoogleLoading = isGoogleLoading,
+                onEmailAction = {
+                    isAuthPromptOpen = false
+                    onNavigateToLogin()
                 },
-                onDismiss = { isFruitCatalogOpen = false }
+                onDismiss = { isAuthPromptOpen = false }
             )
         }
 
@@ -886,46 +914,10 @@ fun MapScreen(
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 80.dp)
+                .padding(top = 76.dp)
                 .statusBarsPadding()
         ) {
             ToastOverlay(message = toastMessage)
-        }
-    }
-}
-
-@Composable
-private fun BottomNavItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        color = if (selected) MamaoOrangeLight else Color.Transparent,
-        modifier = Modifier.defaultMinSize(minHeight = 48.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Icon(
-                icon,
-                contentDescription = label,
-                tint = if (selected) MamaoOrange else Stone400,
-                modifier = Modifier.size(22.dp)
-            )
-            Text(
-                label,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 10.sp,
-                    fontWeight = if (selected) FontWeight.Black else FontWeight.Bold
-                ),
-                color = if (selected) MamaoOrange else Stone500
-            )
         }
     }
 }
@@ -968,7 +960,8 @@ private fun createFruitVectorDrawable(
     context: Context,
     species: String,
     status: TreeStatus,
-    isPulsing: Boolean = false
+    isPulsing: Boolean = false,
+    isObfuscated: Boolean = false
 ): android.graphics.drawable.Drawable {
     val density = context.resources.displayMetrics.density
     val sizeDp = if (isPulsing) 52 else 40
@@ -979,23 +972,31 @@ private fun createFruitVectorDrawable(
     val centerY = sizePx / 2f
     val radius = sizePx * (if (isPulsing) 0.36f else 0.44f)
 
-    // Background color based on status
-    val bgColor = when (status) {
-        TreeStatus.PRONTO -> android.graphics.Color.parseColor("#FEF2F2")
-        TreeStatus.CRESCENDO -> android.graphics.Color.parseColor("#F0FDF4")
-        TreeStatus.FLORINDO -> android.graphics.Color.parseColor("#FDF2F8")
-        TreeStatus.VAZIO -> android.graphics.Color.parseColor("#F5F5F4")
+    // Background color based on status or obfuscation
+    val bgColor = if (isObfuscated) {
+        android.graphics.Color.parseColor("#F5F5F4") // Stone100
+    } else {
+        when (status) {
+            TreeStatus.PRONTO -> android.graphics.Color.parseColor("#FEF2F2")
+            TreeStatus.CRESCENDO -> android.graphics.Color.parseColor("#F0FDF4")
+            TreeStatus.FLORINDO -> android.graphics.Color.parseColor("#FDF2F8")
+            TreeStatus.VAZIO -> android.graphics.Color.parseColor("#F5F5F4")
+        }
     }
 
-    val strokeColor = when (status) {
-        TreeStatus.PRONTO -> android.graphics.Color.parseColor("#EF4444")
-        TreeStatus.CRESCENDO -> android.graphics.Color.parseColor("#22C55E")
-        TreeStatus.FLORINDO -> android.graphics.Color.parseColor("#EC4899")
-        TreeStatus.VAZIO -> android.graphics.Color.parseColor("#78716C")
+    val strokeColor = if (isObfuscated) {
+        android.graphics.Color.parseColor("#A8A29E") // Stone400
+    } else {
+        when (status) {
+            TreeStatus.PRONTO -> android.graphics.Color.parseColor("#EF4444")
+            TreeStatus.CRESCENDO -> android.graphics.Color.parseColor("#22C55E")
+            TreeStatus.FLORINDO -> android.graphics.Color.parseColor("#EC4899")
+            TreeStatus.VAZIO -> android.graphics.Color.parseColor("#78716C")
+        }
     }
 
     // Glowing pulsing outer ring
-    if (isPulsing) {
+    if (isPulsing && !isObfuscated) {
         val haloPaint = android.graphics.Paint().apply {
             color = android.graphics.Color.argb(120, 249, 115, 22) // MamaoOrange glowing halo
             isAntiAlias = true
@@ -1012,7 +1013,7 @@ private fun createFruitVectorDrawable(
 
     // Border
     val borderPaint = android.graphics.Paint().apply {
-        color = if (isPulsing) android.graphics.Color.parseColor("#F97316") else strokeColor
+        color = if (isPulsing && !isObfuscated) android.graphics.Color.parseColor("#F97316") else strokeColor
         style = android.graphics.Paint.Style.STROKE
         strokeWidth = (if (isPulsing) 3.5f else 2.5f) * density
         isAntiAlias = true
@@ -1027,7 +1028,56 @@ private fun createFruitVectorDrawable(
         val left = (centerX - iconSize / 2f).toInt()
         val top = (centerY - iconSize / 2f).toInt()
         vectorDrawable.setBounds(left, top, left + iconSize, top + iconSize)
+        if (isObfuscated) {
+            vectorDrawable.alpha = 110 // Translúcido desbotado
+        }
         vectorDrawable.draw(canvas)
+    }
+
+    // Badge de cadeado vetorial para itens ofuscados
+    if (isObfuscated) {
+        val lockBadgeRadius = 6.5f * density
+        val lockBadgeX = centerX + radius * 0.65f
+        val lockBadgeY = centerY + radius * 0.65f
+
+        val lockBgPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.parseColor("#57534E") // Stone600
+            isAntiAlias = true
+        }
+        canvas.drawCircle(lockBadgeX, lockBadgeY, lockBadgeRadius, lockBgPaint)
+
+        val lockPaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            isAntiAlias = true
+        }
+        val lockWidth = 4.5f * density
+        val lockHeight = 3.5f * density
+        val rectLeft = lockBadgeX - lockWidth / 2f
+        val rectTop = lockBadgeY - lockHeight / 4f
+        canvas.drawRoundRect(
+            rectLeft,
+            rectTop,
+            rectLeft + lockWidth,
+            rectTop + lockHeight,
+            1f * density,
+            1f * density,
+            lockPaint
+        )
+
+        val shacklePaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = 1f * density
+            isAntiAlias = true
+        }
+        val shackleRadius = 1.6f * density
+        val shackleOval = android.graphics.RectF(
+            lockBadgeX - shackleRadius,
+            rectTop - shackleRadius * 1.6f,
+            lockBadgeX + shackleRadius,
+            rectTop + shackleRadius * 0.2f
+        )
+        canvas.drawArc(shackleOval, 180f, 180f, false, shacklePaint)
     }
 
     return android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
@@ -1037,7 +1087,8 @@ private fun createFruitVectorDrawable(
 private fun createClusterVectorDrawable(
     context: Context,
     count: Int,
-    isPulsing: Boolean = false
+    isPulsing: Boolean = false,
+    isObfuscated: Boolean = false
 ): android.graphics.drawable.Drawable {
     val density = context.resources.displayMetrics.density
     val sizeDp = if (isPulsing) 52 else 42
@@ -1049,7 +1100,7 @@ private fun createClusterVectorDrawable(
     val radius = sizePx * (if (isPulsing) 0.36f else 0.44f)
 
     // Halo pulsante quando a árvore selecionada está dentro deste agrupamento
-    if (isPulsing) {
+    if (isPulsing && !isObfuscated) {
         val haloPaint = android.graphics.Paint().apply {
             color = android.graphics.Color.argb(120, 249, 115, 22) // MamaoOrange glowing halo
             isAntiAlias = true
@@ -1059,21 +1110,21 @@ private fun createClusterVectorDrawable(
 
     // Sombra sutil externa para profundidade
     val shadowPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.argb(35, 0, 0, 0)
+        color = android.graphics.Color.argb(if (isObfuscated) 15 else 35, 0, 0, 0)
         isAntiAlias = true
     }
     canvas.drawCircle(centerX, centerY + 1.2f * density, radius, shadowPaint)
 
-    // Fundo circular (MamaoOrangeLight / creme suave)
+    // Fundo circular (MamaoOrangeLight ou Stone100 quando ofuscado)
     val bgPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.parseColor("#FFF7ED")
+        color = if (isObfuscated) android.graphics.Color.parseColor("#F5F5F4") else android.graphics.Color.parseColor("#FFF7ED")
         isAntiAlias = true
     }
     canvas.drawCircle(centerX, centerY, radius, bgPaint)
 
-    // Borda vibrante (MamaoOrange)
+    // Borda (MamaoOrange ou Stone400 quando ofuscado)
     val borderPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.parseColor("#F97316")
+        color = if (isObfuscated) android.graphics.Color.parseColor("#A8A29E") else android.graphics.Color.parseColor("#F97316")
         style = android.graphics.Paint.Style.STROKE
         strokeWidth = (if (isPulsing) 3.5f else 2.6f) * density
         isAntiAlias = true
@@ -1083,7 +1134,7 @@ private fun createClusterVectorDrawable(
     // Texto com a quantidade condensada ("3", "4", "6", etc.)
     val countText = if (count > 99) "99+" else count.toString()
     val textPaint = android.graphics.Paint().apply {
-        color = android.graphics.Color.parseColor("#C2410C") // Laranja escuro de alto contraste
+        color = if (isObfuscated) android.graphics.Color.parseColor("#78716C") else android.graphics.Color.parseColor("#C2410C")
         isAntiAlias = true
         isFakeBoldText = true
         textAlign = android.graphics.Paint.Align.CENTER

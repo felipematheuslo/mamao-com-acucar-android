@@ -1,6 +1,9 @@
 package com.felipelaurindo.mamaocomacucar.ui.map
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,9 +16,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,6 +37,8 @@ import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
 fun TreeListSheet(
     mapViewModel: MapViewModel,
     creatorUsernames: Map<String, String>,
+    isGuest: Boolean = false,
+    onRequestAuth: ((String) -> Unit)? = null,
     onSelectTree: (TreeItem) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -45,17 +52,25 @@ fun TreeListSheet(
         mapViewModel.getFilteredTrees()
     }
 
+    var isExpanded by remember { mutableStateOf(true) }
+
+    val sheetHeightFraction by animateFloatAsState(
+        targetValue = if (isExpanded) 0.85f else 0.52f,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 200, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "sheetHeightFraction"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(Stone950.copy(alpha = 0.5f))
             .clickable(onClick = onDismiss)
     ) {
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .fillMaxHeight(0.85f)
+                .fillMaxHeight(sheetHeightFraction)
                 .statusBarsPadding()
                 .padding(bottom = 64.dp)
                 .navigationBarsPadding()
@@ -65,18 +80,32 @@ fun TreeListSheet(
             shadowElevation = 24.dp
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Handle bar
+                // Barra de arrasto interativa para estender / comprimir o card
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 10.dp, bottom = 4.dp),
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures { _, dragAmount ->
+                                if (dragAmount < -15) {
+                                    isExpanded = true
+                                } else if (dragAmount > 20) {
+                                    if (isExpanded) {
+                                        isExpanded = false
+                                    } else {
+                                        onDismiss()
+                                    }
+                                }
+                            }
+                        }
+                        .clickable { isExpanded = !isExpanded }
+                        .padding(top = 10.dp, bottom = 6.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(40.dp)
-                            .height(4.dp)
-                            .background(Stone300, RoundedCornerShape(2.dp))
+                            .width(44.dp)
+                            .height(5.dp)
+                            .background(Stone300, RoundedCornerShape(2.5.dp))
                     )
                 }
 
@@ -89,7 +118,8 @@ fun TreeListSheet(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.clickable { isExpanded = !isExpanded }
                         ) {
                             Text("🔍", fontSize = 18.sp)
                             Text(
@@ -98,8 +128,18 @@ fun TreeListSheet(
                                 color = Stone950
                             )
                         }
-                        IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Outlined.Close, null, tint = Stone400, modifier = Modifier.size(16.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { isExpanded = !isExpanded }, modifier = Modifier.size(32.dp)) {
+                                Icon(
+                                    imageVector = if (isExpanded) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
+                                    contentDescription = if (isExpanded) "Comprimir lista" else "Estender lista",
+                                    tint = Stone500,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.Outlined.Close, "Fechar", tint = Stone400, modifier = Modifier.size(16.dp))
+                            }
                         }
                     }
 
@@ -156,18 +196,26 @@ fun TreeListSheet(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        FilterChipItem("Todas", "todos", statusFilter) { mapViewModel.setStatusFilter(it) }
-                        FilterChipItem("🍎 Maduro", "pronto", statusFilter) { mapViewModel.setStatusFilter(it) }
-                        FilterChipItem("🍏 Verde", "crescendo", statusFilter) { mapViewModel.setStatusFilter(it) }
-                        FilterChipItem("🌸 Florindo", "florindo", statusFilter) { mapViewModel.setStatusFilter(it) }
-                        FilterChipItem("🌳 Vazio", "vazio", statusFilter) { mapViewModel.setStatusFilter(it) }
+                        val handleFilterClick: (String) -> Unit = { filter ->
+                            if (isGuest && filter != "todos") {
+                                onRequestAuth?.invoke("Cadastre-se gratuitamente para filtrar as árvores por fase de maturação.")
+                            } else {
+                                mapViewModel.setStatusFilter(filter)
+                            }
+                        }
+                        FilterChipItem("Todas", "todos", statusFilter, handleFilterClick)
+                        FilterChipItem("🍎 Maduro", "pronto", statusFilter, handleFilterClick)
+                        FilterChipItem("🍏 Verde", "crescendo", statusFilter, handleFilterClick)
+                        FilterChipItem("🌸 Florindo", "florindo", statusFilter, handleFilterClick)
+                        FilterChipItem("🌳 Vazio", "vazio", statusFilter, handleFilterClick)
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     val count = filteredTrees.size
                     Text(
-                        "$count ${if (count == 1) "fruteira encontrada" else "fruteiras encontradas"}",
+                        if (isGuest && count > 3) "Mostrando 3 de $count fruteiras na sua região"
+                        else "$count ${if (count == 1) "fruteira encontrada" else "fruteiras encontradas"}",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                         color = Stone400
                     )
@@ -185,7 +233,8 @@ fun TreeListSheet(
                         .padding(horizontal = 20.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (filteredTrees.isEmpty()) {
+                    val displayedTrees = if (isGuest) filteredTrees.take(3) else filteredTrees
+                    if (displayedTrees.isEmpty()) {
                         // Empty state
                         Column(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
@@ -205,7 +254,7 @@ fun TreeListSheet(
                             )
                         }
                     } else {
-                        filteredTrees.forEach { tw ->
+                        displayedTrees.forEach { tw ->
                             val tree = tw.tree
                             val meta = getStatusMeta(tree.currentStatus)
                             val username = creatorUsernames[tree.createdBy]
@@ -227,22 +276,25 @@ fun TreeListSheet(
                                     Surface(
                                         shape = CircleShape,
                                         color = meta.bgColor,
-                                        modifier = Modifier.size(40.dp)
+                                        modifier = Modifier.size(36.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Image(
-                                                painter = painterResource(id = getFruitDrawableRes(tree.species)),
-                                                contentDescription = tree.species,
-                                                modifier = Modifier.size(24.dp)
-                                            )
+                                            Text(meta.emoji, fontSize = 16.sp)
                                         }
                                     }
+
+                                    // Fruit icon + info
+                                    Image(
+                                        painter = painterResource(id = getFruitDrawableRes(tree.species)),
+                                        contentDescription = tree.species,
+                                        modifier = Modifier.size(32.dp)
+                                    )
 
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             tree.species,
-                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
-                                            color = Stone900,
+                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = Stone950,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
@@ -253,8 +305,9 @@ fun TreeListSheet(
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Row(
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
@@ -270,13 +323,66 @@ fun TreeListSheet(
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(
                                             formatDistance(tw.distance),
-                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
-                                            color = Stone700
+                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = Stone950
                                         )
                                         Text(
                                             "de distância",
                                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
                                             color = Stone400
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (isGuest) {
+                            val hiddenCount = (filteredTrees.size - displayedTrees.size).coerceAtLeast(0)
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                shape = RoundedCornerShape(18.dp),
+                                color = MamaoOrangeLight,
+                                border = BorderStroke(1.dp, MamaoOrange.copy(alpha = 0.35f))
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text("🔒", fontSize = 16.sp)
+                                        Text(
+                                            if (hiddenCount > 0) "Mais $hiddenCount ${if (hiddenCount == 1) "fruteira" else "fruteiras"} na região"
+                                            else "Explore todas as fruteiras",
+                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
+                                            color = Stone900
+                                        )
+                                    }
+                                    Text(
+                                        "Cadastre-se gratuitamente para ver a lista completa de árvores frutíferas, distância exata e rota até elas.",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                                        color = Stone600,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Button(
+                                        onClick = {
+                                            onRequestAuth?.invoke("Cadastre-se gratuitamente para ver a lista completa de árvores frutíferas e a distância exata até elas.")
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(42.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MamaoOrange)
+                                    ) {
+                                        Text(
+                                            "Desbloquear Lista Completa 🍊",
+                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = Color.White
                                         )
                                     }
                                 }

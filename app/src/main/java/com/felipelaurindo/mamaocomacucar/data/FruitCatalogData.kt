@@ -8,7 +8,7 @@ data class FruitCatalogItem(
     val scientificName: String,
     val family: String,
     val biome: String,
-    val category: String, // "Populares", "Cerrado & Caatinga", "Amazônia", "Mata Atlântica", "Nativas Raras"
+    val category: String, // "Populares", "Cerrado", "Caatinga", "Amazônia", "Mata Atlântica", "Nativas Raras"
     val description: String
 )
 
@@ -77,7 +77,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Annona crassiflora",
         family = "Annonaceae",
         biome = "Cerrado",
-        category = "Cerrado & Caatinga",
+        category = "Cerrado",
         description = "Conhecido como marolo ou araticum-do-cerrado, fruto rústico de casca grossa e polpa amarela intensamente aromática."
     ),
     FruitCatalogItem(
@@ -117,7 +117,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Mauritia flexuosa",
         family = "Arecaceae",
         biome = "Cerrado",
-        category = "Cerrado & Caatinga",
+        category = "Cerrado",
         description = "A 'árvore da vida' dos brejos e veredas, com frutos escamosos avermelhados riquíssimos em vitamina A e óleos nobres."
     ),
     FruitCatalogItem(
@@ -133,7 +133,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Eugenia dysenterica",
         family = "Myrtaceae",
         biome = "Cerrado",
-        category = "Cerrado & Caatinga",
+        category = "Cerrado",
         description = "Fruta clássica do cerrado brasileiro, de casca amarelo-pálida e sabor refrescante e suave."
     ),
     FruitCatalogItem(
@@ -189,7 +189,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Copernicia prunifera",
         family = "Arecaceae",
         biome = "Caatinga",
-        category = "Cerrado & Caatinga",
+        category = "Caatinga",
         description = "A 'árvore da providência' do semiárido nordestino, cujos pequenos frutos escuros alimentam a fauna e populações locais."
     ),
     FruitCatalogItem(
@@ -245,7 +245,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Campomanesia adamantium",
         family = "Myrtaceae",
         biome = "Cerrado",
-        category = "Cerrado & Caatinga",
+        category = "Cerrado",
         description = "Frutinho do cerrado com casca verde-amarelada e sabor doce aromático inesquecível de infância no campo."
     ),
     FruitCatalogItem(
@@ -333,7 +333,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Hymenaea courbaril",
         family = "Fabaceae",
         biome = "Cerrado",
-        category = "Cerrado & Caatinga",
+        category = "Cerrado",
         description = "Árvore majestosa com vagens lenhosas duras que guardam uma farinha amarelada rica em nutrientes e energia."
     ),
     FruitCatalogItem(
@@ -349,7 +349,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Ziziphus joazeiro",
         family = "Rhamnaceae",
         biome = "Caatinga",
-        category = "Cerrado & Caatinga",
+        category = "Caatinga",
         description = "Árvore símbolo da resistência do semiárido, com frutos amarelos doces ricos em saponinas e vitamina C."
     ),
     FruitCatalogItem(
@@ -365,7 +365,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Acrocomia aculeata",
         family = "Arecaceae",
         biome = "Cerrado",
-        category = "Cerrado & Caatinga",
+        category = "Cerrado",
         description = "Palmeira rústica e espinhosa com frutos globosos oleaginosos de polpa amarela nutritiva e castanha crocante."
     ),
     FruitCatalogItem(
@@ -389,7 +389,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Hancornia speciosa",
         family = "Apocynaceae",
         biome = "Cerrado",
-        category = "Cerrado & Caatinga",
+        category = "Cerrado",
         description = "Seu nome em tupi significa 'coisa boa de comer'; polpa macia, perfumada e leitosa muito valorizada no nordeste."
     ),
     FruitCatalogItem(
@@ -437,7 +437,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Byrsonima verbascifolia",
         family = "Malpighiaceae",
         biome = "Cerrado",
-        category = "Cerrado & Caatinga",
+        category = "Cerrado",
         description = "Frutinho amarelo do cerrado de aroma forte e marcante e polpa carnosa amanteigada com sabor característico."
     ),
     FruitCatalogItem(
@@ -453,7 +453,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Caryocar brasiliense",
         family = "Caryocaraceae",
         biome = "Cerrado",
-        category = "Cerrado & Caatinga",
+        category = "Cerrado",
         description = "O rei do cerrado! Fruto aromático de polpa amarelo-ouro que deve ser roída com cuidado devido aos espinhos internos."
     ),
     FruitCatalogItem(
@@ -557,7 +557,7 @@ val FRUIT_CATALOG_LIST = listOf(
         scientificName = "Spondias tuberosa",
         family = "Anacardiaceae",
         biome = "Caatinga",
-        category = "Cerrado & Caatinga",
+        category = "Caatinga",
         description = "O 'sagrado do sertão', árvore da caatinga que armazena água nas raízes e produz frutinhos verdes doces e refrescantes."
     )
 )

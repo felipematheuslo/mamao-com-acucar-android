@@ -27,12 +27,12 @@ fun GoogleSignInButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp),
+            .height(50.dp),
         enabled = enabled && !isLoading,
         shape = RoundedCornerShape(14.dp),
         color = Color.White,
-        border = BorderStroke(1.dp, Stone200),
-        shadowElevation = 0.dp
+        border = BorderStroke(1.dp, Stone300),
+        shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier

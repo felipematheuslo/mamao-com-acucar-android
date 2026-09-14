@@ -28,6 +28,7 @@ import com.felipelaurindo.mamaocomacucar.ui.auth.RegisterScreen
 import com.felipelaurindo.mamaocomacucar.ui.auth.WelcomeScreen
 import com.felipelaurindo.mamaocomacucar.ui.map.MapScreen
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun MamaoApp() {
@@ -63,6 +64,7 @@ fun MamaoApp() {
         composable("auth/welcome") {
             WelcomeScreen(
                 authViewModel = authViewModel,
+                onContinueAsGuest = { authViewModel.continueAsGuest() },
                 onNavigateToRegister = {
                     navController.navigate("auth/register")
                 },
@@ -101,9 +103,15 @@ fun MamaoApp() {
         composable("map") {
             val currentAuth = authState
             if (currentAuth is AuthState.Authenticated) {
+                val context = LocalContext.current
+                val isSubmittingGoogle by authViewModel.isSubmittingGoogle.collectAsState()
                 MapScreen(
                     currentUser = currentAuth.user,
-                    onLogout = { authViewModel.logout() }
+                    onLogout = { authViewModel.logout() },
+                    onGoogleSignIn = { authViewModel.loginWithGoogle(context) },
+                    isGoogleLoading = isSubmittingGoogle,
+                    onNavigateToLogin = { navController.navigate("auth/login") },
+                    onNavigateToRegister = { navController.navigate("auth/register") }
                 )
             }
         }

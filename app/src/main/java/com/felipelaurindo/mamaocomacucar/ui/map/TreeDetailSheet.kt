@@ -39,6 +39,7 @@ fun TreeDetailSheet(
     currentUser: LoggedUser,
     creatorUsernames: Map<String, String>,
     mapViewModel: MapViewModel,
+    onRequestAuth: (String) -> Unit = {},
     onDismiss: () -> Unit
 ) {
     var selectedPhase by remember { mutableStateOf<TreeStatus?>(null) }
@@ -50,7 +51,7 @@ fun TreeDetailSheet(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(Stone950.copy(alpha = 0.5f))
             .clickable(onClick = onDismiss)
     ) {
         Surface(
@@ -182,7 +183,13 @@ fun TreeDetailSheet(
                                             else -> Stone200
                                         }
                                     ),
-                                    onClick = { selectedPhase = status }
+                                    onClick = {
+                                        if (currentUser.isGuest) {
+                                            onRequestAuth("Cadastre-se gratuitamente para registrar novas fases e atualizações de árvores frutíferas.")
+                                        } else {
+                                            selectedPhase = status
+                                        }
+                                    }
                                 ) {
                                     Column(
                                         modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
@@ -223,15 +230,19 @@ fun TreeDetailSheet(
                         if (selectedPhase != null && selectedPhase != tree.currentStatus) {
                             Button(
                                 onClick = {
-                                    isSubmitting = true
-                                    mapViewModel.submitReport(
-                                        treeId = tree.id,
-                                        status = selectedPhase!!,
-                                        createdBy = currentUser.uid,
-                                        createdByName = currentUser.displayName
-                                    )
-                                    isSubmitting = false
-                                    selectedPhase = null
+                                    if (currentUser.isGuest) {
+                                        onRequestAuth("Cadastre-se gratuitamente para registrar novas fases e atualizações de árvores frutíferas.")
+                                    } else {
+                                        isSubmitting = true
+                                        mapViewModel.submitReport(
+                                            treeId = tree.id,
+                                            status = selectedPhase!!,
+                                            createdBy = currentUser.uid,
+                                            createdByName = currentUser.displayName
+                                        )
+                                        isSubmitting = false
+                                        selectedPhase = null
+                                    }
                                 },
                                 modifier = Modifier.fillMaxWidth().height(44.dp),
                                 shape = RoundedCornerShape(12.dp),
@@ -248,7 +259,66 @@ fun TreeDetailSheet(
                     }
 
                     // Timeline
-                    if (updates.isNotEmpty()) {
+                    if (currentUser.isGuest) {
+                        HorizontalDivider(color = Stone100)
+
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(18.dp),
+                            color = MamaoOrangeLight,
+                            border = BorderStroke(1.dp, MamaoOrange.copy(alpha = 0.35f))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(18.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color.White,
+                                    border = BorderStroke(1.dp, MamaoOrange.copy(alpha = 0.3f)),
+                                    modifier = Modifier.size(44.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text("🔒", fontSize = 20.sp)
+                                    }
+                                }
+
+                                Text(
+                                    "Histórico da Comunidade",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
+                                    color = Stone900
+                                )
+
+                                Text(
+                                    if (updates.isNotEmpty())
+                                        "Esta árvore possui ${updates.size} ${if (updates.size == 1) "relato registrado" else "relatos registrados"} por outros cultivadores. Crie sua conta gratuita para ver o histórico e ler os comentários."
+                                    else
+                                        "Crie sua conta gratuita para acompanhar relatos de colheitas, fotos e atualizações colaborativas da comunidade nesta fruteira.",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                                    color = Stone600,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Button(
+                                    onClick = {
+                                        onRequestAuth("Cadastre-se gratuitamente para ver relatos, fotos e colaborar com a comunidade.")
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(42.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MamaoOrange)
+                                ) {
+                                    Text(
+                                        "Ver Relatos da Comunidade 💬",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    } else if (updates.isNotEmpty()) {
                         HorizontalDivider(color = Stone100)
 
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

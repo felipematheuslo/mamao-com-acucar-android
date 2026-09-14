@@ -19,5 +19,16 @@ data class LoggedUser(
     val uid: String,
     val displayName: String,
     val username: String,
-    val email: String
-)
+    val email: String,
+    val isGuest: Boolean = false
+) {
+    companion object {
+        val Guest = LoggedUser(
+            uid = "guest_visitor",
+            displayName = "Visitante",
+            username = "visitante",
+            email = "",
+            isGuest = true
+        )
+    }
+}
