@@ -23,6 +23,14 @@
           }
         },
         {
+          "client_id": "808257197765-mpro7563mvplsa83fjc37khm1ft8nmbb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.felipelaurindo.mamaocomacucar",
+            "certificate_hash": "bb1b87a00435a2c78dad6bad7cccdeec0055df50"
+          }
+        },
+        {
           "client_id": "808257197765-n4dm1s65hm7d3u0d8p2pcr3362oq94ur.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

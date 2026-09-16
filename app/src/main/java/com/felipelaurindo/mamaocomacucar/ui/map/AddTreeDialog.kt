@@ -124,6 +124,9 @@ fun AddTreeDialog(
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Stone900,
+                            unfocusedTextColor = Stone900,
+                            cursorColor = MamaoOrange,
                             focusedBorderColor = MamaoOrange,
                             unfocusedBorderColor = Stone200,
                             focusedContainerColor = Stone50,
@@ -227,6 +230,9 @@ fun AddTreeDialog(
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Stone900,
+                            unfocusedTextColor = Stone900,
+                            cursorColor = MamaoOrange,
                             focusedBorderColor = MamaoOrange,
                             unfocusedBorderColor = Stone200,
                             focusedContainerColor = Stone50,

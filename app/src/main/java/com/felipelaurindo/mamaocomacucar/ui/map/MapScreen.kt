@@ -325,9 +325,14 @@ fun MapScreen(
                     )
                     overlays.add(rotationOverlay)
 
-                    // Monitora alterações de zoom para re-calcular agrupamento de marcadores
                     addMapListener(object : MapListener {
-                        override fun onScroll(event: ScrollEvent?): Boolean = false
+                        override fun onScroll(event: ScrollEvent?): Boolean {
+                            if (isAddingTree) {
+                                val center = this@apply.mapCenter
+                                pinCoordinates = Pair(center.latitude, center.longitude)
+                            }
+                            return false
+                        }
                         override fun onZoom(event: ZoomEvent?): Boolean {
                             val newZoom = zoomLevelDouble
                             if (abs(newZoom - currentMapZoom) >= 0.3) {
@@ -493,9 +498,29 @@ fun MapScreen(
                     .navigationBarsPadding(),
                 contentAlignment = Alignment.Center
             ) {
+                // Mira no solo ancorada exatamente no centro geográfico do mapa (coordenada salva)
+                Box(
+                    modifier = Modifier.size(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MamaoOrange.copy(alpha = 0.2f), CircleShape)
+                            .border(1.5.dp, MamaoOrange.copy(alpha = 0.75f), CircleShape)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(MamaoOrange, CircleShape)
+                            .border(1.dp, Color.White, CircleShape)
+                    )
+                }
+
+                // Pino (balão de cereja + haste) posicionado diretamente acima do pontinho
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.offset(y = (-16).dp)
+                    modifier = Modifier.offset(y = (-35).dp)
                 ) {
                     Surface(
                         shape = CircleShape,
@@ -513,15 +538,9 @@ fun MapScreen(
                     }
                     Box(
                         modifier = Modifier
-                            .width(2.dp)
-                            .height(14.dp)
+                            .width(2.5.dp)
+                            .height(18.dp)
                             .background(MamaoOrange)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(MamaoOrange.copy(alpha = 0.7f))
                     )
                 }
             }
@@ -587,7 +606,7 @@ fun MapScreen(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = MamaoOrange)
                         ) {
-                            Text("Confirmar Local 🌳", style = MaterialTheme.typography.labelMedium)
+                            Text("Confirmar Local", style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
@@ -806,9 +825,7 @@ fun MapScreen(
                     isFruitCatalogOpen = false
                     val next = !isAddingTree
                     mapViewModel.setIsAddingTree(next)
-                    if (next) {
-                        mapViewModel.showToast("📍 Mova o mapa para alinhar a árvore com o marcador.")
-                    } else {
+                    if (!next) {
                         pinCoordinates = null
                     }
                 }
