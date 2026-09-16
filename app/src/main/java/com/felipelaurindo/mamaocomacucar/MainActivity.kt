@@ -18,6 +18,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         Configuration.getInstance().load(this, getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
+        Configuration.getInstance().userAgentValue = packageName
 
         // Inicialização do Google Mobile Ads (AdMob)
         MobileAds.initialize(this) {}

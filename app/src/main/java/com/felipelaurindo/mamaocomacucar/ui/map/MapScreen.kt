@@ -169,17 +169,17 @@ private val esriSatelliteSource: OnlineTileSourceBase by lazy {
     }
 }
 
-// Fonte de mapa de Relevo (Esri World Topo Map) livre e sem marcas d'água
-private val esriTopoSource: OnlineTileSourceBase by lazy {
+// Fonte de mapa Clássico (OpenStreetMap oficial - mesmo padrão utilizado pelo Leaflet) livre de marcas d'água
+private val osmClassicSource: OnlineTileSourceBase by lazy {
     object : OptimizedOnlineTileSource(
-        "EsriTopo", 0, 19, 256, ".jpg",
-        arrayOf("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/")
+        "OpenStreetMap", 0, 19, 256, ".png",
+        arrayOf("https://tile.openstreetmap.org/")
     ) {
         override fun getTileURLString(pMapTileIndex: Long): String {
             val zoom = MapTileIndex.getZoom(pMapTileIndex)
             val x = MapTileIndex.getX(pMapTileIndex)
             val y = MapTileIndex.getY(pMapTileIndex)
-            return "$baseUrl$zoom/$y/$x$mImageFilenameEnding"
+            return "$baseUrl$zoom/$x/$y$mImageFilenameEnding"
         }
     }
 }
@@ -187,7 +187,7 @@ private val esriTopoSource: OnlineTileSourceBase by lazy {
 private fun getTileSourceForStyle(style: String): OnlineTileSourceBase {
     return when (style) {
         "satellite" -> esriSatelliteSource
-        else -> esriTopoSource
+        else -> osmClassicSource
     }
 }
 
@@ -802,6 +802,37 @@ fun MapScreen(
                 contentColor = Stone900
             ) {
                 Icon(Icons.Outlined.MyLocation, contentDescription = "Minha localização")
+            }
+        }
+
+        // ---- Map Attribution Badge (UI/UX clean, dinâmico e conforme licenças) ----
+        AnimatedVisibility(
+            visible = !isTreeListOpen && !isTreeDetailOpen,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 16.dp, bottom = bottomOffset + 8.dp)
+                .navigationBarsPadding(),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color.White.copy(alpha = 0.85f),
+                border = BorderStroke(0.5.dp, Stone200.copy(alpha = 0.8f)),
+                shadowElevation = 2.dp,
+                modifier = Modifier.clickable {
+                    isAppSettingsOpen = true
+                }
+            ) {
+                Text(
+                    text = if (mapStyle == "satellite") "© Esri" else "© OpenStreetMap",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = Stone600,
+                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
+                )
             }
         }
 

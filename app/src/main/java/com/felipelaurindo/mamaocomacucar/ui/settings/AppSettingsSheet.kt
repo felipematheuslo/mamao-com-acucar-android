@@ -25,7 +25,7 @@ fun AppSettingsSheet(
     onDismiss: () -> Unit
 ) {
     val mapStyles = listOf(
-        MapStyleOption("topo", "Padrão", "⛰️"),
+        MapStyleOption("topo", "Clássico", "🗺️"),
         MapStyleOption("satellite", "Satélite", "🛰️")
     )
 
@@ -153,6 +153,32 @@ fun AppSettingsSheet(
                                 }
                             }
                         }
+                    }
+                }
+
+                // Cartographic attribution
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Stone50,
+                    border = BorderStroke(1.dp, Stone200)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Text(
+                            "CRÉDITOS CARTOGRÁFICOS",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
+                            color = Stone400,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            "• Mapa Clássico: © OpenStreetMap contributors (ODbL)\n• Imagens de Satélite: © Esri, Maxar, Earthstar",
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                            color = Stone600,
+                            lineHeight = 16.sp
+                        )
                     }
                 }
 
