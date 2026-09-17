@@ -29,6 +29,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.Mail
 import com.felipelaurindo.mamaocomacucar.R
 import com.felipelaurindo.mamaocomacucar.ui.auth.components.GoogleSignInButton
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
@@ -261,6 +264,13 @@ fun WelcomeScreen(
                         contentColor = Stone700
                     )
                 ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Explore,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = Stone700
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "Explorar o mapa sem conta",
                         style = MaterialTheme.typography.bodyMedium.copy(
@@ -307,6 +317,13 @@ fun WelcomeScreen(
                         contentColor = Stone700
                     )
                 ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Mail,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = Stone700
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "Entrar com e-mail",
                         style = MaterialTheme.typography.bodyMedium.copy(

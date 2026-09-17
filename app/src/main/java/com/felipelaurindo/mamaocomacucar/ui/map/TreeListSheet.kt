@@ -29,7 +29,6 @@ import androidx.compose.ui.res.painterResource
 import com.felipelaurindo.mamaocomacucar.data.getFruitDisplayName
 import com.felipelaurindo.mamaocomacucar.data.model.TreeItem
 import com.felipelaurindo.mamaocomacucar.ui.map.components.StatusChip
-import com.felipelaurindo.mamaocomacucar.ui.map.components.getStatusMeta
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.formatDistance
 import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
@@ -266,7 +265,6 @@ fun TreeListSheet(
                     } else {
                         displayedTrees.forEach { tw ->
                             val tree = tw.tree
-                            val meta = getStatusMeta(tree.currentStatus)
                             val username = creatorUsernames[tree.createdBy]
                                 ?: "@${tree.createdByName.split(" ").first().lowercase()}"
 
@@ -279,26 +277,24 @@ fun TreeListSheet(
                             ) {
                                 Row(
                                     modifier = Modifier.padding(12.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Status icon
+                                    // Fruit avatar
                                     Surface(
                                         shape = CircleShape,
-                                        color = meta.bgColor,
-                                        modifier = Modifier.size(36.dp)
+                                        color = MamaoOrangeLight,
+                                        border = BorderStroke(1.dp, MamaoOrange.copy(alpha = 0.2f)),
+                                        modifier = Modifier.size(44.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Text(meta.emoji, fontSize = 16.sp)
+                                            Image(
+                                                painter = painterResource(id = getFruitDrawableRes(tree.species)),
+                                                contentDescription = tree.species,
+                                                modifier = Modifier.size(28.dp)
+                                            )
                                         }
                                     }
-
-                                    // Fruit icon + info
-                                    Image(
-                                        painter = painterResource(id = getFruitDrawableRes(tree.species)),
-                                        contentDescription = tree.species,
-                                        modifier = Modifier.size(32.dp)
-                                    )
 
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
@@ -374,7 +370,7 @@ fun TreeListSheet(
                                         )
                                     }
                                     Text(
-                                        "Cadastre-se gratuitamente para ver a lista completa de árvores frutíferas, distância exata e rota até elas.",
+                                        "Cadastre-se gratuitamente para ver a lista completa de árvores frutíferas e a distância até elas.",
                                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                                         color = Stone600,
                                         textAlign = TextAlign.Center
