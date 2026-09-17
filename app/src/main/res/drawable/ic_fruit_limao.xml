@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+  <!-- Lemon / Lime Oval with pointed tips -->
+  <path
+      android:pathData="M32,10C34,10 36,13 38,16C47,21 51,31 50,40C49,49 43,55 36,58C34,59 33,60 32,60C31,60 30,59 28,58C21,55 15,49 14,40C13,31 17,21 26,16C28,13 30,10 32,10Z"
+      android:fillColor="#84CC16"
+      android:strokeColor="#4D7C0F"
+      android:strokeWidth="2"/>
+
+  <!-- Shading layer (darker green lime gradient) -->
+  <path
+      android:pathData="M32,10C34,10 36,13 38,16C47,21 51,31 50,40C49,49 43,55 36,58C42,53 45,45 44,38C43,28 38,20 32,10Z"
+      android:fillColor="#65A30D"/>
+
+  <!-- Bright Yellow-Green Fresh Highlight -->
+  <path
+      android:pathData="M22,22C18,28 18,36 21,44"
+      android:strokeColor="#BEF264"
+      android:strokeWidth="2.5"
+      android:strokeLineCap="round"/>
+
+  <!-- Top Stem -->
+  <path
+      android:pathData="M32,10L32,4"
+      android:strokeColor="#365314"
+      android:strokeWidth="3"
+      android:strokeLineCap="round"/>
+
+  <!-- Green Leaf -->
+  <path
+      android:pathData="M32,6C38,2 45,4 47,8C41,10 36,9 32,6Z"
+      android:fillColor="#16A34A"/>
+</vector>

@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+  <!-- Red Apple Body -->
+  <path
+      android:pathData="M32,18C29,13 21,13 16,18C10,24 10,38 14,48C18,57 26,60 32,57C38,60 46,57 50,48C54,38 54,24 48,18C43,13 35,13 32,18Z"
+      android:fillColor="#DC2626"
+      android:strokeColor="#991B1B"
+      android:strokeWidth="2"/>
+
+  <!-- Left glossy highlight -->
+  <path
+      android:pathData="M20,24C16,30 16,40 20,48"
+      android:strokeColor="#FCA5A5"
+      android:strokeWidth="2.5"
+      android:strokeLineCap="round"/>
+
+  <!-- Curved Apple Stem -->
+  <path
+      android:pathData="M32,18C33,14 36,10 38,6"
+      android:strokeColor="#78350F"
+      android:strokeWidth="3"
+      android:strokeLineCap="round"/>
+
+  <!-- Fresh Green Leaf -->
+  <path
+      android:pathData="M34,14C40,11 46,13 48,18C42,19 37,17 34,14Z"
+      android:fillColor="#22C55E"/>
+</vector>

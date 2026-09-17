@@ -1,0 +1,48 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+  <!-- Round Orange Body -->
+  <path
+      android:pathData="M32,36m-20,0a20,20 0,1 1,40 0a20,20 0,1 1,-40 0"
+      android:fillColor="#F97316"
+      android:strokeColor="#C2410C"
+      android:strokeWidth="2"/>
+
+  <!-- Shading depth -->
+  <path
+      android:pathData="M32,16C43,16 52,25 52,36C52,47 43,56 32,56C38,52 44,45 44,36C44,27 38,20 32,16Z"
+      android:fillColor="#EA580C"/>
+
+  <!-- Glossy Highlight Curve -->
+  <path
+      android:pathData="M20,24C24,20 30,18 36,18"
+      android:strokeColor="#FED7AA"
+      android:strokeWidth="2.5"
+      android:strokeLineCap="round"/>
+
+  <!-- Bottom Navel -->
+  <path
+      android:pathData="M30,55C32,56 34,56 36,55"
+      android:strokeColor="#9A3412"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"/>
+
+  <!-- Top Stem -->
+  <path
+      android:pathData="M32,16L32,8"
+      android:strokeColor="#78350F"
+      android:strokeWidth="3"
+      android:strokeLineCap="round"/>
+
+  <!-- Top Calyx -->
+  <path
+      android:pathData="M32,16L28,13L32,15L36,13Z"
+      android:fillColor="#15803D"/>
+
+  <!-- Green Leaf -->
+  <path
+      android:pathData="M32,11C38,7 46,8 48,13C42,15 36,14 32,11Z"
+      android:fillColor="#22C55E"/>
+</vector>

@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.felipelaurindo.mamaocomacucar.data.getFruitDisplayName
 import com.felipelaurindo.mamaocomacucar.data.model.TreeItem
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.calculateDistance
@@ -86,7 +87,7 @@ fun TreeQuickPreviewCard(
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         Text(
-                            text = tree.species,
+                            text = getFruitDisplayName(tree.species),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 17.sp,

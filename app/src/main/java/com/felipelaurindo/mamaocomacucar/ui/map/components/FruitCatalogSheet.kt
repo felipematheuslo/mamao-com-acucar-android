@@ -82,6 +82,7 @@ fun FruitCatalogSheet(
 
             val matchesSearch = normalizedQuery.isBlank() ||
                     normalizedName.contains(normalizedQuery) ||
+                    item.canonicalId.contains(normalizedQuery) ||
                     normalizedScientific.contains(normalizedQuery) ||
                     normalizedBiome.contains(normalizedQuery)
 
@@ -164,7 +165,7 @@ fun FruitCatalogSheet(
                             .clickable { isExpanded = !isExpanded }
                     ) {
                         Text(
-                            "Guia Botânico 📖",
+                            "Catálogo de Fruteiras",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Black,
                                 letterSpacing = (-0.5).sp
@@ -172,8 +173,8 @@ fun FruitCatalogSheet(
                             color = Stone900
                         )
                         Text(
-                            if (isGuest) "Espécies Populares • Cadastre-se para ver 68 espécies"
-                            else "68 espécies • Toque no card para detalhes",
+                            if (isGuest) "Cadastre-se para ver o catálogo completo"
+                            else "${FRUIT_CATALOG_LIST.size} espécies • Toque no card para detalhes",
                             style = MaterialTheme.typography.bodySmall,
                             color = Stone500
                         )
@@ -350,7 +351,7 @@ fun FruitCatalogSheet(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
-                        items(filteredList, key = { it.name }) { fruit ->
+                        items(filteredList, key = { it.canonicalId }) { fruit ->
                             FruitCatalogCard(
                                 fruit = fruit,
                                 onSearchOnMap = {
@@ -393,7 +394,7 @@ fun FruitCatalogSheet(
                                         )
                                         Button(
                                             onClick = {
-                                                onRequestAuth?.invoke("Cadastre-se gratuitamente para desbloquear o Guia Botânico completo com todas as 68 espécies.")
+                                                onRequestAuth?.invoke("Cadastre-se gratuitamente para desbloquear o Catálogo de Fruteiras completo.")
                                             },
                                             modifier = Modifier
                                                 .fillMaxWidth()

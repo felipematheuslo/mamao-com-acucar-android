@@ -1,0 +1,55 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+  <!-- Pomegranate Round Body -->
+  <path
+      android:pathData="M32,38m-19,0a19,19 0,1 1,38 0a19,19 0,1 1,-38 0"
+      android:fillColor="#DC2626"
+      android:strokeColor="#991B1B"
+      android:strokeWidth="2"/>
+
+  <!-- Distinctive Serrated Crown / Calyx -->
+  <path
+      android:pathData="M24,20L21,10L27,15L32,7L37,15L43,10L40,20Z"
+      android:fillColor="#B91C1C"
+      android:strokeColor="#7F1D1D"
+      android:strokeWidth="1.5"/>
+
+  <!-- Crown center hole -->
+  <path
+      android:pathData="M32,19m-4,0a4,2 0,1 1,8 0a4,2 0,1 1,-8 0"
+      android:fillColor="#7F1D1D"/>
+
+  <!-- Decorative Window Revealing Arils / Seeds -->
+  <path
+      android:pathData="M24,32C32,28 40,32 40,42C40,50 32,54 25,48C21,43 20,35 24,32Z"
+      android:fillColor="#FEE2E2"
+      android:strokeColor="#FECACA"
+      android:strokeWidth="1"/>
+
+  <!-- Red Aril Seeds inside -->
+  <path
+      android:pathData="M27,35m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0"
+      android:fillColor="#B91C1C"/>
+  <path
+      android:pathData="M34,35m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0"
+      android:fillColor="#DC2626"/>
+  <path
+      android:pathData="M30,41m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0"
+      android:fillColor="#991B1B"/>
+  <path
+      android:pathData="M35,43m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0"
+      android:fillColor="#B91C1C"/>
+  <path
+      android:pathData="M26,43m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"
+      android:fillColor="#DC2626"/>
+
+  <!-- Glossy Outer Highlight -->
+  <path
+      android:pathData="M44,28C48,34 48,42 45,48"
+      android:strokeColor="#FCA5A5"
+      android:strokeWidth="2"
+      android:strokeLineCap="round"/>
+</vector>

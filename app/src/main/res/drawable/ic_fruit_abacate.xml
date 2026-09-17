@@ -1,0 +1,48 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+  <!-- Outer Dark Green Skin -->
+  <path
+      android:pathData="M32,10C22,10 20,20 18,30C15,40 15,50 20,56C24,60 40,60 44,56C49,50 49,40 46,30C44,20 42,10 32,10Z"
+      android:fillColor="#14532D"
+      android:strokeColor="#0F3D20"
+      android:strokeWidth="1.5"/>
+
+  <!-- Mid Green Flesh Layer -->
+  <path
+      android:pathData="M32,12C23,12 21,21 19,31C17,40 17,49 21,54C25,58 39,58 43,54C47,49 47,40 45,31C43,21 41,12 32,12Z"
+      android:fillColor="#65A30D"/>
+
+  <!-- Creamy Inner Pulp -->
+  <path
+      android:pathData="M32,15C25,15 23,23 22,32C20,40 20,47 24,52C27,55 37,55 40,52C44,47 44,40 42,32C41,23 39,15 32,15Z"
+      android:fillColor="#BEF264"/>
+
+  <!-- Avocado Seed / Pit -->
+  <path
+      android:pathData="M32,42m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0"
+      android:fillColor="#78350F"
+      android:strokeColor="#451A03"
+      android:strokeWidth="1.5"/>
+
+  <!-- Seed Highlight -->
+  <path
+      android:pathData="M28,37C30,35 34,35 36,37"
+      android:strokeColor="#D97706"
+      android:strokeWidth="2"
+      android:strokeLineCap="round"/>
+
+  <!-- Top Stem -->
+  <path
+      android:pathData="M32,10L32,4"
+      android:strokeColor="#14532D"
+      android:strokeWidth="3"
+      android:strokeLineCap="round"/>
+
+  <!-- Little Stem Leaf -->
+  <path
+      android:pathData="M32,6C37,2 43,4 45,8C39,9 35,8 32,6Z"
+      android:fillColor="#15803D"/>
+</vector>

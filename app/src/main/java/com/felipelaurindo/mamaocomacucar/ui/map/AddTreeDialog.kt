@@ -19,11 +19,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.felipelaurindo.mamaocomacucar.data.ALLOWED_FRUITS
+import com.felipelaurindo.mamaocomacucar.data.findFruitDefinition
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
 import com.felipelaurindo.mamaocomacucar.data.model.TreeStatus
 import com.felipelaurindo.mamaocomacucar.ui.map.components.getStatusMeta
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
+import java.text.Normalizer
 
 @Composable
 fun AddTreeDialog(
@@ -40,9 +42,21 @@ fun AddTreeDialog(
     var isSubmitting by remember { mutableStateOf(false) }
 
     val filteredFruits = remember(speciesSearchQuery) {
-        if (speciesSearchQuery.isBlank()) ALLOWED_FRUITS
-        else ALLOWED_FRUITS.filter {
-            it.lowercase().contains(speciesSearchQuery.lowercase())
+        val queryNorm = Normalizer.normalize(speciesSearchQuery, Normalizer.Form.NFD)
+            .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+            .lowercase()
+            .trim()
+        if (queryNorm.isBlank()) ALLOWED_FRUITS
+        else ALLOWED_FRUITS.filter { fruit ->
+            val fruitNorm = Normalizer.normalize(fruit, Normalizer.Form.NFD)
+                .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+                .lowercase()
+            fruitNorm.contains(queryNorm) || findFruitDefinition(fruit)?.aliases?.any { alias ->
+                val aliasNorm = Normalizer.normalize(alias, Normalizer.Form.NFD)
+                    .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+                    .lowercase()
+                aliasNorm.contains(queryNorm)
+            } == true
         }
     }
 
@@ -135,7 +149,7 @@ fun AddTreeDialog(
                     )
 
                     // Quick suggestion chips for popular fruits
-                    val quickSuggestions = listOf("Pitanga 🍒", "Amora 🫐", "Goiaba 🍐", "Manga 🥭", "Mamão 🥭", "Jabuticaba 🟣", "Pitomba 🟡")
+                    val quickSuggestions = listOf("Laranja 🍊", "Limão 🍋", "Abacate 🥑", "Pitanga 🍒", "Amora 🫐", "Goiaba 🍐", "Manga 🥭", "Mamão 🥭", "Jabuticaba 🟣")
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

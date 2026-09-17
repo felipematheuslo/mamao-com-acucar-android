@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import com.felipelaurindo.mamaocomacucar.data.getFruitDisplayName
 import com.felipelaurindo.mamaocomacucar.data.model.CommentUpdate
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
 import com.felipelaurindo.mamaocomacucar.data.model.TreeItem
@@ -96,7 +97,7 @@ fun TreeDetailSheet(
                                         modifier = Modifier.size(28.dp)
                                     )
                                     Text(
-                                        tree.species,
+                                        getFruitDisplayName(tree.species),
                                         style = MaterialTheme.typography.titleLarge,
                                         color = Color.White
                                     )
