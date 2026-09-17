@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Person
@@ -15,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,10 +30,13 @@ fun FloatingSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     onClearQuery: () -> Unit,
+    onSearch: (String) -> Unit = {},
     onProfileClick: () -> Unit,
     isGuest: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val focusManager = LocalFocusManager.current
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -42,18 +49,28 @@ fun FloatingSearchBar(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 14.dp, end = 8.dp),
+                .padding(start = 6.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ícone de Busca
-            Icon(
-                imageVector = Icons.Outlined.Search,
-                contentDescription = "Buscar",
-                tint = MamaoOrange,
-                modifier = Modifier.size(22.dp)
-            )
+            // Ícone de Busca clicável
+            IconButton(
+                onClick = {
+                    if (query.isNotBlank()) {
+                        onSearch(query)
+                        focusManager.clearFocus()
+                    }
+                },
+                modifier = Modifier.size(38.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = "Buscar",
+                    tint = MamaoOrange,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(4.dp))
 
             // Campo de Texto de Busca
             Box(
@@ -81,7 +98,16 @@ fun FloatingSearchBar(
                         color = Stone900,
                         fontSize = 14.sp
                     ),
-                    cursorBrush = SolidColor(MamaoOrange)
+                    cursorBrush = SolidColor(MamaoOrange),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            if (query.isNotBlank()) {
+                                onSearch(query)
+                                focusManager.clearFocus()
+                            }
+                        }
+                    )
                 )
             }
 
@@ -93,7 +119,10 @@ fun FloatingSearchBar(
                 // Botão de Limpar busca (quando há texto digitado)
                 if (query.isNotEmpty()) {
                     IconButton(
-                        onClick = onClearQuery,
+                        onClick = {
+                            onClearQuery()
+                            focusManager.clearFocus()
+                        },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(

@@ -3,6 +3,7 @@ package com.felipelaurindo.mamaocomacucar.ui.map
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.felipelaurindo.mamaocomacucar.data.getFruitDisplayName
 import com.felipelaurindo.mamaocomacucar.data.model.*
 import com.felipelaurindo.mamaocomacucar.data.repository.FirestoreRepository
 import com.felipelaurindo.mamaocomacucar.util.calculateDistance
@@ -126,7 +127,8 @@ class MapViewModel : ViewModel() {
 
     fun getFilteredTrees(): List<TreeWithDistance> {
         val loc = _userLocation.value
-        val query = _searchQuery.value.lowercase()
+        val rawQuery = _searchQuery.value.trim()
+        val normalizedQuery = com.felipelaurindo.mamaocomacucar.util.normalizeString(rawQuery)
         val filter = _statusFilter.value
 
         return _trees.value
@@ -137,10 +139,19 @@ class MapViewModel : ViewModel() {
                 )
             }
             .filter { tw ->
-                val matchesSearch = query.isEmpty() ||
-                    tw.tree.name.lowercase().contains(query) ||
-                    tw.tree.species.lowercase().contains(query) ||
-                    tw.tree.createdByName.lowercase().contains(query)
+                val matchesSearch = if (normalizedQuery.isEmpty()) {
+                    true
+                } else {
+                    val nameNorm = com.felipelaurindo.mamaocomacucar.util.normalizeString(tw.tree.name)
+                    val speciesNorm = com.felipelaurindo.mamaocomacucar.util.normalizeString(tw.tree.species)
+                    val displayNorm = com.felipelaurindo.mamaocomacucar.util.normalizeString(getFruitDisplayName(tw.tree.species))
+                    val creatorNorm = com.felipelaurindo.mamaocomacucar.util.normalizeString(tw.tree.createdByName)
+
+                    nameNorm.contains(normalizedQuery) ||
+                    speciesNorm.contains(normalizedQuery) ||
+                    displayNorm.contains(normalizedQuery) ||
+                    creatorNorm.contains(normalizedQuery)
+                }
 
                 val matchesStatus = filter == "todos" || tw.tree.currentStatus.value == filter
 
@@ -217,26 +228,145 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    fun searchLocation(query: String) {
+    /**
+     * Executa a busca ao submeter o texto no teclado ou tocar no ícone da barra de pesquisa.
+     * Prioridade:
+     * 1. Se encontrar árvores no mapa com o termo buscado na região permitida (raio de 2 km para visitante, 20 km para logado),
+     *    foca na mais próxima e seleciona.
+     * 2. Se o usuário for visitante e a fruta só existir além de 2 km, bloqueia e aciona onGuestBlocked.
+     * 3. Se for uma fruta válida do catálogo (mas sem árvores cadastradas na região), emite aviso amigável.
+     * 4. Caso contrário (bairro, cidade, endereço), busca coordenadas geográficas via Nominatim OpenStreetMap.
+     */
+    fun performSearch(
+        query: String,
+        isGuest: Boolean = false,
+        onGuestBlocked: ((Double) -> Unit)? = null
+    ) {
+        val trimmed = query.trim()
+        if (trimmed.isBlank()) return
+
+        val filtered = getFilteredTrees()
+        if (filtered.isNotEmpty()) {
+            val fruitName = getFruitDisplayName(filtered.first().tree.species)
+
+            // Raio de 2 km para visitante, 20 km para usuário autenticado
+            val maxRadius = if (isGuest) 2.0 else 20.0
+            val nearby = filtered.filter { it.distance <= maxRadius }
+
+            if (nearby.isNotEmpty()) {
+                val closest = nearby.first().tree
+                _mapCenter.value = Pair(closest.latitude, closest.longitude)
+                _selectedTree.value = closest
+
+                val localCountText = if (nearby.size == 1) "1 fruteira" else "${nearby.size} fruteiras"
+                showToast("🌳 $localCountText de $fruitName encontrada(s) na sua região!")
+                return
+            } else {
+                if (isGuest) {
+                    val distantTrees = filtered.filter { it.distance > 2.0 }
+                    if (distantTrees.isNotEmpty()) {
+                        // Bloqueia a navegação de visitante para árvores fora de 2km e abre prompt de auth
+                        onGuestBlocked?.invoke(distantTrees.first().distance)
+                        return
+                    } else {
+                        showToast("Nenhum pé de $fruitName encontrada no seu raio de 2 km.")
+                        return
+                    }
+                } else {
+                    showToast("Nenhum pé de $fruitName encontrada na sua região (raio de 20 km).")
+                    return
+                }
+            }
+        }
+
+        // Se não há árvores cadastradas com esse termo, verifica se é uma fruta botânica conhecida
+        val fruitDef = com.felipelaurindo.mamaocomacucar.data.findFruitDefinition(trimmed)
+        if (fruitDef != null) {
+            val radiusText = if (isGuest) "no seu raio de 2 km" else "na sua região"
+            showToast("Nenhum pé de '${fruitDef.displayName}' cadastrada $radiusText.")
+            return
+        }
+
+        // Se não for fruta botânica, pesquisa bairro, cidade ou endereço
+        searchLocation(
+            query = trimmed,
+            isGuest = isGuest,
+            onGuestBlocked = onGuestBlocked
+        )
+    }
+
+    fun searchLocation(
+        query: String,
+        isGuest: Boolean = false,
+        onGuestBlocked: ((Double) -> Unit)? = null
+    ) {
         if (query.isBlank()) return
         viewModelScope.launch {
             try {
-                val url = "https://nominatim.openstreetmap.org/search?format=json&q=${
-                    java.net.URLEncoder.encode(query, "UTF-8")
-                }&limit=1"
-                val response = URL(url).readText()
-                val arr = JSONArray(response)
-                if (arr.length() > 0) {
-                    val obj = arr.getJSONObject(0)
+                val results = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    val encoded = java.net.URLEncoder.encode(query.trim(), "UTF-8")
+                    // Busca priorizando o Brasil e com cabeçalho User-Agent obrigatório do Nominatim
+                    val urlString = "https://nominatim.openstreetmap.org/search?format=json&q=$encoded&countrycodes=br&limit=1&addressdetails=1"
+                    val url = URL(urlString)
+                    val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                        requestMethod = "GET"
+                        connectTimeout = 6000
+                        readTimeout = 6000
+                        setRequestProperty("User-Agent", "MamaoComAcucar/1.0 (Android; contact: mamaocomacucar@app.com)")
+                        setRequestProperty("Accept-Language", "pt-BR,pt;q=0.9,en;q=0.8")
+                    }
+
+                    if (conn.responseCode == 200) {
+                        val responseText = conn.inputStream.bufferedReader().use { it.readText() }
+                        val arr = JSONArray(responseText)
+                        if (arr.length() > 0) {
+                            arr
+                        } else {
+                            // Fallback mundial se a busca restrita ao Brasil retornar vazia
+                            val fallbackUrl = URL("https://nominatim.openstreetmap.org/search?format=json&q=$encoded&limit=1")
+                            val fbConn = (fallbackUrl.openConnection() as java.net.HttpURLConnection).apply {
+                                requestMethod = "GET"
+                                connectTimeout = 6000
+                                readTimeout = 6000
+                                setRequestProperty("User-Agent", "MamaoComAcucar/1.0 (Android; contact: mamaocomacucar@app.com)")
+                                setRequestProperty("Accept-Language", "pt-BR,pt;q=0.9,en;q=0.8")
+                            }
+                            if (fbConn.responseCode == 200) {
+                                val fbText = fbConn.inputStream.bufferedReader().use { it.readText() }
+                                JSONArray(fbText)
+                            } else {
+                                JSONArray()
+                            }
+                        }
+                    } else {
+                        JSONArray()
+                    }
+                }
+
+                if (results.length() > 0) {
+                    val obj = results.getJSONObject(0)
                     val lat = obj.getDouble("lat")
                     val lon = obj.getDouble("lon")
+                    val displayName = obj.optString("display_name", query)
+                    val friendlyName = displayName.split(",").take(2).joinToString(", ").trim()
+
+                    if (isGuest) {
+                        val userLoc = _userLocation.value
+                        val distKm = calculateDistance(userLoc.first, userLoc.second, lat, lon)
+                        if (distKm > 2.0) {
+                            onGuestBlocked?.invoke(distKm)
+                            return@launch
+                        }
+                    }
+
                     _mapCenter.value = Pair(lat, lon)
+                    showToast("📍 Navegando para: $friendlyName")
                 } else {
-                    showToast("Localização não encontrada. Tente buscar por outro endereço ou ponto de referência.")
+                    showToast("Nenhum local ou fruta encontrado para '$query'. Tente buscar por bairro ou cidade.")
                 }
             } catch (e: Exception) {
                 Log.e("MapViewModel", "Error searching location", e)
-                showToast("Não foi possível realizar a busca de localização.")
+                showToast("Não foi possível realizar a busca de localização. Verifique sua conexão.")
             }
         }
     }

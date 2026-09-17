@@ -34,6 +34,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import com.felipelaurindo.mamaocomacucar.data.getFruitDisplayName
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
 import com.felipelaurindo.mamaocomacucar.data.model.TreeStatus
 import com.felipelaurindo.mamaocomacucar.ui.components.AdMobBanner
@@ -212,6 +213,15 @@ fun MapScreen(
     val isAddingTree by mapViewModel.isAddingTree.collectAsState()
     val creatorUsernames by mapViewModel.creatorUsernames.collectAsState()
     val searchQuery by mapViewModel.searchQuery.collectAsState()
+    val statusFilter by mapViewModel.statusFilter.collectAsState()
+    val filteredTrees = remember(searchQuery, statusFilter, trees, userLocation, currentUser.isGuest) {
+        val all = mapViewModel.getFilteredTrees()
+        if (currentUser.isGuest && searchQuery.isNotBlank()) {
+            all.filter { it.distance <= 2.0 }
+        } else {
+            all
+        }
+    }
 
     val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     val savedStyle = prefs.getString("map_style", "topo")
@@ -292,7 +302,8 @@ fun MapScreen(
 
     // Update map center when it changes
     LaunchedEffect(mapCenter) {
-        mapViewRef.value?.controller?.animateTo(GeoPoint(mapCenter.first, mapCenter.second), 17.5, 1000L)
+        val targetZoom = if (currentMapZoom < 15.0) 16.5 else currentMapZoom
+        mapViewRef.value?.controller?.animateTo(GeoPoint(mapCenter.first, mapCenter.second), targetZoom, 1000L)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -358,8 +369,7 @@ fun MapScreen(
                 }
                 mapView.overlays.add(userMarker)
 
-                // Marcadores de árvores agrupados (clusters) ou individuais
-                val filteredTrees = mapViewModel.getFilteredTrees()
+                // Marcadores de árvores agrupados (clusters) ou individuais (usa filteredTrees reativo do Compose)
                 val density = context.resources.displayMetrics.density
                 val clusterRadiusPx = 44f * density
                 val clusters = clusterTrees(
@@ -379,7 +389,7 @@ fun MapScreen(
                         val marker = Marker(mapView).apply {
                             position = GeoPoint(tree.latitude, tree.longitude)
                             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            title = if (isObfuscated) "Fruteira fora do raio de 2 km 🔒" else tree.species
+                            title = if (isObfuscated) "Fruteira fora do raio de 2 km 🔒" else getFruitDisplayName(tree.species)
                             snippet = if (isObfuscated) "Cadastre-se para ver os detalhes" else tree.name
                             if (isObfuscated) {
                                 alpha = 0.40f
@@ -473,6 +483,17 @@ fun MapScreen(
             query = searchQuery,
             onQueryChange = { query -> mapViewModel.setSearchQuery(query) },
             onClearQuery = { mapViewModel.setSearchQuery("") },
+            onSearch = { query ->
+                mapViewModel.performSearch(
+                    query = query,
+                    isGuest = currentUser.isGuest,
+                    onGuestBlocked = { distanceKm ->
+                        val distFormatted = formatDistance(distanceKm)
+                        authPromptSubtitle = "Esta busca encontrou fruteiras a $distFormatted de você, fora do raio de 2 km do modo visitante. Conecte sua conta gratuita para explorar árvores em qualquer cidade!"
+                        isAuthPromptOpen = true
+                    }
+                )
+            },
             onProfileClick = {
                 if (currentUser.isGuest) {
                     authPromptSubtitle = "Você está navegando como visitante. Conecte sua conta para salvar seu progresso!"
@@ -613,6 +634,127 @@ fun MapScreen(
             }
         }
 
+        // ---- Top Right Controls (Camadas e Bússola) ----
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(end = 16.dp, top = 76.dp)
+                .statusBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Botão de Camadas do Mapa (Satélite / Relevo)
+            AnimatedVisibility(
+                visible = !isAnySheetOrDialogActive,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
+                Surface(
+                    onClick = { isAppSettingsOpen = true },
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = 4.dp,
+                    border = BorderStroke(1.dp, Stone200),
+                    modifier = Modifier.size(42.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.Layers,
+                            contentDescription = "Estilo do mapa",
+                            tint = Stone700,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+
+            // Bússola (apenas quando mapa estiver rotacionado)
+            AnimatedVisibility(
+                visible = kotlin.math.abs(mapOrientation) > 1f && !isAnySheetOrDialogActive,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        mapViewRef.value?.let { mv ->
+                            mv.mapOrientation = 0f
+                            mapOrientation = 0f
+                        }
+                    },
+                    shape = CircleShape,
+                    containerColor = Color.White,
+                    contentColor = Stone900,
+                    modifier = Modifier.size(42.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.Navigation,
+                        contentDescription = "Redefinir orientação para o Norte",
+                        tint = Rose600,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .rotate(-mapOrientation)
+                    )
+                }
+            }
+        }
+
+        // ---- GPS FAB ----
+        AnimatedVisibility(
+            visible = !isAnySheetOrDialogActive,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = bottomOffset)
+                .navigationBarsPadding(),
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
+            FloatingActionButton(
+                onClick = {
+                    requestCurrentLocation(context, mapViewModel) { lat, lng ->
+                        mapViewRef.value?.controller?.apply {
+                            animateTo(GeoPoint(lat, lng), 18.0, 1000L)
+                        }
+                    }
+                },
+                shape = CircleShape,
+                containerColor = Color.White,
+                contentColor = Stone900
+            ) {
+                Icon(Icons.Outlined.MyLocation, contentDescription = "Minha localização")
+            }
+        }
+
+        // ---- Map Attribution Badge (UI/UX clean, dinâmico e conforme licenças) ----
+        AnimatedVisibility(
+            visible = !isAnySheetOrDialogActive,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 16.dp, bottom = bottomOffset + 8.dp)
+                .navigationBarsPadding(),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color.White.copy(alpha = 0.85f),
+                border = BorderStroke(0.5.dp, Stone200.copy(alpha = 0.8f)),
+                shadowElevation = 2.dp,
+                modifier = Modifier.clickable {
+                    isAppSettingsOpen = true
+                }
+            ) {
+                Text(
+                    text = if (mapStyle == "satellite") "© Esri" else "© OpenStreetMap",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = Stone600,
+                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
+                )
+            }
+        }
+
         // ---- Tree List Bottom Sheet ----
         AnimatedVisibility(
             visible = isTreeListOpen,
@@ -713,127 +855,6 @@ fun MapScreen(
                 },
                 onDismiss = { isFruitCatalogOpen = false }
             )
-        }
-
-        // ---- Top Right Controls (Camadas e Bússola) ----
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(end = 16.dp, top = 76.dp)
-                .statusBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Botão de Camadas do Mapa (Satélite / Relevo)
-            AnimatedVisibility(
-                visible = !isTreeListOpen && !isTreeDetailOpen,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut()
-            ) {
-                Surface(
-                    onClick = { isAppSettingsOpen = true },
-                    shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.95f),
-                    shadowElevation = 4.dp,
-                    border = BorderStroke(1.dp, Stone200),
-                    modifier = Modifier.size(42.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Outlined.Layers,
-                            contentDescription = "Estilo do mapa",
-                            tint = Stone700,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-            }
-
-            // Bússola (apenas quando mapa estiver rotacionado)
-            AnimatedVisibility(
-                visible = kotlin.math.abs(mapOrientation) > 1f && !isTreeListOpen && !isTreeDetailOpen,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut()
-            ) {
-                FloatingActionButton(
-                    onClick = {
-                        mapViewRef.value?.let { mv ->
-                            mv.mapOrientation = 0f
-                            mapOrientation = 0f
-                        }
-                    },
-                    shape = CircleShape,
-                    containerColor = Color.White,
-                    contentColor = Stone900,
-                    modifier = Modifier.size(42.dp)
-                ) {
-                    Icon(
-                        Icons.Outlined.Navigation,
-                        contentDescription = "Redefinir orientação para o Norte",
-                        tint = Rose600,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .rotate(-mapOrientation)
-                    )
-                }
-            }
-        }
-
-        // ---- GPS FAB ----
-        AnimatedVisibility(
-            visible = !isTreeListOpen && !isTreeDetailOpen,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = bottomOffset)
-                .navigationBarsPadding(),
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut()
-        ) {
-            FloatingActionButton(
-                onClick = {
-                    requestCurrentLocation(context, mapViewModel) { lat, lng ->
-                        mapViewRef.value?.controller?.apply {
-                            animateTo(GeoPoint(lat, lng), 18.0, 1000L)
-                        }
-                    }
-                },
-                shape = CircleShape,
-                containerColor = Color.White,
-                contentColor = Stone900
-            ) {
-                Icon(Icons.Outlined.MyLocation, contentDescription = "Minha localização")
-            }
-        }
-
-        // ---- Map Attribution Badge (UI/UX clean, dinâmico e conforme licenças) ----
-        AnimatedVisibility(
-            visible = !isTreeListOpen && !isTreeDetailOpen,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 16.dp, bottom = bottomOffset + 8.dp)
-                .navigationBarsPadding(),
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = Color.White.copy(alpha = 0.85f),
-                border = BorderStroke(0.5.dp, Stone200.copy(alpha = 0.8f)),
-                shadowElevation = 2.dp,
-                modifier = Modifier.clickable {
-                    isAppSettingsOpen = true
-                }
-            ) {
-                Text(
-                    text = if (mapStyle == "satellite") "© Esri" else "© OpenStreetMap",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    color = Stone600,
-                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
-                )
-            }
         }
 
         // ---- Bottom Dock (AdMob + Navigation) ----
@@ -1068,64 +1089,57 @@ private fun createFruitVectorDrawable(
     }
     canvas.drawCircle(centerX, centerY, radius, borderPaint)
 
-    // VectorDrawable Icon
-    val drawableRes = getFruitDrawableRes(species)
-    val vectorDrawable = ContextCompat.getDrawable(context, drawableRes)
-    if (vectorDrawable != null) {
-        val iconSize = ((if (isPulsing) 26 else 24) * density).toInt()
-        val left = (centerX - iconSize / 2f).toInt()
-        val top = (centerY - iconSize / 2f).toInt()
-        vectorDrawable.setBounds(left, top, left + iconSize, top + iconSize)
-        if (isObfuscated) {
-            vectorDrawable.alpha = 110 // Translúcido desbotado
-        }
-        vectorDrawable.draw(canvas)
-    }
-
-    // Badge de cadeado vetorial para itens ofuscados
     if (isObfuscated) {
-        val lockBadgeRadius = 6.5f * density
-        val lockBadgeX = centerX + radius * 0.65f
-        val lockBadgeY = centerY + radius * 0.65f
-
-        val lockBgPaint = android.graphics.Paint().apply {
-            color = android.graphics.Color.parseColor("#57534E") // Stone600
-            isAntiAlias = true
-        }
-        canvas.drawCircle(lockBadgeX, lockBadgeY, lockBadgeRadius, lockBgPaint)
-
+        // Marcador Bloqueado (Modo Visitante): NÃO desenha a fruta! Desenha cadeado centralizado elegante
         val lockPaint = android.graphics.Paint().apply {
-            color = android.graphics.Color.WHITE
+            color = android.graphics.Color.parseColor("#78716C") // Stone500
             isAntiAlias = true
         }
-        val lockWidth = 4.5f * density
-        val lockHeight = 3.5f * density
-        val rectLeft = lockBadgeX - lockWidth / 2f
-        val rectTop = lockBadgeY - lockHeight / 4f
+        val lockWidth = 11f * density
+        val lockHeight = 8.5f * density
+        val rectLeft = centerX - lockWidth / 2f
+        val rectTop = centerY - lockHeight / 5f
         canvas.drawRoundRect(
             rectLeft,
             rectTop,
             rectLeft + lockWidth,
             rectTop + lockHeight,
-            1f * density,
-            1f * density,
+            1.8f * density,
+            1.8f * density,
             lockPaint
         )
 
         val shacklePaint = android.graphics.Paint().apply {
-            color = android.graphics.Color.WHITE
+            color = android.graphics.Color.parseColor("#78716C")
             style = android.graphics.Paint.Style.STROKE
-            strokeWidth = 1f * density
+            strokeWidth = 2.2f * density
             isAntiAlias = true
         }
-        val shackleRadius = 1.6f * density
+        val shackleRadius = 3.8f * density
         val shackleOval = android.graphics.RectF(
-            lockBadgeX - shackleRadius,
-            rectTop - shackleRadius * 1.6f,
-            lockBadgeX + shackleRadius,
-            rectTop + shackleRadius * 0.2f
+            centerX - shackleRadius,
+            rectTop - shackleRadius * 1.5f,
+            centerX + shackleRadius,
+            rectTop + shackleRadius * 0.3f
         )
         canvas.drawArc(shackleOval, 180f, 180f, false, shacklePaint)
+
+        val holePaint = android.graphics.Paint().apply {
+            color = android.graphics.Color.parseColor("#F5F5F4") // Stone100
+            isAntiAlias = true
+        }
+        canvas.drawCircle(centerX, rectTop + lockHeight * 0.45f, 1.3f * density, holePaint)
+    } else {
+        // VectorDrawable Icon oficial da fruta (somente se não ofuscado)
+        val drawableRes = getFruitDrawableRes(species)
+        val vectorDrawable = ContextCompat.getDrawable(context, drawableRes)
+        if (vectorDrawable != null) {
+            val iconSize = ((if (isPulsing) 26 else 24) * density).toInt()
+            val left = (centerX - iconSize / 2f).toInt()
+            val top = (centerY - iconSize / 2f).toInt()
+            vectorDrawable.setBounds(left, top, left + iconSize, top + iconSize)
+            vectorDrawable.draw(canvas)
+        }
     }
 
     return android.graphics.drawable.BitmapDrawable(context.resources, bitmap)

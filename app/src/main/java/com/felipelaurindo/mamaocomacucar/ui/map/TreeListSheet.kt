@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import com.felipelaurindo.mamaocomacucar.data.getFruitDisplayName
 import com.felipelaurindo.mamaocomacucar.data.model.TreeItem
 import com.felipelaurindo.mamaocomacucar.ui.map.components.StatusChip
 import com.felipelaurindo.mamaocomacucar.ui.map.components.getStatusMeta
@@ -50,6 +51,9 @@ fun TreeListSheet(
 
     val filteredTrees = remember(searchQuery, statusFilter, mapViewModel.trees.collectAsState().value) {
         mapViewModel.getFilteredTrees()
+    }
+    val nearbyTrees = remember(filteredTrees) {
+        filteredTrees.filter { it.distance <= 20.0 }
     }
 
     var isExpanded by remember { mutableStateOf(true) }
@@ -212,12 +216,18 @@ fun TreeListSheet(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    val count = filteredTrees.size
+                    val nearbyCount = nearbyTrees.size
+
+                    val countLabel = when {
+                        isGuest && nearbyCount > 3 -> "Mostrando 3 de $nearbyCount fruteiras na sua região"
+                        nearbyCount > 0 -> "$nearbyCount ${if (nearbyCount == 1) "fruteira encontrada" else "fruteiras encontradas"} na sua região (raio de 20 km)"
+                        else -> "Nenhuma fruteira encontrada na sua região (raio de 20 km)"
+                    }
+
                     Text(
-                        if (isGuest && count > 3) "Mostrando 3 de $count fruteiras na sua região"
-                        else "$count ${if (count == 1) "fruteira encontrada" else "fruteiras encontradas"}",
+                        countLabel,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                        color = Stone400
+                        color = Stone500
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -233,7 +243,7 @@ fun TreeListSheet(
                         .padding(horizontal = 20.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    val displayedTrees = if (isGuest) filteredTrees.take(3) else filteredTrees
+                    val displayedTrees = if (isGuest) nearbyTrees.take(3) else nearbyTrees
                     if (displayedTrees.isEmpty()) {
                         // Empty state
                         Column(
@@ -243,12 +253,12 @@ fun TreeListSheet(
                         ) {
                             Text("🌿", fontSize = 32.sp)
                             Text(
-                                "Nenhuma fruteira encontrada",
+                                "Nenhuma fruteira encontrada na sua região",
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                 color = Stone600
                             )
                             Text(
-                                "Tente buscar por outro termo ou ajuste os filtros.",
+                                "Não há fruteiras cadastradas em um raio de 20 km para este filtro.",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = Stone400
                             )
@@ -292,7 +302,7 @@ fun TreeListSheet(
 
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            tree.species,
+                                            getFruitDisplayName(tree.species),
                                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                             color = Stone950,
                                             maxLines = 1,
@@ -337,7 +347,7 @@ fun TreeListSheet(
                         }
 
                         if (isGuest) {
-                            val hiddenCount = (filteredTrees.size - displayedTrees.size).coerceAtLeast(0)
+                            val hiddenCount = (nearbyTrees.size - displayedTrees.size).coerceAtLeast(0)
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
