@@ -238,6 +238,10 @@ fun MapScreen(
     var pinCoordinates by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
     var previewTree by remember { mutableStateOf<TreeItem?>(null) }
+    var displayedDetailTree by remember { mutableStateOf<TreeItem?>(null) }
+    if (selectedTree != null) {
+        displayedDetailTree = selectedTree
+    }
     var pulsingTreeId by remember { mutableStateOf<String?>(null) }
     var currentMapZoom by remember { mutableDoubleStateOf(15.0) }
 
@@ -510,7 +514,8 @@ fun MapScreen(
         )
 
         // ---- Pin overlay for adding tree ----
-        if (isAddingTree && pinCoordinates != null) {
+        val currentPin = pinCoordinates
+        if (isAddingTree && currentPin != null) {
             // Center pin
             Box(
                 modifier = Modifier
@@ -592,7 +597,7 @@ fun MapScreen(
                                 color = MamaoOrange
                             )
                             Text(
-                                "COORDENADAS: ${String.format("%.5f", pinCoordinates!!.first)}, ${String.format("%.5f", pinCoordinates!!.second)}",
+                                "COORDENADAS: ${String.format("%.5f", currentPin.first)}, ${String.format("%.5f", currentPin.second)}",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontFamily = FontFamily.Monospace,
                                     fontSize = 9.sp
@@ -803,7 +808,7 @@ fun MapScreen(
 
         // ---- Tree Detail Sheet ----
         AnimatedVisibility(
-            visible = isTreeDetailOpen && selectedTree != null,
+            visible = isTreeDetailOpen && (selectedTree != null || displayedDetailTree != null),
             enter = slideInVertically(
                 initialOffsetY = { it },
                 animationSpec = androidx.compose.animation.core.tween(220, easing = androidx.compose.animation.core.FastOutSlowInEasing)
@@ -813,21 +818,24 @@ fun MapScreen(
                 animationSpec = androidx.compose.animation.core.tween(180, easing = androidx.compose.animation.core.FastOutLinearInEasing)
             ) + fadeOut(animationSpec = androidx.compose.animation.core.tween(120))
         ) {
-            TreeDetailSheet(
-                tree = selectedTree!!,
-                updates = updates,
-                currentUser = currentUser,
-                creatorUsernames = creatorUsernames,
-                mapViewModel = mapViewModel,
-                onRequestAuth = { msg ->
-                    authPromptSubtitle = msg
-                    isAuthPromptOpen = true
-                },
-                onDismiss = {
-                    isTreeDetailOpen = false
-                    mapViewModel.selectTree(null)
-                }
-            )
+            val treeToDisplay = selectedTree ?: displayedDetailTree
+            if (treeToDisplay != null) {
+                TreeDetailSheet(
+                    tree = treeToDisplay,
+                    updates = updates,
+                    currentUser = currentUser,
+                    creatorUsernames = creatorUsernames,
+                    mapViewModel = mapViewModel,
+                    onRequestAuth = { msg ->
+                        authPromptSubtitle = msg
+                        isAuthPromptOpen = true
+                    },
+                    onDismiss = {
+                        isTreeDetailOpen = false
+                        mapViewModel.selectTree(null)
+                    }
+                )
+            }
         }
 
         // ---- Fruit Catalog Sheet ----
@@ -896,9 +904,10 @@ fun MapScreen(
         )
 
         // ---- Add Tree Dialog ----
-        if (isAddDialogOpen && pinCoordinates != null) {
+        val currentAddPin = pinCoordinates
+        if (isAddDialogOpen && currentAddPin != null) {
             AddTreeDialog(
-                coordinates = pinCoordinates!!,
+                coordinates = currentAddPin,
                 currentUser = currentUser,
                 mapViewModel = mapViewModel,
                 onDismiss = {
@@ -954,8 +963,9 @@ fun MapScreen(
         }
 
         // ---- Tree Quick Preview Card ----
-        if (previewTree != null && !isAnySheetOrDialogActive) {
-            val previewCreatorUsername = mapViewModel.getCreatorUsername(previewTree!!.createdBy, previewTree!!.createdByName)
+        val currentPreview = previewTree
+        if (currentPreview != null && !isAnySheetOrDialogActive) {
+            val previewCreatorUsername = mapViewModel.getCreatorUsername(currentPreview.createdBy, currentPreview.createdByName)
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -963,11 +973,11 @@ fun MapScreen(
                     .navigationBarsPadding()
             ) {
                 TreeQuickPreviewCard(
-                    tree = previewTree!!,
+                    tree = currentPreview,
                     userLocation = userLocation,
                     creatorUsername = previewCreatorUsername,
                     onOpenFullDetails = {
-                        mapViewModel.selectTree(previewTree)
+                        mapViewModel.selectTree(currentPreview)
                         isTreeDetailOpen = true
                         previewTree = null
                     },

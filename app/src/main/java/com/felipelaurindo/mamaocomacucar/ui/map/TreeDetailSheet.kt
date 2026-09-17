@@ -228,7 +228,8 @@ fun TreeDetailSheet(
                             }
                         }
 
-                        if (selectedPhase != null && selectedPhase != tree.currentStatus) {
+                        val phase = selectedPhase
+                        if (phase != null && phase != tree.currentStatus) {
                             Button(
                                 onClick = {
                                     if (currentUser.isGuest) {
@@ -237,7 +238,7 @@ fun TreeDetailSheet(
                                         isSubmitting = true
                                         mapViewModel.submitReport(
                                             treeId = tree.id,
-                                            status = selectedPhase!!,
+                                            status = phase,
                                             createdBy = currentUser.uid,
                                             createdByName = currentUser.displayName
                                         )
@@ -430,7 +431,7 @@ private fun formatDate(isoString: String): String {
         }
         val outputFormat = SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault())
         val date = inputFormat.parse(isoString.substringBefore(".").substringBefore("Z"))
-        outputFormat.format(date!!)
+        if (date != null) outputFormat.format(date) else isoString.take(10)
     } catch (e: Exception) {
         isoString.take(10)
     }
