@@ -3,22 +3,87 @@
     android:height="64dp"
     android:viewportWidth="64"
     android:viewportHeight="64">
+
+  <!-- ==================== HASTE DO CAJU ==================== -->
   <path
-      android:pathData="M28,6C24,6 22,10 24,14C26,18 32,18 36,14C38,10 36,6 32,6Z"
-      android:fillColor="#A16207"
-      android:strokeColor="#713F12"
-      android:strokeWidth="2"/>
-  <path
-      android:pathData="M30,14C18,14 12,28 14,42C16,54 26,60 34,60C42,60 48,52 46,38C44,24 38,14 30,14Z"
-      android:fillColor="#EF4444"
-      android:strokeColor="#B91C1C"
-      android:strokeWidth="2"/>
-  <path
-      android:pathData="M30,14C22,14 18,26 19,40C20,50 26,56 34,56C30,46 28,30 30,14Z"
-      android:fillColor="#F59E0B"/>
-  <path
-      android:pathData="M30,6L30,2"
+      android:pathData="M31,7 C29,4 31,1 33,2"
       android:strokeColor="#15803D"
-      android:strokeWidth="3"
+      android:strokeWidth="2.5"
       android:strokeLineCap="round"/>
+
+  <!-- ==================== CASTANHA DE CAJU (TOPO) ==================== -->
+  <!-- Sombra de Base da Castanha -->
+  <path
+      android:pathData="M31,7 C24,6 21,12 23,17 C25,20 28,21 33,20 C38,19 40,15 39,11 C38,7 35,7 31,7 Z"
+      android:fillColor="#1E293B"/>
+
+  <!-- Corpo Principal da Castanha (Formato anatômico curvo de rim) -->
+  <path
+      android:pathData="M31,8 C25,7 23,12 24,16 C26,19 29,19 33,18 C37,17 38,14 37,11 C36,8 34,8 31,8 Z"
+      android:fillColor="#475569"
+      android:strokeColor="#334155"
+      android:strokeWidth="1"/>
+
+  <!-- Sulco Central da Castanha -->
+  <path
+      android:pathData="M27,11 C26,14 28,17 32,16"
+      android:strokeColor="#1E293B"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <!-- Brilho na Crista Superior da Castanha -->
+  <path
+      android:pathData="M30,9 C33,9 36,11 36,13"
+      android:strokeColor="#94A3B8"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <!-- Pequeno Anel / Receptáculo de Inserção da Fruta -->
+  <path
+      android:pathData="M27,19 C29,18 35,18 37,19 C38,20 36,22 32,22 C28,22 26,20 27,19 Z"
+      android:fillColor="#15803D"/>
+
+  <!-- ==================== CORPO CARNOSO (PSEUDOFRUTO) ==================== -->
+  <!-- Silhueta e Cor de Fundo (Amarelo Dourado Tropical) -->
+  <path
+      android:pathData="M32,20 C27,20 23,24 20,31 C16,39 14,48 18,55 C21,60 27,61 32,60 C37,61 43,60 46,55 C50,48 48,39 44,31 C41,24 37,20 32,20 Z"
+      android:fillColor="#FBBF24"
+      android:strokeColor="#D97706"
+      android:strokeWidth="1.5"/>
+
+  <!-- Lado Rubro / Vermelho Alaranjado Maduro (Lado Direito e Fundo) -->
+  <path
+      android:pathData="M32,20 C36,20 40,24 43,31 C47,39 49,48 46,55 C43,60 37,61 32,60 C37,58 41,52 42,44 C43,36 40,27 35,21 C34,20 33,20 32,20 Z"
+      android:fillColor="#DC2626"/>
+
+  <path
+      android:pathData="M32,21 C35,23 39,29 40,38 C41,47 38,54 33,59 C36,56 40,50 40,42 C40,33 37,25 32,21 Z"
+      android:fillColor="#F97316"/>
+
+  <!-- Toque Verde-Amarelo no Ombro Superior (Natural do Caju Colhido Fresco) -->
+  <path
+      android:pathData="M32,20 C28,20 25,23 23,27 C26,26 29,26 32,26 C35,26 38,26 41,27 C39,23 36,20 32,20 Z"
+      android:fillColor="#84CC16"/>
+
+  <!-- Sulco Suave Longitudinal da Polpa Carnosa -->
+  <path
+      android:pathData="M32,24 C30,34 30,48 32,59"
+      android:strokeColor="#EA580C"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"/>
+
+  <!-- Brilho Especular Curvo de Suculência (Lado Esquerdo Superior) -->
+  <path
+      android:pathData="M21,34 C19,40 19,46 22,51"
+      android:strokeColor="#FEF08A"
+      android:strokeWidth="2.5"
+      android:strokeLineCap="round"/>
+
+  <!-- Ponto de Luz Intensa -->
+  <path
+      android:pathData="M23,31 C22,33 22,35 23,37"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"/>
+
 </vector>

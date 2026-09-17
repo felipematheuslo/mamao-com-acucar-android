@@ -3,57 +3,138 @@
     android:height="64dp"
     android:viewportWidth="64"
     android:viewportHeight="64">
-  <!-- Outer Main Papaya Body (Closed Fruit) -->
-  <path
-      android:pathData="M32,8C20,8 12,20 12,38C12,52 21,60 32,60C43,60 52,52 52,38C52,20 44,8 32,8Z"
-      android:fillColor="#F97316"
-      android:strokeColor="#C2410C"
-      android:strokeWidth="2"/>
 
-  <!-- Left Greenish Ripening Shade (Natural papaya green-orange blend) -->
+  <!-- ==================== HASTE E FOLHA SUPERIOR ==================== -->
+  <!-- Talo verde escuro da fruteira -->
   <path
-      android:pathData="M32,8C22,8 14,18 13,32C12,44 19,54 28,58C22,52 17,44 18,34C19,24 25,14 32,8Z"
-      android:fillColor="#65A30D"/>
+      android:pathData="M32,8 C32,5 31,2 29,1"
+      android:strokeColor="#14532D"
+      android:strokeWidth="3"
+      android:strokeLineCap="round"/>
 
-  <!-- Right Darker Orange Depth Shadow -->
+  <!-- Folha fresca do mamoeiro no topo -->
   <path
-      android:pathData="M32,8C40,10 48,20 49,34C50,44 45,54 39,58C45,54 50,46 50,36C50,22 43,10 32,8Z"
+      android:pathData="M32,5 C37,2 45,3 47,8 C41,9 35,9 32,5 Z"
+      android:fillColor="#22C55E"
+      android:strokeColor="#15803D"
+      android:strokeWidth="0.8"/>
+
+  <!-- Cálice de inserção no fruto -->
+  <path
+      android:pathData="M28,8 C30,7 34,7 36,8 C35,10 29,10 28,8 Z"
+      android:fillColor="#14532D"/>
+
+  <!-- ==================== CORPO DO MAMÃO (CASCA EXTERNA) ==================== -->
+  <!-- Casca externa verde floresta com formato de gota/papaia anatômico -->
+  <path
+      android:pathData="M32,8 C22,8 14,18 13,34 C12,48 20,59 32,59 C44,59 52,48 51,34 C50,18 42,8 32,8 Z"
+      android:fillColor="#15803D"
+      android:strokeColor="#14532D"
+      android:strokeWidth="1.5"/>
+
+  <!-- Camada intermediária da casca (Verde-limão de maturação) -->
+  <path
+      android:pathData="M32,9 C23,9 16,19 15,34 C14,46 21,57 32,57 C43,57 50,46 49,34 C48,19 41,9 32,9 Z"
+      android:fillColor="#84CC16"/>
+
+  <!-- Camada de transição da casca para a polpa (Amarelo claro dourado) -->
+  <path
+      android:pathData="M32,10 C24,10 18,20 17,34 C16,45 22,55 32,55 C42,55 48,45 47,34 C46,20 40,10 32,10 Z"
+      android:fillColor="#FDE047"/>
+
+  <!-- ==================== POLPA LARANJA SUCULENTA (MAMÃO COM AÇÚCAR) ==================== -->
+  <!-- Polpa farta em laranja vibrante característico da identidade do app -->
+  <path
+      android:pathData="M32,11 C25,11 19,21 18,34 C17,44 23,53 32,53 C41,53 47,44 46,34 C45,21 39,11 32,11 Z"
+      android:fillColor="#F97316"/>
+
+  <!-- Sombra de profundidade e brilho na polpa inferior -->
+  <path
+      android:pathData="M32,32 C23,32 19,39 19,45 C23,52 41,52 45,45 C45,39 41,32 32,32 Z"
       android:fillColor="#EA580C"/>
 
-  <!-- Center Longitudinal Ridge Lines -->
+  <!-- Brilho especular sutil na polpa suculenta (Lado Esquerdo) -->
   <path
-      android:pathData="M32,10C31,24 31,42 32,58"
-      android:strokeColor="#C2410C"
-      android:strokeWidth="1.5"
+      android:pathData="M22,20 C20,26 20,36 22,42"
+      android:strokeColor="#FDBA74"
+      android:strokeWidth="2"
       android:strokeLineCap="round"/>
 
+  <!-- ==================== CAVIDADE CENTRAL DAS SEMENTES ==================== -->
+  <!-- Leito escavado estrelado/ondulado da cavidade central -->
   <path
-      android:pathData="M24,14C22,26 23,40 26,52"
-      android:strokeColor="#84CC16"
-      android:strokeWidth="1.5"
-      android:strokeLineCap="round"/>
+      android:pathData="M32,18 C28,21 26,26 26,35 C26,43 28,47 32,47 C36,47 38,43 38,35 C38,26 36,21 32,18 Z"
+      android:fillColor="#9A3412"/>
 
-  <!-- Glossy Soft Highlight -->
+  <!-- Fundo escuro aveludado da câmara de sementes -->
   <path
-      android:pathData="M38,16C42,22 43,30 42,42"
-      android:strokeColor="#FED7AA"
-      android:strokeWidth="2.5"
-      android:strokeLineCap="round"/>
+      android:pathData="M32,20 C29,23 27,27 27,35 C27,42 29,45 32,45 C35,45 37,42 37,35 C37,27 35,23 32,20 Z"
+      android:fillColor="#1E293B"/>
 
-  <!-- Top Stem -->
+  <!-- ==================== SEMENTES PRETAS RELUZENTES DE MAMÃO ==================== -->
+  <!-- Linha Superior de Sementes -->
   <path
-      android:pathData="M32,8L32,2"
-      android:strokeColor="#15803D"
-      android:strokeWidth="3.5"
-      android:strokeLineCap="round"/>
+      android:pathData="M32,22 A2,2 0 1,1 32,26 A2,2 0 1,1 32,22 Z"
+      android:fillColor="#0F172A"/>
+  <path
+      android:pathData="M31.3,23 A0.5,0.5 0 1,1 31.3,24 A0.5,0.5 0 1,1 31.3,23 Z"
+      android:fillColor="#94A3B8"/>
 
-  <!-- Top Stem Calyx -->
+  <!-- Sementes do Meio-Alto -->
   <path
-      android:pathData="M32,8L27,11L30,8L28,5L32,7L36,5L34,8L37,11Z"
-      android:fillColor="#15803D"/>
+      android:pathData="M29.5,26 A2,2 0 1,1 29.5,30 A2,2 0 1,1 29.5,26 Z"
+      android:fillColor="#0F172A"/>
+  <path
+      android:pathData="M29,27 A0.5,0.5 0 1,1 29,28 A0.5,0.5 0 1,1 29,27 Z"
+      android:fillColor="#94A3B8"/>
 
-  <!-- Top Green Leaf -->
   <path
-      android:pathData="M32,4C37,0 44,2 46,6C40,8 35,7 32,4Z"
-      android:fillColor="#22C55E"/>
+      android:pathData="M34.5,26 A2,2 0 1,1 34.5,30 A2,2 0 1,1 34.5,26 Z"
+      android:fillColor="#0F172A"/>
+  <path
+      android:pathData="M34,27 A0.5,0.5 0 1,1 34,28 A0.5,0.5 0 1,1 34,27 Z"
+      android:fillColor="#94A3B8"/>
+
+  <!-- Sementes Centrais -->
+  <path
+      android:pathData="M32,30 A2.2,2.2 0 1,1 32,34.4 A2.2,2.2 0 1,1 32,30 Z"
+      android:fillColor="#0F172A"/>
+  <path
+      android:pathData="M31.2,31 A0.6,0.6 0 1,1 31.2,32.2 A0.6,0.6 0 1,1 31.2,31 Z"
+      android:fillColor="#E2E8F0"/>
+
+  <path
+      android:pathData="M28.5,33 A2,2 0 1,1 28.5,37 A2,2 0 1,1 28.5,33 Z"
+      android:fillColor="#0F172A"/>
+  <path
+      android:pathData="M28,34 A0.5,0.5 0 1,1 28,35 A0.5,0.5 0 1,1 28,34 Z"
+      android:fillColor="#94A3B8"/>
+
+  <path
+      android:pathData="M35.5,33 A2,2 0 1,1 35.5,37 A2,2 0 1,1 35.5,33 Z"
+      android:fillColor="#0F172A"/>
+  <path
+      android:pathData="M35,34 A0.5,0.5 0 1,1 35,35 A0.5,0.5 0 1,1 35,34 Z"
+      android:fillColor="#94A3B8"/>
+
+  <!-- Sementes do Meio-Baixo -->
+  <path
+      android:pathData="M32,37 A2.2,2.2 0 1,1 32,41.4 A2.2,2.2 0 1,1 32,37 Z"
+      android:fillColor="#0F172A"/>
+  <path
+      android:pathData="M31.2,38 A0.6,0.6 0 1,1 31.2,39.2 A0.6,0.6 0 1,1 31.2,38 Z"
+      android:fillColor="#E2E8F0"/>
+
+  <path
+      android:pathData="M29.5,39 A1.8,1.8 0 1,1 29.5,42.6 A1.8,1.8 0 1,1 29.5,39 Z"
+      android:fillColor="#0F172A"/>
+  <path
+      android:pathData="M34.5,39 A1.8,1.8 0 1,1 34.5,42.6 A1.8,1.8 0 1,1 34.5,39 Z"
+      android:fillColor="#0F172A"/>
+
+  <!-- Semente Inferior da Ponta -->
+  <path
+      android:pathData="M32,42 A1.5,1.5 0 1,1 32,45 A1.5,1.5 0 1,1 32,42 Z"
+      android:fillColor="#0F172A"/>
+
 </vector>

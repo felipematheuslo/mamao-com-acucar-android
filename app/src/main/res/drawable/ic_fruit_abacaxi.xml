@@ -3,21 +3,163 @@
     android:height="64dp"
     android:viewportWidth="64"
     android:viewportHeight="64">
+
+  <!-- ==================== COROA DE FOLHAS (CAMADA DE TRÁS) ==================== -->
+  <!-- Folhas laterais espalmadas de fundo (Verde Escuro) -->
   <path
-      android:pathData="M32,40m-18,0a18,20 0,1 1,36 0a18,20 0,1 1,-36 0"
-      android:fillColor="#F59E0B"
-      android:strokeColor="#D97706"
-      android:strokeWidth="2"/>
+      android:pathData="M32,24 L16,10 C21,17 26,20 30,22 L12,18 C18,23 25,24 30,24 Z"
+      android:fillColor="#14532D"/>
+
   <path
-      android:pathData="M20,28L44,52 M20,52L44,28 M16,40L48,40 M32,20L32,60"
-      android:strokeColor="#B45309"
-      android:strokeWidth="1.5"/>
+      android:pathData="M32,24 L48,10 C43,17 38,20 34,22 L52,18 C46,23 39,24 34,24 Z"
+      android:fillColor="#14532D"/>
+
+  <!-- Folhas altas traseiras -->
   <path
-      android:pathData="M32,22L24,4L30,18L32,2L34,18L40,4L32,22Z"
+      android:pathData="M32,24 L22,3 C27,11 29,18 31,21 L32,1 C33,18 35,11 42,3 L32,24 Z"
+      android:fillColor="#166534"/>
+
+  <!-- ==================== COROA DE FOLHAS (CAMADA FRONTAL) ==================== -->
+  <!-- Folhas centrais principais (Verde Vivo) -->
+  <path
+      android:pathData="M32,25 L24,5 C28,14 30,19 32,22 C34,19 36,14 40,5 L32,25 Z"
       android:fillColor="#16A34A"
       android:strokeColor="#14532D"
-      android:strokeWidth="1.5"/>
+      android:strokeWidth="0.8"/>
+
+  <!-- Folhas frontais curvas iluminadas (Verde Claro) -->
   <path
-      android:pathData="M32,22L18,10L26,20L46,10L38,20Z"
+      android:pathData="M32,25 L18,14 C24,19 28,22 31,24 L32,25 Z"
       android:fillColor="#22C55E"/>
+
+  <path
+      android:pathData="M32,25 L46,14 C40,19 36,22 33,24 L32,25 Z"
+      android:fillColor="#22C55E"/>
+
+  <!-- Nervura central brilhante da folha do meio -->
+  <path
+      android:pathData="M32,6 L32,23"
+      android:strokeColor="#86EFAC"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <!-- ==================== CORPO DO FRUTO (BASE E SILHUETA) ==================== -->
+  <!-- Base e contorno oval estruturado do abacaxi -->
+  <path
+      android:pathData="M32,24 C20,24 15,32 15,43 C15,54 22,61 32,61 C42,61 49,54 49,43 C49,32 44,24 32,24 Z"
+      android:fillColor="#F59E0B"
+      android:strokeColor="#B45309"
+      android:strokeWidth="1.8"/>
+
+  <!-- Sombra perimetral nas laterais e base para volume 3D -->
+  <path
+      android:pathData="M32,25 C21,25 16,33 16,43 C16,53 22,60 32,60 C23,59 18,52 18,43 C18,34 22,27 32,25 Z"
+      android:fillColor="#D97706"/>
+
+  <path
+      android:pathData="M32,25 C43,25 48,33 48,43 C48,53 42,60 32,60 C41,59 46,52 46,43 C46,34 42,27 32,25 Z"
+      android:fillColor="#B45309"/>
+
+  <!-- ==================== ESCAMAS / GOMOS TROPICAIS DO ABACAXI ==================== -->
+  <!-- Linha 1 de Gomos (Superior) -->
+  <path
+      android:pathData="M27,27 L32,24 L37,27 L32,30 Z"
+      android:fillColor="#FDE047"/>
+  <path
+      android:pathData="M32,28 L32,26"
+      android:strokeColor="#92400E"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <path
+      android:pathData="M20,31 L25,27 L30,31 L25,34 Z"
+      android:fillColor="#FBBF24"/>
+  <path
+      android:pathData="M25,32 L25,30"
+      android:strokeColor="#92400E"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <path
+      android:pathData="M34,31 L39,27 L44,31 L39,34 Z"
+      android:fillColor="#FBBF24"/>
+  <path
+      android:pathData="M39,32 L39,30"
+      android:strokeColor="#92400E"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <!-- Linha 2 de Gomos (Centro-Superior) -->
+  <path
+      android:pathData="M27,36 L32,32 L37,36 L32,40 Z"
+      android:fillColor="#FEF08A"/>
+  <path
+      android:pathData="M32,37 L32,34"
+      android:strokeColor="#78350F"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"/>
+
+  <path
+      android:pathData="M16,39 L21,35 L26,39 L21,43 Z"
+      android:fillColor="#F59E0B"/>
+  <path
+      android:pathData="M21,40 L21,38"
+      android:strokeColor="#92400E"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <path
+      android:pathData="M38,39 L43,35 L48,39 L43,43 Z"
+      android:fillColor="#F59E0B"/>
+  <path
+      android:pathData="M43,40 L43,38"
+      android:strokeColor="#92400E"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <!-- Linha 3 de Gomos (Centro-Inferior) -->
+  <path
+      android:pathData="M27,45 L32,41 L37,45 L32,49 Z"
+      android:fillColor="#FBBF24"/>
+  <path
+      android:pathData="M32,46 L32,43"
+      android:strokeColor="#78350F"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"/>
+
+  <path
+      android:pathData="M18,48 L23,44 L28,48 L23,52 Z"
+      android:fillColor="#D97706"/>
+  <path
+      android:pathData="M23,49 L23,47"
+      android:strokeColor="#78350F"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <path
+      android:pathData="M36,48 L41,44 L46,48 L41,52 Z"
+      android:fillColor="#D97706"/>
+  <path
+      android:pathData="M41,49 L41,47"
+      android:strokeColor="#78350F"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <!-- Linha 4 de Gomos (Base) -->
+  <path
+      android:pathData="M27,54 L32,50 L37,54 L32,58 Z"
+      android:fillColor="#D97706"/>
+  <path
+      android:pathData="M32,55 L32,53"
+      android:strokeColor="#78350F"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <!-- Brilho no topo do fruto -->
+  <path
+      android:pathData="M28,26 C30,25 34,25 36,26"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
 </vector>

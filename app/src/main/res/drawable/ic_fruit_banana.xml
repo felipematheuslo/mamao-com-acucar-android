@@ -3,20 +3,81 @@
     android:height="64dp"
     android:viewportWidth="64"
     android:viewportHeight="64">
+
+  <!-- ==================== BANANA DE TRÁS (PENCA) ==================== -->
+  <!-- Corpo da banana de trás para profundidade -->
   <path
-      android:pathData="M12,16C24,10 48,18 54,46C44,48 22,44 12,16Z"
+      android:pathData="M16,14 C28,11 44,18 52,38 C44,43 32,36 19,22 C17,19 16,16 16,14 Z"
+      android:fillColor="#EAB308"
+      android:strokeColor="#CA8A04"
+      android:strokeWidth="1.2"/>
+
+  <!-- Ponta escura da banana de trás -->
+  <path
+      android:pathData="M52,38 C54,41 53,43 51,44 C50,43 50,40 52,38 Z"
+      android:fillColor="#713F12"/>
+
+  <!-- ==================== BANANA PRINCIPAL DA FRENTE ==================== -->
+  <!-- Silhueta total da banana principal -->
+  <path
+      android:pathData="M14,18 C26,14 46,22 54,48 C48,53 28,49 14,24 C13,22 13,20 14,18 Z"
       android:fillColor="#FACC15"
       android:strokeColor="#CA8A04"
-      android:strokeWidth="2"/>
+      android:strokeWidth="1.5"/>
+
+  <!-- Faceta Inferior / Sombra de Volume -->
   <path
-      android:pathData="M14,18C24,24 42,28 50,44C44,46 26,42 14,18Z"
+      android:pathData="M14,23 C26,38 42,47 54,48 C47,53 29,49 14,24 Z"
+      android:fillColor="#EAB308"/>
+
+  <!-- Faceta Superior Iluminada (Luz na Crista) -->
+  <path
+      android:pathData="M14,18 C26,14 46,22 54,48 C49,43 32,27 16,19 Z"
       android:fillColor="#FEF08A"/>
+
+  <!-- Linha de Aresta Longitudinal (Característica do formato de banana) -->
   <path
-      android:pathData="M12,16L6,10"
-      android:strokeColor="#713F12"
-      android:strokeWidth="3"
+      android:pathData="M15,20 C28,20 44,32 52,47"
+      android:strokeColor="#CA8A04"
+      android:strokeWidth="1.2"
       android:strokeLineCap="round"/>
+
+  <!-- Brilho de Reflexo Suave na Casca -->
   <path
-      android:pathData="M54,46m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0"
-      android:fillColor="#713F12"/>
+      android:pathData="M23,17 C34,20 44,28 48,37"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"/>
+
+  <!-- ==================== DETALHES DE TALO E EXTREMIDADES ==================== -->
+  <!-- Talo Principal Conectado da Penca -->
+  <path
+      android:pathData="M15,19 C13,15 9,10 7,9 C6,8 5,9 6,11 C7,14 11,20 13,23 Z"
+      android:fillColor="#65A30D"
+      android:strokeColor="#15803D"
+      android:strokeWidth="1"/>
+
+  <!-- Corte do Talo (Fibra Marrom da Junção) -->
+  <path
+      android:pathData="M7,9 C6,8 5,9 6,11 C7,11 8,10 7,9 Z"
+      android:fillColor="#451A03"/>
+
+  <!-- Talo Verde da Banana de Trás -->
+  <path
+      android:pathData="M17,14 C15,11 11,8 10,7 C10,9 12,12 14,15 Z"
+      android:fillColor="#4D7C0F"/>
+
+  <!-- Ponta Distal Escura (Flor Caduca / Ponta da Banana) -->
+  <path
+      android:pathData="M54,48 C56,51 55,54 52,54 C51,53 52,50 54,48 Z"
+      android:fillColor="#451A03"/>
+
+  <!-- Mancha Natural de Banana Madura Açucarada -->
+  <path
+      android:pathData="M35,32 C36,33 36,34 35,34 C34,34 34,33 35,32 Z"
+      android:fillColor="#854D0E"/>
+  <path
+      android:pathData="M43,40 C44,41 44,42 43,42 C42,42 42,41 43,40 Z"
+      android:fillColor="#854D0E"/>
+
 </vector>
