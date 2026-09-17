@@ -101,7 +101,7 @@ The application adheres to clean Android architecture using **MVVM (Model-View-V
 - Dynamic search and status filter sheet (`TreeListSheet`) with live distance display.
 
 ### Native Botanical Guide (Guia Botânico)
-- Built-in catalog of **68 fruit tree species** featuring custom vector icons, biological fruiting timelines, and species-specific harvest tips.
+- Built-in catalog of **71 fruit tree species** featuring custom vector icons, biological fruiting timelines, and species-specific harvest tips.
 - Instant search and offline filtering for rapid outdoor tree identification.
 
 ### Modern Auth & Non-Intrusive Monetization

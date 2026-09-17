@@ -30,7 +30,7 @@ app/src/main/java/com/felipelaurindo/mamaocomacucar/
 ├── MainActivity.kt                # Activity principal, configura Edge-to-Edge e inicializa OSMDroid Configuration
 ├── MamaoApp.kt                    # NavHost principal e controle do estado de autenticação (LoggedUser)
 ├── data/
-│   ├── FruitCatalogData.kt        # Catálogo botânico estático (68 espécies, nomes científicos, biomas e descrições)
+│   ├── FruitCatalogData.kt        # Catálogo botânico estático (71 espécies, nomes científicos, biomas e descrições)
 │   ├── FruitsData.kt              # Lista de espécies de frutas permitidas e sugestões rápidas (ALLOWED_FRUITS)
 │   ├── model/
 │   │   ├── CommentUpdate.kt       # Modelo de atualização de status e comentários reportados
