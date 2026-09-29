@@ -43,39 +43,16 @@ abstract class OptimizedOnlineTileSource(
     override fun getDrawable(aFilePath: String): Drawable? {
         try {
             val targetSize = tileSizePixels
-
-            // 1. Inspeciona dimensões reais da imagem sem alocar bitmap na memória
-            val optSize = BitmapFactory.Options().apply {
-                inJustDecodeBounds = true
+            val bitmapOptions = BitmapFactory.Options().apply {
+                inSampleSize = 1
+                if (isJpeg) {
+                    inPreferredConfig = Bitmap.Config.RGB_565
+                }
             }
-            BitmapFactory.decodeFile(aFilePath, optSize)
-            val realWidth = optSize.outWidth
-            val realHeight = optSize.outHeight
-
-            // Se o arquivo estiver corrompido ou inacessível
-            if (realWidth <= 0 || realHeight <= 0) {
-                return null
-            }
-
-            // 2. Configura opções de decodificação com reuso de memória
-            val bitmapOptions = BitmapFactory.Options()
             BitmapPool.getInstance().applyReusableOptions(bitmapOptions, targetSize, targetSize)
 
-            // 3. Define explicitamente inSampleSize (resolvendo o alerta do Google Play)
-            bitmapOptions.inSampleSize = calculateInSampleSize(realWidth, realHeight, targetSize, targetSize)
-
-            // 4. Se for JPEG (sem transparência), usa RGB_565 para economizar 50% de RAM
-            if (isJpeg) {
-                bitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565
-            }
-
-            // 5. Decodifica o arquivo de imagem
-            val bitmap = BitmapFactory.decodeFile(aFilePath, bitmapOptions)
-            return if (bitmap != null) {
-                ReusableBitmapDrawable(bitmap)
-            } else {
-                null
-            }
+            val bitmap = BitmapFactory.decodeFile(aFilePath, bitmapOptions) ?: return null
+            return ReusableBitmapDrawable(bitmap)
         } catch (e: OutOfMemoryError) {
             System.gc()
             throw BitmapTileSourceBase.LowMemoryException(e)
@@ -88,67 +65,21 @@ abstract class OptimizedOnlineTileSource(
     override fun getDrawable(aFileInputStream: InputStream): Drawable? {
         try {
             val targetSize = tileSizePixels
-            var realWidth = targetSize
-            var realHeight = targetSize
-
-            // 1. Inspeciona dimensões reais da stream se suportar mark/reset
-            if (aFileInputStream.markSupported()) {
-                aFileInputStream.mark(1024 * 1024)
-                val optSize = BitmapFactory.Options().apply {
-                    inJustDecodeBounds = true
+            val bitmapOptions = BitmapFactory.Options().apply {
+                inSampleSize = 1
+                if (isJpeg) {
+                    inPreferredConfig = Bitmap.Config.RGB_565
                 }
-                BitmapFactory.decodeStream(aFileInputStream, null, optSize)
-                if (optSize.outWidth > 0 && optSize.outHeight > 0) {
-                    realWidth = optSize.outWidth
-                    realHeight = optSize.outHeight
-                }
-                aFileInputStream.reset()
             }
-
-            // 2. Configura opções de decodificação com reuso de memória
-            val bitmapOptions = BitmapFactory.Options()
             BitmapPool.getInstance().applyReusableOptions(bitmapOptions, targetSize, targetSize)
 
-            // 3. Define explicitamente inSampleSize
-            bitmapOptions.inSampleSize = calculateInSampleSize(realWidth, realHeight, targetSize, targetSize)
-
-            // 4. Se for JPEG (sem transparência), usa RGB_565 para economizar 50% de RAM
-            if (isJpeg) {
-                bitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565
-            }
-
-            // 5. Decodifica a stream
-            val bitmap = BitmapFactory.decodeStream(aFileInputStream, null, bitmapOptions)
-            return if (bitmap != null) {
-                ReusableBitmapDrawable(bitmap)
-            } else {
-                null
-            }
+            val bitmap = BitmapFactory.decodeStream(aFileInputStream, null, bitmapOptions) ?: return null
+            return ReusableBitmapDrawable(bitmap)
         } catch (e: OutOfMemoryError) {
             System.gc()
             throw BitmapTileSourceBase.LowMemoryException(e)
         } catch (t: Throwable) {
             return null
         }
-    }
-
-    /**
-     * Calcula o inSampleSize como potência de 2 para downsampling seguro de bitmaps.
-     */
-    private fun calculateInSampleSize(
-        actualWidth: Int,
-        actualHeight: Int,
-        reqWidth: Int,
-        reqHeight: Int
-    ): Int {
-        var inSampleSize = 1
-        if (actualHeight > reqHeight || actualWidth > reqWidth) {
-            val halfHeight = actualHeight / 2
-            val halfWidth = actualWidth / 2
-            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2
-            }
-        }
-        return inSampleSize
     }
 }

@@ -69,10 +69,6 @@ fun AccountSettingsSheet(
         }
     }
 
-    val userInitial = remember(currentUser.displayName, currentUser.username) {
-        val name = currentUser.displayName.ifBlank { currentUser.username }
-        if (name.isNotBlank()) name.first().uppercase() else "👤"
-    }
 
     Box(
         modifier = Modifier
@@ -105,17 +101,11 @@ fun AccountSettingsSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text("👤", fontSize = 20.sp)
-                        Text(
-                            "Configurações do Perfil",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = Stone900
-                        )
-                    }
+                    Text(
+                        "Configurações do Perfil",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Stone900
+                    )
                     IconButton(
                         onClick = { onDismiss(); isProfileUpdated = false },
                         modifier = Modifier
@@ -128,63 +118,6 @@ fun AccountSettingsSheet(
                             tint = Stone600,
                             modifier = Modifier.size(18.dp)
                         )
-                    }
-                }
-
-                // Profile Card Header (compacto e elegante)
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MamaoOrangeLight,
-                    border = BorderStroke(1.dp, MamaoOrangeContainer),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MamaoOrange,
-                            modifier = Modifier.size(44.dp),
-                            shadowElevation = 2.dp
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = userInitial,
-                                    color = Color.White,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Black
-                                )
-                            }
-                        }
-
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(1.dp)
-                        ) {
-                            Text(
-                                text = currentUser.displayName.ifBlank { "Membro da Comunidade" },
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = Stone900,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = "@${currentUser.username}",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                                color = MamaoOrange,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = currentUser.email,
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                                color = Stone500,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
                     }
                 }
 
@@ -258,6 +191,28 @@ fun AccountSettingsSheet(
                             unfocusedContainerColor = Stone50,
                             cursorColor = MamaoOrange,
                             focusedLabelColor = MamaoOrange,
+                            unfocusedLabelColor = Stone400
+                        )
+                    )
+
+                    // E-mail (Read-only)
+                    OutlinedTextField(
+                        value = currentUser.email.ifBlank { "Não informado" },
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("E-mail") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Stone600,
+                            unfocusedTextColor = Stone600,
+                            focusedBorderColor = Stone200,
+                            unfocusedBorderColor = Stone200,
+                            focusedContainerColor = Stone50,
+                            unfocusedContainerColor = Stone50,
+                            cursorColor = Color.Transparent,
+                            focusedLabelColor = Stone500,
                             unfocusedLabelColor = Stone400
                         )
                     )
@@ -472,13 +427,6 @@ fun AccountSettingsSheet(
                                         trackColor = MamaoOrangeContainer
                                     )
 
-                                    val remaining = nextBadgeInfo.targetCount - userTreeCount
-                                    val countText = if (remaining == 1) "Falta apenas 1 fruteira" else "Faltam apenas $remaining fruteiras"
-                                    Text(
-                                        "$countText para o próximo nível 🚀",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                                        color = Stone500
-                                    )
                                 }
                             } else {
                                 HorizontalDivider(color = Stone200)

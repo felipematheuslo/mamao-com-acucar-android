@@ -71,6 +71,8 @@ private class ThresholdRotationGestureOverlay(
     private val onOrientationChanged: ((Float) -> Unit)? = null,
     private val onGestureEnd: ((Double) -> Unit)? = null
 ) : Overlay() {
+    var isMultiTouchActive: Boolean = false
+        private set
     private var initialFingerAngle: Float = 0f
     private var rotationPivotAngle: Float = 0f
     private var rotationPivotOrientation: Float = 0f
@@ -81,7 +83,8 @@ private class ThresholdRotationGestureOverlay(
     override fun onTouchEvent(event: MotionEvent, mapView: MapView): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_POINTER_DOWN -> {
-                if (event.pointerCount == 2) {
+                if (event.pointerCount >= 2) {
+                    isMultiTouchActive = true
                     pointerId1 = event.getPointerId(0)
                     pointerId2 = event.getPointerId(1)
                     val idx1 = event.findPointerIndex(pointerId1)
@@ -96,6 +99,9 @@ private class ThresholdRotationGestureOverlay(
             }
 
             MotionEvent.ACTION_MOVE -> {
+                if (event.pointerCount >= 2) {
+                    isMultiTouchActive = true
+                }
                 if (event.pointerCount == 2 && pointerId1 != MotionEvent.INVALID_POINTER_ID && pointerId2 != MotionEvent.INVALID_POINTER_ID) {
                     val idx1 = event.findPointerIndex(pointerId1)
                     val idx2 = event.findPointerIndex(pointerId2)
@@ -129,6 +135,7 @@ private class ThresholdRotationGestureOverlay(
             }
 
             MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                isMultiTouchActive = false
                 if (isRotating) {
                     onOrientationChanged?.invoke(mapView.mapOrientation)
                 }
@@ -245,6 +252,34 @@ fun MapScreen(
     var pulsingTreeId by remember { mutableStateOf<String?>(null) }
     var currentMapZoom by remember { mutableDoubleStateOf(15.0) }
 
+    val mapViewRef = remember { mutableStateOf<MapView?>(null) }
+
+    val density = context.resources.displayMetrics.density
+    val clusterRadiusPx = remember(density) { 44f * density }
+    val clusters = remember(filteredTrees, currentMapZoom, pulsingTreeId, clusterRadiusPx) {
+        clusterTrees(
+            items = filteredTrees,
+            zoom = currentMapZoom,
+            clusterRadiusPx = clusterRadiusPx,
+            pulsingTreeId = pulsingTreeId
+        )
+    }
+
+    var lastRenderedClusters by remember { mutableStateOf<List<TreeCluster>?>(null) }
+    var lastRenderedLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+
+    // Inicializa coordenadas do pino ao entrar no modo de adicionar fruteira
+    LaunchedEffect(isAddingTree) {
+        if (isAddingTree) {
+            val center = mapViewRef.value?.mapCenter
+            pinCoordinates = if (center != null) {
+                Pair(center.latitude, center.longitude)
+            } else {
+                mapCenter
+            }
+        }
+    }
+
     // Close auth prompt if user logs in
     LaunchedEffect(currentUser.isGuest) {
         if (!currentUser.isGuest) {
@@ -259,8 +294,6 @@ fun MapScreen(
             pulsingTreeId = null
         }
     }
-
-    val mapViewRef = remember { mutableStateOf<MapView?>(null) }
 
     val isAnySheetOrDialogActive = isTreeListOpen || isTreeDetailOpen || isFruitCatalogOpen || isAddingTree || isAddDialogOpen || isAccountSettingsOpen || isAppSettingsOpen || isAuthPromptOpen
     val isBannerVisible = !isAnySheetOrDialogActive && previewTree == null
@@ -322,6 +355,10 @@ fun MapScreen(
                     setMultiTouchControls(true)
                     setBuiltInZoomControls(false)
                     zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
+                    isTilesScaledToDpi = false
+                    isVerticalMapRepetitionEnabled = false
+                    isHorizontalMapRepetitionEnabled = false
+                    setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
                     controller.setZoom(15.0)
                     controller.setCenter(GeoPoint(mapCenter.first, mapCenter.second))
                     setTileSource(getTileSourceForStyle(mapStyle))
@@ -333,7 +370,7 @@ fun MapScreen(
                             mapOrientation = newOrientation
                         },
                         onGestureEnd = { finalZoom ->
-                            if (abs(finalZoom - currentMapZoom) >= 0.05) {
+                            if (abs(finalZoom - currentMapZoom) >= 0.1) {
                                 currentMapZoom = finalZoom
                             }
                         }
@@ -342,15 +379,14 @@ fun MapScreen(
 
                     addMapListener(object : MapListener {
                         override fun onScroll(event: ScrollEvent?): Boolean {
-                            if (isAddingTree) {
-                                val center = this@apply.mapCenter
-                                pinCoordinates = Pair(center.latitude, center.longitude)
-                            }
                             return false
                         }
                         override fun onZoom(event: ZoomEvent?): Boolean {
+                            // Se o usuário estiver fazendo gesto de pinça, não dispara recomposição contínua.
+                            // A atualização final dos clusters acontecerá no onGestureEnd ao soltar os dedos.
+                            if (rotationOverlay.isMultiTouchActive) return false
                             val newZoom = zoomLevelDouble
-                            if (abs(newZoom - currentMapZoom) >= 0.3) {
+                            if (abs(newZoom - currentMapZoom) >= 0.8) {
                                 currentMapZoom = newZoom
                             }
                             return false
@@ -361,124 +397,116 @@ fun MapScreen(
                 }
             },
             update = { mapView ->
-                // Remove apenas os marcadores antigos sem destruir os overlays persistentes
-                mapView.overlays.removeAll { it is Marker }
-
-                // User location marker
-                val userMarker = Marker(mapView).apply {
-                    position = GeoPoint(userLocation.first, userLocation.second)
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                    title = "Você está aqui! 📍"
-                    icon = createCircleDrawable(context, android.graphics.Color.parseColor("#2563EB"), 12)
-                }
-                mapView.overlays.add(userMarker)
-
-                // Marcadores de árvores agrupados (clusters) ou individuais (usa filteredTrees reativo do Compose)
-                val density = context.resources.displayMetrics.density
-                val clusterRadiusPx = 44f * density
-                val clusters = clusterTrees(
-                    items = filteredTrees,
-                    zoom = currentMapZoom,
-                    clusterRadiusPx = clusterRadiusPx,
-                    pulsingTreeId = pulsingTreeId
-                )
-
-                for (cluster in clusters) {
-                    if (cluster.trees.size == 1) {
-                        val tree = cluster.trees.first()
-                        val isPulsing = tree.id == pulsingTreeId
-                        val distanceKm = calculateDistance(userLocation.first, userLocation.second, tree.latitude, tree.longitude)
-                        val isObfuscated = currentUser.isGuest && distanceKm > 2.0
-
-                        val marker = Marker(mapView).apply {
-                            position = GeoPoint(tree.latitude, tree.longitude)
-                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            title = if (isObfuscated) "Fruteira fora do raio de 2 km 🔒" else getFruitDisplayName(tree.species)
-                            snippet = if (isObfuscated) "Cadastre-se para ver os detalhes" else tree.name
-                            if (isObfuscated) {
-                                alpha = 0.40f
-                            }
-                            icon = createFruitVectorDrawable(
-                                context = context,
-                                species = tree.species,
-                                status = tree.currentStatus,
-                                isPulsing = isPulsing,
-                                isObfuscated = isObfuscated
-                            )
-                            setOnMarkerClickListener { _, _ ->
-                                if (isObfuscated) {
-                                    val distFormatted = formatDistance(distanceKm)
-                                    authPromptSubtitle = "Esta fruteira está a $distFormatted de você, fora do raio de 2 km do modo visitante. Conecte sua conta gratuita para explorar árvores em qualquer cidade!"
-                                    isAuthPromptOpen = true
-                                } else {
-                                    previewTree = tree
-                                    pulsingTreeId = tree.id
-                                    mapViewModel.setMapCenter(tree.latitude, tree.longitude)
-                                }
-                                true
-                            }
-                        }
-                        mapView.overlays.add(marker)
-                    } else {
-                        val allTreesObfuscated = currentUser.isGuest && cluster.trees.all {
-                            calculateDistance(userLocation.first, userLocation.second, it.latitude, it.longitude) > 2.0
-                        }
-
-                        val marker = Marker(mapView).apply {
-                            position = GeoPoint(cluster.centerLat, cluster.centerLng)
-                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                            title = "${cluster.trees.size} fruteiras"
-                            snippet = if (allTreesObfuscated) "Fora do raio de 2 km 🔒" else "Toque para aproximar"
-                            if (allTreesObfuscated) {
-                                alpha = 0.45f
-                            }
-                            icon = createClusterVectorDrawable(
-                                context = context,
-                                count = cluster.trees.size,
-                                isPulsing = cluster.isPulsing,
-                                isObfuscated = allTreesObfuscated
-                            )
-                            setOnMarkerClickListener { _, _ ->
-                                val currentZoom = mapView.zoomLevelDouble
-                                if (currentZoom < 18.0) {
-                                    mapView.controller.animateTo(
-                                        GeoPoint(cluster.centerLat, cluster.centerLng),
-                                        (currentZoom + 2.0).coerceAtMost(19.0),
-                                        500L
-                                    )
-                                } else {
-                                    val firstTree = cluster.trees.first()
-                                    val distKm = calculateDistance(userLocation.first, userLocation.second, firstTree.latitude, firstTree.longitude)
-                                    if (currentUser.isGuest && distKm > 2.0) {
-                                        val distFormatted = formatDistance(distKm)
-                                        authPromptSubtitle = "Estas fruteiras estão a $distFormatted de você, fora do raio de 2 km do modo visitante. Conecte sua conta gratuita para explorar árvores em qualquer cidade!"
-                                        isAuthPromptOpen = true
-                                    } else {
-                                        previewTree = firstTree
-                                        pulsingTreeId = firstTree.id
-                                        mapViewModel.setMapCenter(cluster.centerLat, cluster.centerLng)
-                                    }
-                                }
-                                true
-                            }
-                        }
-                        mapView.overlays.add(marker)
-                    }
-                }
-
                 // Update tile source based on style
                 val tileSource = getTileSourceForStyle(mapStyle)
                 if (mapView.tileProvider.tileSource.name() != tileSource.name()) {
                     mapView.setTileSource(tileSource)
                 }
 
-                // Track center for pin placement mode
-                if (isAddingTree) {
-                    val center = mapView.mapCenter
-                    pinCoordinates = Pair(center.latitude, center.longitude)
-                }
+                // Evita reconstrução custosa de marcadores se os clusters e localização não mudaram
+                val shouldRebuild = (lastRenderedClusters !== clusters) || (lastRenderedLocation != userLocation)
+                if (shouldRebuild) {
+                    lastRenderedClusters = clusters
+                    lastRenderedLocation = userLocation
 
-                mapView.invalidate()
+                    // Remove apenas os marcadores antigos sem destruir os overlays persistentes
+                    mapView.overlays.removeAll { it is Marker }
+
+                    // User location marker (reutiliza drawable cacheado)
+                    val userMarker = Marker(mapView).apply {
+                        position = GeoPoint(userLocation.first, userLocation.second)
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                        title = "Você está aqui! 📍"
+                        icon = MarkerDrawableCache.getUserLocationDrawable(context)
+                    }
+                    mapView.overlays.add(userMarker)
+
+                    // Marcadores de árvores agrupados (clusters) ou individuais (usa clusters memoizados com remember)
+                    for (cluster in clusters) {
+                        if (cluster.trees.size == 1) {
+                            val tree = cluster.trees.first()
+                            val isPulsing = tree.id == pulsingTreeId
+                            val distanceKm = calculateDistance(userLocation.first, userLocation.second, tree.latitude, tree.longitude)
+                            val isObfuscated = currentUser.isGuest && distanceKm > 2.0
+
+                            val marker = Marker(mapView).apply {
+                                position = GeoPoint(tree.latitude, tree.longitude)
+                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                title = if (isObfuscated) "Fruteira fora do raio de 2 km 🔒" else getFruitDisplayName(tree.species)
+                                snippet = if (isObfuscated) "Cadastre-se para ver os detalhes" else tree.name
+                                if (isObfuscated) {
+                                    alpha = 0.40f
+                                }
+                                icon = MarkerDrawableCache.getFruitDrawable(
+                                    context = context,
+                                    species = tree.species,
+                                    status = tree.currentStatus,
+                                    isPulsing = isPulsing,
+                                    isObfuscated = isObfuscated
+                                )
+                                setOnMarkerClickListener { _, _ ->
+                                    if (isObfuscated) {
+                                        val distFormatted = formatDistance(distanceKm)
+                                        authPromptSubtitle = "Esta fruteira está a $distFormatted de você, fora do raio de 2 km do modo visitante. Conecte sua conta gratuita para explorar árvores em qualquer cidade!"
+                                        isAuthPromptOpen = true
+                                    } else {
+                                        previewTree = tree
+                                        pulsingTreeId = tree.id
+                                        mapViewModel.setMapCenter(tree.latitude, tree.longitude)
+                                    }
+                                    true
+                                }
+                            }
+                            mapView.overlays.add(marker)
+                        } else {
+                            val allTreesObfuscated = currentUser.isGuest && cluster.trees.all {
+                                calculateDistance(userLocation.first, userLocation.second, it.latitude, it.longitude) > 2.0
+                            }
+
+                            val marker = Marker(mapView).apply {
+                                position = GeoPoint(cluster.centerLat, cluster.centerLng)
+                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                                title = "${cluster.trees.size} fruteiras"
+                                snippet = if (allTreesObfuscated) "Fora do raio de 2 km 🔒" else "Toque para aproximar"
+                                if (allTreesObfuscated) {
+                                    alpha = 0.45f
+                                }
+                                icon = MarkerDrawableCache.getClusterDrawable(
+                                    context = context,
+                                    count = cluster.trees.size,
+                                    isPulsing = cluster.isPulsing,
+                                    isObfuscated = allTreesObfuscated
+                                )
+                                setOnMarkerClickListener { _, _ ->
+                                    val currentZoom = mapView.zoomLevelDouble
+                                    if (currentZoom < 18.0) {
+                                        mapView.controller.animateTo(
+                                            GeoPoint(cluster.centerLat, cluster.centerLng),
+                                            (currentZoom + 2.0).coerceAtMost(19.0),
+                                            500L
+                                        )
+                                    } else {
+                                        val firstTree = cluster.trees.first()
+                                        val distKm = calculateDistance(userLocation.first, userLocation.second, firstTree.latitude, firstTree.longitude)
+                                        if (currentUser.isGuest && distKm > 2.0) {
+                                            val distFormatted = formatDistance(distKm)
+                                            authPromptSubtitle = "Estas fruteiras estão a $distFormatted de você, fora do raio de 2 km do modo visitante. Conecte sua conta gratuita para explorar árvores em qualquer cidade!"
+                                            isAuthPromptOpen = true
+                                        } else {
+                                            previewTree = firstTree
+                                            pulsingTreeId = firstTree.id
+                                            mapViewModel.setMapCenter(cluster.centerLat, cluster.centerLng)
+                                        }
+                                    }
+                                    true
+                                }
+                            }
+                            mapView.overlays.add(marker)
+                        }
+                    }
+
+                    mapView.invalidate()
+                }
             }
         )
 
@@ -514,8 +542,8 @@ fun MapScreen(
         )
 
         // ---- Pin overlay for adding tree ----
-        val currentPin = pinCoordinates
-        if (isAddingTree && currentPin != null) {
+        val currentPin = pinCoordinates ?: mapCenter
+        if (isAddingTree) {
             // Center pin
             Box(
                 modifier = Modifier
@@ -1219,6 +1247,46 @@ private fun createClusterVectorDrawable(
     canvas.drawText(countText, centerX, textY, textPaint)
 
     return android.graphics.drawable.BitmapDrawable(context.resources, bitmap)
+}
+
+// Cache em memória para drawables de marcadores e clusters para evitar alocações constantes de Bitmaps/Canvas
+private object MarkerDrawableCache {
+    private val fruitCache = mutableMapOf<String, android.graphics.drawable.Drawable>()
+    private val clusterCache = mutableMapOf<String, android.graphics.drawable.Drawable>()
+    private var userLocationDrawable: android.graphics.drawable.Drawable? = null
+
+    fun getUserLocationDrawable(context: Context): android.graphics.drawable.Drawable {
+        return userLocationDrawable ?: createCircleDrawable(
+            context,
+            android.graphics.Color.parseColor("#2563EB"),
+            12
+        ).also { userLocationDrawable = it }
+    }
+
+    fun getFruitDrawable(
+        context: Context,
+        species: String,
+        status: TreeStatus,
+        isPulsing: Boolean = false,
+        isObfuscated: Boolean = false
+    ): android.graphics.drawable.Drawable {
+        val key = "$species#${status.name}#$isPulsing#$isObfuscated"
+        return fruitCache.getOrPut(key) {
+            createFruitVectorDrawable(context, species, status, isPulsing, isObfuscated)
+        }
+    }
+
+    fun getClusterDrawable(
+        context: Context,
+        count: Int,
+        isPulsing: Boolean = false,
+        isObfuscated: Boolean = false
+    ): android.graphics.drawable.Drawable {
+        val key = "$count#$isPulsing#$isObfuscated"
+        return clusterCache.getOrPut(key) {
+            createClusterVectorDrawable(context, count, isPulsing, isObfuscated)
+        }
+    }
 }
 
 // Representação de um agrupamento de árvores no mapa
