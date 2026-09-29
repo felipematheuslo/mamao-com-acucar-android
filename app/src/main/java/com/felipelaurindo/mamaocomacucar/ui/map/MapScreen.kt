@@ -542,7 +542,6 @@ fun MapScreen(
         )
 
         // ---- Pin overlay for adding tree ----
-        val currentPin = pinCoordinates ?: mapCenter
         if (isAddingTree) {
             // Center pin
             Box(
@@ -599,7 +598,7 @@ fun MapScreen(
                 }
             }
 
-            // Bottom card with coordinates
+            // Bottom card to confirm location
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -623,15 +622,6 @@ fun MapScreen(
                                 "Arraste o mapa para centralizar a árvore exatamente sobre o marcador e confirme o local.",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                 color = MamaoOrange
-                            )
-                            Text(
-                                "COORDENADAS: ${String.format("%.5f", currentPin.first)}, ${String.format("%.5f", currentPin.second)}",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 9.sp
-                                ),
-                                color = Stone500,
-                                modifier = Modifier.padding(top = 4.dp)
                             )
                         }
                     }
