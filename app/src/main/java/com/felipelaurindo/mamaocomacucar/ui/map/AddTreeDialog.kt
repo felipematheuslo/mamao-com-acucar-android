@@ -11,13 +11,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.focus.onFocusChanged
 import com.felipelaurindo.mamaocomacucar.data.ALLOWED_FRUITS
 import com.felipelaurindo.mamaocomacucar.data.findFruitDefinition
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
@@ -38,7 +39,7 @@ fun AddTreeDialog(
     var referenceName by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf(TreeStatus.VAZIO) }
     var speciesSearchQuery by remember { mutableStateOf("") }
-    var showSpeciesDropdown by remember { mutableStateOf(false) }
+    var showSuggestions by remember { mutableStateOf(false) }
     var isSubmitting by remember { mutableStateOf(false) }
 
     val filteredFruits = remember(speciesSearchQuery) {
@@ -74,13 +75,24 @@ fun AddTreeDialog(
                 .navigationBarsPadding()
                 .imePadding()
                 .padding(horizontal = 20.dp, vertical = 16.dp)
-                .clickable(enabled = false, onClick = {}),
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    showSuggestions = false
+                },
             shape = RoundedCornerShape(28.dp),
             color = Color.White,
             shadowElevation = 24.dp
         ) {
             Column(
                 modifier = Modifier
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        showSuggestions = false
+                    }
                     .verticalScroll(rememberScrollState())
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -102,11 +114,6 @@ fun AddTreeDialog(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Stone950
                             )
-                            Text(
-                                "Adicione uma nova árvore frutífera ao mapa coletivo",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                                color = Stone400
-                            )
                         }
                     }
                     IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
@@ -117,111 +124,153 @@ fun AddTreeDialog(
                 HorizontalDivider(color = Stone100)
 
                 // Species selector
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        "ESPÉCIE DA FRUTA",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MamaoOrange,
-                        letterSpacing = 2.sp
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "ESPÉCIE DA FRUTA",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MamaoOrange,
+                            letterSpacing = 2.sp
+                        )
+                        if (selectedSpecies.isNotBlank()) {
+                            Text(
+                                "Selecionada ✓",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = MamaoGreen
+                            )
+                        }
+                    }
+
                     OutlinedTextField(
-                        value = if (selectedSpecies.isNotEmpty() && !showSpeciesDropdown) selectedSpecies
-                               else speciesSearchQuery,
+                        value = if (selectedSpecies.isNotEmpty() && !showSuggestions) selectedSpecies else speciesSearchQuery,
                         onValueChange = {
                             speciesSearchQuery = it
                             selectedSpecies = ""
-                            showSpeciesDropdown = true
+                            showSuggestions = it.isNotBlank()
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Pesquisar espécie (ex: Pitanga, Amora)...", color = Stone400) },
-                        leadingIcon = { Icon(Icons.Outlined.Search, null, tint = Stone400) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged {
+                                if (it.isFocused && speciesSearchQuery.isNotBlank() && selectedSpecies.isBlank()) {
+                                    showSuggestions = true
+                                }
+                            },
+                        placeholder = {
+                            Text(
+                                "Buscar fruta no catálogo (ex: Manga, Amora)...",
+                                color = Stone400,
+                                fontSize = 13.sp
+                            )
+                        },
+                        leadingIcon = {
+                            if (selectedSpecies.isNotEmpty() && !showSuggestions) {
+                                Image(
+                                    painter = painterResource(id = getFruitDrawableRes(selectedSpecies)),
+                                    contentDescription = selectedSpecies,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            } else {
+                                Icon(Icons.Outlined.Search, contentDescription = null, tint = Stone400)
+                            }
+                        },
+                        trailingIcon = {
+                            if (speciesSearchQuery.isNotEmpty() || selectedSpecies.isNotEmpty()) {
+                                IconButton(onClick = {
+                                    speciesSearchQuery = ""
+                                    selectedSpecies = ""
+                                    showSuggestions = false
+                                }) {
+                                    Icon(
+                                        Icons.Outlined.Close,
+                                        contentDescription = "Limpar busca",
+                                        tint = Stone400,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Stone900,
                             unfocusedTextColor = Stone900,
                             cursorColor = MamaoOrange,
-                            focusedBorderColor = MamaoOrange,
-                            unfocusedBorderColor = Stone200,
+                            focusedBorderColor = if (selectedSpecies.isNotEmpty()) MamaoGreen else MamaoOrange,
+                            unfocusedBorderColor = if (selectedSpecies.isNotEmpty()) MamaoGreen.copy(alpha = 0.5f) else Stone200,
                             focusedContainerColor = Stone50,
                             unfocusedContainerColor = Stone50
                         )
                     )
-
-                    // Quick suggestion chips for popular fruits
-                    val quickSuggestions = listOf("Laranja 🍊", "Limão 🍋", "Abacate 🥑", "Pitanga 🍒", "Amora 🫐", "Goiaba 🍐", "Manga 🥭", "Mamão 🥭", "Jabuticaba 🟣")
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        quickSuggestions.forEach { item ->
-                            val cleanName = item.split(" ").first()
-                            val isSelected = selectedSpecies.equals(cleanName, ignoreCase = true)
-                            val fruitRes = getFruitDrawableRes(cleanName)
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = if (isSelected) MamaoOrangeLight else Stone50,
-                                border = BorderStroke(1.dp, if (isSelected) MamaoOrange else Stone200),
-                                onClick = {
-                                    selectedSpecies = cleanName
-                                    speciesSearchQuery = cleanName
-                                    showSpeciesDropdown = false
-                                }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = fruitRes),
-                                        contentDescription = cleanName,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        cleanName,
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 10.sp,
-                                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold
-                                        ),
-                                        color = if (isSelected) MamaoOrange else Stone600
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Dropdown
-                    if (showSpeciesDropdown && filteredFruits.isNotEmpty()) {
+                    // Dynamic suggestions list - only shown while typing
+                    if (showSuggestions && speciesSearchQuery.isNotBlank()) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = Color.White,
                             border = BorderStroke(1.dp, Stone200),
-                            shadowElevation = 4.dp
+                            shadowElevation = 6.dp,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 200.dp)
-                                    .verticalScroll(rememberScrollState())
-                            ) {
-                                filteredFruits.forEach { fruit ->
+                            if (filteredFruits.isEmpty()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     Text(
-                                        text = "🍃 $fruit",
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                selectedSpecies = fruit
-                                                speciesSearchQuery = fruit
-                                                showSpeciesDropdown = false
-                                            }
-                                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Stone900
+                                        text = "Nenhuma espécie encontrada para \"$speciesSearchQuery\".\nTente outro termo ou sinônimo.",
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                                        color = Stone500,
+                                        textAlign = TextAlign.Center
                                     )
+                                }
+                            } else {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = 200.dp)
+                                        .verticalScroll(rememberScrollState())
+                                ) {
+                                    filteredFruits.forEachIndexed { index, fruit ->
+                                        val fruitRes = getFruitDrawableRes(fruit)
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    selectedSpecies = fruit
+                                                    speciesSearchQuery = fruit
+                                                    showSuggestions = false
+                                                }
+                                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = fruitRes),
+                                                contentDescription = fruit,
+                                                modifier = Modifier.size(26.dp)
+                                            )
+                                            Text(
+                                                text = fruit,
+                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                    fontSize = 15.sp,
+                                                    fontWeight = FontWeight.SemiBold
+                                                ),
+                                                color = Stone900
+                                            )
+                                        }
+                                        if (index < filteredFruits.lastIndex) {
+                                            HorizontalDivider(color = Stone100, thickness = 0.5.dp)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -238,8 +287,13 @@ fun AddTreeDialog(
                     )
                     OutlinedTextField(
                         value = referenceName,
-                        onValueChange = { referenceName = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        onValueChange = {
+                            showSuggestions = false
+                            referenceName = it
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { if (it.isFocused) showSuggestions = false },
                         placeholder = { Text("Ex: Pé de manga na esquina da praça", color = Stone400) },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
@@ -279,7 +333,10 @@ fun AddTreeDialog(
                                     if (isSelected) 2.dp else 1.dp,
                                     if (isSelected) meta.textColor else Stone200
                                 ),
-                                onClick = { selectedStatus = status }
+                                onClick = {
+                                    selectedStatus = status
+                                    showSuggestions = false
+                                }
                             ) {
                                 Column(
                                     modifier = Modifier.padding(8.dp),
@@ -302,35 +359,6 @@ fun AddTreeDialog(
                     }
                 }
 
-                // Coordinates display
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Stone50,
-                    border = BorderStroke(1.dp, Stone200)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text("📍", fontSize = 14.sp)
-                        Column {
-                            Text(
-                                "Coordenadas do local",
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                color = Stone700
-                            )
-                            Text(
-                                "${String.format("%.5f", coordinates.first)}, ${String.format("%.5f", coordinates.second)}",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 10.sp
-                                ),
-                                color = Stone500
-                            )
-                        }
-                    }
-                }
 
                 // Buttons
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -361,7 +389,7 @@ fun AddTreeDialog(
                         enabled = selectedSpecies.isNotBlank() && !isSubmitting
                     ) {
                         Text(
-                            if (isSubmitting) "Salvando..." else "Salvar Fruteira 🌳",
+                            if (isSubmitting) "Salvando..." else "Salvar Fruteira",
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
