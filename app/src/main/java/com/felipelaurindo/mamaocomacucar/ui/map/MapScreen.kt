@@ -1181,7 +1181,16 @@ private fun createClusterVectorDrawable(
     isObfuscated: Boolean = false
 ): android.graphics.drawable.Drawable {
     val density = context.resources.displayMetrics.density
-    val sizeDp = if (isPulsing) 52 else 42
+    val countText = when {
+        count >= 10_000 -> String.format(java.util.Locale.US, "%.0fk", count / 1000.0)
+        else -> count.toString()
+    }
+    val sizeDp = when {
+        isPulsing -> if (countText.length >= 3) 56 else 52
+        countText.length >= 4 -> 48
+        countText.length == 3 -> 44
+        else -> 42
+    }
     val sizePx = (sizeDp * density).toInt()
     val bitmap = android.graphics.Bitmap.createBitmap(sizePx, sizePx, android.graphics.Bitmap.Config.ARGB_8888)
     val canvas = android.graphics.Canvas(bitmap)
@@ -1221,14 +1230,17 @@ private fun createClusterVectorDrawable(
     }
     canvas.drawCircle(centerX, centerY, radius, borderPaint)
 
-    // Texto com a quantidade condensada ("3", "4", "6", etc.)
-    val countText = if (count > 99) "99+" else count.toString()
+    // Texto com a quantidade real de árvores agrupadas
     val textPaint = android.graphics.Paint().apply {
         color = if (isObfuscated) android.graphics.Color.parseColor("#78716C") else android.graphics.Color.parseColor("#C2410C")
         isAntiAlias = true
         isFakeBoldText = true
         textAlign = android.graphics.Paint.Align.CENTER
-        textSize = (if (countText.length > 2) 13f else 15f) * density
+        textSize = when {
+            countText.length <= 2 -> 15f
+            countText.length == 3 -> 12f
+            else -> 10.5f
+        } * density
         typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
     }
 

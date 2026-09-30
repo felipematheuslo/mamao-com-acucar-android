@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextOverflow
+import com.felipelaurindo.mamaocomacucar.BuildConfig
 import com.felipelaurindo.mamaocomacucar.data.model.LoggedUser
 import com.felipelaurindo.mamaocomacucar.data.repository.FirestoreRepository
 import com.felipelaurindo.mamaocomacucar.ui.map.NextBadgeInfo
@@ -611,6 +612,12 @@ fun AccountSettingsSheet(
                             }
                         }
                     }
+                Text(
+                    text = "Mamão com Açúcar • Versão ${BuildConfig.VERSION_NAME}",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                    color = Stone400,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }

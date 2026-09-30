@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.felipelaurindo.mamaocomacucar.BuildConfig
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 
 @Composable
@@ -193,7 +194,7 @@ fun AppSettingsSheet(
                 }
 
                 Text(
-                    text = "Mamão com Açúcar • Versão 1.3",
+                    text = "Mamão com Açúcar • Versão ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
                     color = Stone400,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
