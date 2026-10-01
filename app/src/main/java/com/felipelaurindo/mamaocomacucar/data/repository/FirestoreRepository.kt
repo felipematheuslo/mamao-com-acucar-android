@@ -60,8 +60,14 @@ class FirestoreRepository {
 
     suspend fun updateTreeStatus(treeId: String, status: TreeStatus) {
         try {
+            val now = java.time.Instant.now().toString()
             db.collection("trees").document(treeId)
-                .update("currentStatus", status.value).await()
+                .update(
+                    mapOf(
+                        "currentStatus" to status.value,
+                        "updatedAt" to now
+                    )
+                ).await()
         } catch (e: Exception) {
             android.util.Log.e("FirestoreRepo", "Error updating tree status", e)
         }
@@ -287,6 +293,7 @@ class FirestoreRepository {
     // --- MAPPING HELPERS ---
 
     private fun documentToTreeItem(id: String, data: Map<String, Any>): TreeItem {
+        val createdAt = data["createdAt"] as? String ?: ""
         return TreeItem(
             id = id,
             createdBy = data["createdBy"] as? String ?: "",
@@ -297,7 +304,8 @@ class FirestoreRepository {
             longitude = (data["longitude"] as? Number)?.toDouble() ?: 0.0,
             currentStatus = TreeStatus.fromValue(data["currentStatus"] as? String ?: "vazio"),
             mainImage = data["mainImage"] as? String ?: "",
-            createdAt = data["createdAt"] as? String ?: ""
+            createdAt = createdAt,
+            updatedAt = data["updatedAt"] as? String ?: createdAt
         )
     }
 
@@ -310,7 +318,8 @@ class FirestoreRepository {
             "latitude" to tree.latitude,
             "longitude" to tree.longitude,
             "currentStatus" to tree.currentStatus.value,
-            "createdAt" to tree.createdAt
+            "createdAt" to tree.createdAt,
+            "updatedAt" to tree.lastActivityTimestamp
         )
         if (tree.mainImage.isNotEmpty()) {
             map["mainImage"] = tree.mainImage

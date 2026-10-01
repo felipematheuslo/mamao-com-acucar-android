@@ -134,14 +134,18 @@ fun TreeDetailSheet(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            "COORDENADAS: ${String.format("%.5f", tree.latitude)}, ${String.format("%.5f", tree.longitude)}",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace, fontSize = 9.sp
-                            ),
-                            color = Color.White.copy(alpha = 0.6f)
-                        )
+                        val mappedDate = formatDate(tree.createdAt, includeTime = false)
+                        if (mappedDate.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "MAPEADA EM: $mappedDate",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 9.sp
+                                ),
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
+                        }
                     }
                 }
 
@@ -423,13 +427,14 @@ fun TreeDetailSheet(
     }
 }
 
-private fun formatDate(isoString: String): String {
+private fun formatDate(isoString: String, includeTime: Boolean = true): String {
     if (isoString.isBlank()) return ""
     return try {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
-        val outputFormat = SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault())
+        val pattern = if (includeTime) "dd/MM/yy HH:mm" else "dd/MM/yyyy"
+        val outputFormat = SimpleDateFormat(pattern, Locale.getDefault())
         val date = inputFormat.parse(isoString.substringBefore(".").substringBefore("Z"))
         if (date != null) outputFormat.format(date) else isoString.take(10)
     } catch (e: Exception) {

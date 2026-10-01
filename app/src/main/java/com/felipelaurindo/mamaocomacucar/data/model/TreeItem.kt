@@ -14,8 +14,12 @@ data class TreeItem(
     val longitude: Double = 0.0,
     val currentStatus: TreeStatus = TreeStatus.VAZIO,
     val mainImage: String = "",
-    val createdAt: String = "" // ISO String
-)
+    val createdAt: String = "", // ISO String
+    val updatedAt: String = "" // ISO String da última alteração de status ou criação
+) {
+    val lastActivityTimestamp: String
+        get() = if (updatedAt.isNotEmpty()) updatedAt else createdAt
+}
 
 /**
  * Ripening status of a fruit tree.
