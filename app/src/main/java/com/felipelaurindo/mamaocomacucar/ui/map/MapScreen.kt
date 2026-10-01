@@ -63,6 +63,8 @@ import org.osmdroid.views.overlay.Overlay
 import com.felipelaurindo.mamaocomacucar.data.model.TreeItem
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.ln
+import kotlin.math.sqrt
 
 // Overlay de rotação com ativação por ângulo inicial (threshold) e rotação contínua e suave.
 // Previne que o zoom em pinça gire o mapa acidentalmente, e garante 60fps sem engasgos ou saltos.
@@ -337,10 +339,30 @@ fun MapScreen(
         )
     }
 
-    // Update map center when it changes
+    var isCameraAnimating by remember { mutableStateOf(false) }
+    var lastAnimatedMapCenter by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+
+    val animateCamera: (GeoPoint, Double?, Long) -> Unit = remember {
+        { targetPoint, targetZoom, durationMs ->
+            val mapView = mapViewRef.value
+            if (mapView != null) {
+                isCameraAnimating = true
+                val finalZoom = targetZoom ?: mapView.zoomLevelDouble
+                mapView.controller.animateTo(targetPoint, finalZoom, durationMs)
+                mapView.postDelayed({
+                    isCameraAnimating = false
+                    currentMapZoom = mapView.zoomLevelDouble
+                }, durationMs + 40L)
+            }
+        }
+    }
+
+    // Update map center when it changes (busca ou seleção externa)
     LaunchedEffect(mapCenter) {
+        if (lastAnimatedMapCenter == mapCenter) return@LaunchedEffect
+        lastAnimatedMapCenter = mapCenter
         val targetZoom = if (currentMapZoom < 15.0) 16.5 else currentMapZoom
-        mapViewRef.value?.controller?.animateTo(GeoPoint(mapCenter.first, mapCenter.second), targetZoom, 1000L)
+        animateCamera(GeoPoint(mapCenter.first, mapCenter.second), targetZoom, 800L)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -382,11 +404,12 @@ fun MapScreen(
                             return false
                         }
                         override fun onZoom(event: ZoomEvent?): Boolean {
-                            // Se o usuário estiver fazendo gesto de pinça, não dispara recomposição contínua.
-                            // A atualização final dos clusters acontecerá no onGestureEnd ao soltar os dedos.
+                            // Se a câmera estiver em animação ou o usuário estiver fazendo pinça,
+                            // silencia recomposições para manter a animação a 60fps lisos.
+                            if (isCameraAnimating) return false
                             if (rotationOverlay.isMultiTouchActive) return false
                             val newZoom = zoomLevelDouble
-                            if (abs(newZoom - currentMapZoom) >= 0.8) {
+                            if (abs(newZoom - currentMapZoom) >= 0.5) {
                                 currentMapZoom = newZoom
                             }
                             return false
@@ -452,7 +475,6 @@ fun MapScreen(
                                     } else {
                                         previewTree = tree
                                         pulsingTreeId = tree.id
-                                        mapViewModel.setMapCenter(tree.latitude, tree.longitude)
                                     }
                                     true
                                 }
@@ -480,10 +502,19 @@ fun MapScreen(
                                 setOnMarkerClickListener { _, _ ->
                                     val currentZoom = mapView.zoomLevelDouble
                                     if (currentZoom < 18.0) {
-                                        mapView.controller.animateTo(
+                                        val mapWidth = if (mapView.width > 0) mapView.width else context.resources.displayMetrics.widthPixels
+                                        val mapHeight = if (mapView.height > 0) mapView.height else context.resources.displayMetrics.heightPixels
+                                        val targetZoom = calculateClusterExpandZoom(
+                                            cluster = cluster,
+                                            currentZoom = currentZoom,
+                                            clusterRadiusPx = clusterRadiusPx,
+                                            mapWidthPx = mapWidth,
+                                            mapHeightPx = mapHeight
+                                        )
+                                        animateCamera(
                                             GeoPoint(cluster.centerLat, cluster.centerLng),
-                                            (currentZoom + 2.0).coerceAtMost(19.0),
-                                            500L
+                                            targetZoom,
+                                            700L
                                         )
                                     } else {
                                         val firstTree = cluster.trees.first()
@@ -495,7 +526,6 @@ fun MapScreen(
                                         } else {
                                             previewTree = firstTree
                                             pulsingTreeId = firstTree.id
-                                            mapViewModel.setMapCenter(cluster.centerLat, cluster.centerLng)
                                         }
                                     }
                                     true
@@ -734,9 +764,7 @@ fun MapScreen(
             FloatingActionButton(
                 onClick = {
                     requestCurrentLocation(context, mapViewModel) { lat, lng ->
-                        mapViewRef.value?.controller?.apply {
-                            animateTo(GeoPoint(lat, lng), 18.0, 1000L)
-                        }
+                        animateCamera(GeoPoint(lat, lng), 18.0, 750L)
                     }
                 },
                 shape = CircleShape,
@@ -1370,6 +1398,96 @@ private fun clusterTrees(
     }
 
     return clusters
+}
+
+/**
+ * Calcula o nível de zoom ideal para que as árvores de um agrupamento (cluster)
+ * se abram na tela quando o usuário clica no marcador.
+ *
+ * Utiliza as coordenadas relativas das árvores projetadas em Web Mercator e o raio de agrupamento (clusterRadiusPx)
+ * para calcular exatamente o nível de zoom em que as árvores deixam de agrupar, limitando pela área visível
+ * da tela para que nenhuma árvore seja jogada para fora dos limites de visualização.
+ */
+private fun calculateClusterExpandZoom(
+    cluster: TreeCluster,
+    currentZoom: Double,
+    clusterRadiusPx: Float,
+    mapWidthPx: Int,
+    mapHeightPx: Int,
+    minZoomStep: Double = 1.8,
+    maxMapZoom: Double = 18.5
+): Double {
+    val trees = cluster.trees
+    if (trees.size < 2) {
+        return (currentZoom + 2.0).coerceAtMost(maxMapZoom)
+    }
+
+    // Projeta as posições para pixels unitários Web Mercator (zoom 0)
+    val projectedUnit = trees.map { tree ->
+        projectToMercatorPixels(tree.latitude, tree.longitude, zoom = 0.0)
+    }
+    val (centerX, centerY) = projectToMercatorPixels(cluster.centerLat, cluster.centerLng, zoom = 0.0)
+
+    val ln2 = ln(2.0)
+    var maxDistUnit = 0.0
+    var minNonZeroDistUnit = Double.MAX_VALUE
+    val epsilon = 1e-7 // ~1 metro em Mercator unitário
+
+    for (i in projectedUnit.indices) {
+        for (j in (i + 1) until projectedUnit.size) {
+            val dx = projectedUnit[i].first - projectedUnit[j].first
+            val dy = projectedUnit[i].second - projectedUnit[j].second
+            val dist = sqrt(dx * dx + dy * dy)
+            if (dist > maxDistUnit) {
+                maxDistUnit = dist
+            }
+            if (dist > epsilon && dist < minNonZeroDistUnit) {
+                minNonZeroDistUnit = dist
+            }
+        }
+    }
+
+    // Se todas as árvores estão exatamente nas mesmas coordenadas (ou coladas a < 1m)
+    if (maxDistUnit < epsilon) {
+        return maxOf(currentZoom + 2.5, 18.0).coerceAtMost(maxMapZoom)
+    }
+
+    // Zoom no qual o par mais afastado se separa do cluster (quebra o grupo)
+    val zBreak = ln(clusterRadiusPx / maxDistUnit) / ln2
+
+    // Zoom no qual todas as árvores distintas se separam individualmente
+    val effectiveMinDist = if (minNonZeroDistUnit < Double.MAX_VALUE) minNonZeroDistUnit else maxDistUnit
+    val zSeparateAll = ln(clusterRadiusPx / effectiveMinDist) / ln2
+
+    // Zoom máximo que mantém todas as árvores dentro de 70% da área útil da tela
+    val availableWidth = (mapWidthPx * 0.70).coerceAtLeast(clusterRadiusPx * 3.0.toDouble())
+    val availableHeight = (mapHeightPx * 0.70).coerceAtLeast(clusterRadiusPx * 3.0.toDouble())
+
+    var maxDxCenter = 0.0
+    var maxDyCenter = 0.0
+    for ((px, py) in projectedUnit) {
+        val dx = abs(px - centerX)
+        val dy = abs(py - centerY)
+        if (dx > maxDxCenter) maxDxCenter = dx
+        if (dy > maxDyCenter) maxDyCenter = dy
+    }
+
+    val zFitX = if (maxDxCenter > epsilon) ln((availableWidth / 2.0) / maxDxCenter) / ln2 else maxMapZoom
+    val zFitY = if (maxDyCenter > epsilon) ln((availableHeight / 2.0) / maxDyCenter) / ln2 else maxMapZoom
+    val zFitScreen = minOf(zFitX, zFitY).coerceAtMost(maxMapZoom)
+
+    // Adiciona margem de visualização confortável (+0.55 de zoom) além do limiar estrito de clusterRadiusPx,
+    // para que os marcadores não fiquem colados no limite do raio, mas com espaço visual limpo entre si
+    val paddingZoom = 0.55
+    val desiredZoom = if (zSeparateAll + paddingZoom <= zFitScreen) {
+        zSeparateAll + paddingZoom
+    } else {
+        // Se separar todas as árvores ultrapassar a tela, quebra o grupo mantendo-as na tela
+        maxOf(zBreak + paddingZoom, currentZoom + minZoomStep).coerceAtMost(zFitScreen)
+    }
+
+    val finalTarget = maxOf(desiredZoom, currentZoom + minZoomStep)
+    return finalTarget.coerceIn(currentZoom + 1.0, maxMapZoom)
 }
 
 private fun requestCurrentLocation(
