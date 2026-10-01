@@ -3,24 +3,138 @@
     android:height="64dp"
     android:viewportWidth="64"
     android:viewportHeight="64">
+
+  <!-- ==================== PEDICELO E FOLHAS DE PITANGUEIRA ==================== -->
+  <!-- Pedicelo longo e gracioso da pitanga -->
   <path
-      android:pathData="M32,16C22,16 12,24 12,38C12,50 20,58 32,58C44,58 52,50 52,38C52,24 42,16 32,16Z"
-      android:fillColor="#EF4444"
-      android:strokeColor="#991B1B"
-      android:strokeWidth="2"/>
-  <path
-      android:pathData="M32,16C26,28 26,46 32,58 M22,20C18,30 18,44 24,54 M42,20C46,30 46,44 40,54"
-      android:strokeColor="#B91C1C"
-      android:strokeWidth="2"/>
-  <path
-      android:pathData="M32,16L32,8"
+      android:pathData="M32,18 C32,12 28,6 24,2"
       android:strokeColor="#15803D"
-      android:strokeWidth="3"
+      android:strokeWidth="2.2"
+      android:strokeLineCap="round"/>
+
+  <!-- Folhinhas pequenas opostas de pitangueira -->
+  <path
+      android:pathData="M29,10 C22,7 19,11 23,13 C27,13 29,11 29,10 Z"
+      android:fillColor="#22C55E"
+      android:strokeColor="#15803D"
+      android:strokeWidth="0.8"/>
+  <path
+      android:pathData="M30,9 C36,6 40,9 38,12 C34,13 31,11 30,9 Z"
+      android:fillColor="#16A34A"
+      android:strokeColor="#15803D"
+      android:strokeWidth="0.8"/>
+
+  <!-- Depressão superior do cabinho -->
+  <path
+      android:pathData="M28,17 C30,16 34,16 36,17 C34,19 30,19 28,17 Z"
+      android:fillColor="#7F1D1D"/>
+
+  <!-- ==================== CORPO LOBULADO (GOMOS DA PITANGA) ==================== -->
+  <!-- Silhueta Ondulada Externa (Lobos/Costelas proeminentes da Eugenia uniflora) -->
+  <path
+      android:pathData="M32,18 C28,17 24,19 20,22 C14,26 11,32 11,38 C11,44 14,50 20,53 C24,55 28,55 32,54 C36,55 40,55 44,53 C50,50 53,44 53,38 C53,32 50,26 44,22 C40,19 36,17 32,18 Z"
+      android:fillColor="#7F1D1D"/>
+
+  <!-- Gomos Traseiros / Base Rubra Profunda -->
+  <path
+      android:pathData="M32,19 C28.5,18 24.5,20 21,23 C15.5,27 12.5,33 12.5,38 C12.5,43 15.5,49 21,52 C24.5,54 28.5,54 32,53 C35.5,54 39.5,54 43,52 C48.5,49 51.5,43 51.5,38 C51.5,33 48.5,27 43,23 C39.5,20 35.5,18 32,19 Z"
+      android:fillColor="#991B1B"/>
+
+  <!-- Lobo Lateral Esquerdo (Costela Externa Esquerda) -->
+  <path
+      android:pathData="M22,23 C16,27 13,32 13,38 C13,44 16,49 22,52 C20,44 20,31 22,23 Z"
+      android:fillColor="#DC2626"/>
+
+  <!-- Lobo Lateral Direito (Costela Externa Direita) -->
+  <path
+      android:pathData="M42,23 C48,27 51,32 51,38 C51,44 48,49 42,52 C44,44 44,31 42,23 Z"
+      android:fillColor="#991B1B"/>
+
+  <!-- Lobo Médio Esquerdo (Volume Frontal Esquerdo) -->
+  <path
+      android:pathData="M32,19 C28,19 23,22 21,27 C19,34 19,43 22,48 C24,51 29,53 32,53 C28,45 28,27 32,19 Z"
+      android:fillColor="#EF4444"/>
+
+  <!-- Lobo Frontal Central (Gomo Principal em Destaque) -->
+  <path
+      android:pathData="M32,19 C29,19 26,23 26,30 C26,38 27,48 32,53 C37,48 38,38 38,30 C38,23 35,19 32,19 Z"
+      android:fillColor="#DC2626"/>
+
+  <!-- Lobo Médio Direito (Sombra e Volume Frontal Direito) -->
+  <path
+      android:pathData="M32,19 C36,19 41,22 43,27 C45,34 45,43 42,48 C40,51 35,53 32,53 C36,45 36,27 32,19 Z"
+      android:fillColor="#B91C1C"/>
+
+  <!-- Realce Alaranjado de Maturação Solar no Lobo Esquerdo -->
+  <path
+      android:pathData="M23,27 C20,32 20,40 23,45 C24,42 24,31 23,27 Z"
+      android:fillColor="#F97316"/>
+
+  <!-- Sulcos Intercostais (Linhas de Profundidade entre os Gomos) -->
+  <path
+      android:pathData="M21,25 C19,33 19,43 22,50"
+      android:strokeColor="#7F1D1D"
+      android:strokeWidth="1.2"
       android:strokeLineCap="round"/>
   <path
-      android:pathData="M32,12C24,8 22,14 26,16Z"
-      android:fillColor="#22C55E"/>
+      android:pathData="M26,21 C24,30 24,42 27,51"
+      android:strokeColor="#7F1D1D"
+      android:strokeWidth="1.4"
+      android:strokeLineCap="round"/>
   <path
-      android:pathData="M32,12C40,8 42,14 38,16Z"
-      android:fillColor="#16A34A"/>
+      android:pathData="M38,21 C40,30 40,42 37,51"
+      android:strokeColor="#7F1D1D"
+      android:strokeWidth="1.4"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M43,25 C45,33 45,43 42,50"
+      android:strokeColor="#581C87"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <!-- ==================== BRILHOS CERÁCEOS LUSTROSOS ==================== -->
+  <!-- Brilho no Gomo Central -->
+  <path
+      android:pathData="M31,23 C30,27 30,34 31,39"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"/>
+
+  <!-- Brilho no Gomo Médio Esquerdo -->
+  <path
+      android:pathData="M23,25 C21,29 21,36 23,40"
+      android:strokeColor="#FECACA"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"/>
+
+  <!-- Reflexo Superior do Ombro -->
+  <path
+      android:pathData="M28,20 C30,19 34,19 36,20"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.2"
+      android:strokeLineCap="round"/>
+
+  <!-- ==================== CÁLICE FLORAL / SÉPALAS DA BASE ==================== -->
+  <!-- A clássica "estrelinha" de 4 a 5 pontas persistentes na ponta inferior da pitanga -->
+  <path
+      android:pathData="M32,53 L32,58"
+      android:strokeColor="#14532D"
+      android:strokeWidth="2.2"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M32,53 L28,56.5"
+      android:strokeColor="#15803D"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M32,53 L36,56.5"
+      android:strokeColor="#15803D"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M32,53 L30,55"
+      android:strokeColor="#166534"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"/>
+
 </vector>
