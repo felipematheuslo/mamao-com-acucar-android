@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -20,6 +21,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,6 +35,11 @@ import com.felipelaurindo.mamaocomacucar.ui.theme.*
 import com.felipelaurindo.mamaocomacucar.util.formatDistance
 import com.felipelaurindo.mamaocomacucar.util.getFruitDrawableRes
 
+enum class TreeSortOrder(val label: String) {
+    DISTANCE("Menor distância"),
+    RECENT_UPDATE("Mais recente")
+}
+
 @Composable
 fun TreeListSheet(
     mapViewModel: MapViewModel,
@@ -45,14 +52,22 @@ fun TreeListSheet(
     val searchQuery by mapViewModel.searchQuery.collectAsState()
     val statusFilter by mapViewModel.statusFilter.collectAsState()
 
-    var geoSearchQuery by remember { mutableStateOf("") }
-    val focusManager = LocalFocusManager.current
+    var radiusInput by remember { mutableStateOf("20") }
+    var sortOrder by remember { mutableStateOf(TreeSortOrder.DISTANCE) }
+    var isSortMenuExpanded by remember { mutableStateOf(false) }
 
     val filteredTrees = remember(searchQuery, statusFilter, mapViewModel.trees.collectAsState().value) {
         mapViewModel.getFilteredTrees()
     }
-    val nearbyTrees = remember(filteredTrees) {
-        filteredTrees.filter { it.distance <= 20.0 }
+
+    val searchRadiusKm = radiusInput.toDoubleOrNull() ?: 20.0
+
+    val nearbyTrees = remember(filteredTrees, searchRadiusKm, sortOrder) {
+        val withinRadius = filteredTrees.filter { it.distance <= searchRadiusKm }
+        when (sortOrder) {
+            TreeSortOrder.DISTANCE -> withinRadius.sortedBy { it.distance }
+            TreeSortOrder.RECENT_UPDATE -> withinRadius.sortedByDescending { it.tree.lastActivityTimestamp }
+        }
     }
 
     var isExpanded by remember { mutableStateOf(true) }
@@ -146,58 +161,209 @@ fun TreeListSheet(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // Unified Smart Search Bar (Tree + Geo Search)
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { query ->
-                            mapViewModel.setSearchQuery(query)
-                        },
+                    // Linha de controle: Raio de busca + Seletor de ordenação
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(
-                            color = Stone950,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp
-                        ),
-                        placeholder = { Text("Buscar por fruta, espécie, bairro ou endereço...", color = Stone400, fontSize = 13.sp) },
-                        leadingIcon = { Icon(Icons.Outlined.Search, null, tint = MamaoOrange) },
-                        trailingIcon = {
-                            if (searchQuery.isNotBlank()) {
-                                IconButton(onClick = {
-                                    mapViewModel.setSearchQuery("")
-                                    focusManager.clearFocus()
-                                }) {
-                                    Icon(Icons.Outlined.Close, "Limpar busca", tint = Stone400, modifier = Modifier.size(18.dp))
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 1. Campo para digitar o tamanho do raio de busca (por padrão 20km)
+                        Surface(
+                            modifier = Modifier
+                                .weight(0.95f)
+                                .height(38.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            color = Stone50,
+                            border = BorderStroke(1.dp, Stone200)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.NearMe,
+                                    contentDescription = "Raio de busca",
+                                    tint = MamaoOrange,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Text(
+                                    "Raio:",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = Stone600
+                                )
+                                BasicTextField(
+                                    value = radiusInput,
+                                    onValueChange = { newValue ->
+                                        val digits = newValue.filter { it.isDigit() }
+                                        if (digits.length <= 4) {
+                                            radiusInput = digits
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    textStyle = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Stone900,
+                                        textAlign = TextAlign.Center
+                                    ),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Number,
+                                        imeAction = ImeAction.Done
+                                    ),
+                                    singleLine = true
+                                )
+                                Text(
+                                    "km",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = Stone500
+                                )
+                            }
+                        }
+
+                        // 2. Seletor para ordenar por menor distância ou atualizado mais recente
+                        Box(modifier = Modifier.weight(1.05f)) {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(38.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                color = Stone50,
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (isSortMenuExpanded) MamaoOrange.copy(alpha = 0.5f) else Stone200
+                                ),
+                                onClick = { isSortMenuExpanded = true }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (sortOrder == TreeSortOrder.DISTANCE) Icons.Outlined.Straighten else Icons.Outlined.History,
+                                            contentDescription = null,
+                                            tint = MamaoOrange,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                        Text(
+                                            text = sortOrder.label,
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = Stone700,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    Icon(
+                                        imageVector = Icons.Outlined.KeyboardArrowDown,
+                                        contentDescription = "Selecionar ordenação",
+                                        tint = Stone400,
+                                        modifier = Modifier.size(16.dp)
+                                    )
                                 }
                             }
-                        },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = {
-                            if (searchQuery.isNotBlank()) {
-                                mapViewModel.searchLocation(searchQuery)
+
+                            DropdownMenu(
+                                expanded = isSortMenuExpanded,
+                                onDismissRequest = { isSortMenuExpanded = false },
+                                modifier = Modifier.background(Color.White)
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "Menor distância",
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontWeight = if (sortOrder == TreeSortOrder.DISTANCE) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (sortOrder == TreeSortOrder.DISTANCE) MamaoOrange else Stone800
+                                            )
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Outlined.Straighten,
+                                            contentDescription = null,
+                                            tint = if (sortOrder == TreeSortOrder.DISTANCE) MamaoOrange else Stone500,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        if (sortOrder == TreeSortOrder.DISTANCE) {
+                                            Icon(
+                                                Icons.Outlined.Check,
+                                                contentDescription = null,
+                                                tint = MamaoOrange,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        sortOrder = TreeSortOrder.DISTANCE
+                                        isSortMenuExpanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "Mais recente",
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontWeight = if (sortOrder == TreeSortOrder.RECENT_UPDATE) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (sortOrder == TreeSortOrder.RECENT_UPDATE) MamaoOrange else Stone800
+                                            )
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Outlined.History,
+                                            contentDescription = null,
+                                            tint = if (sortOrder == TreeSortOrder.RECENT_UPDATE) MamaoOrange else Stone500,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        if (sortOrder == TreeSortOrder.RECENT_UPDATE) {
+                                            Icon(
+                                                Icons.Outlined.Check,
+                                                contentDescription = null,
+                                                tint = MamaoOrange,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        sortOrder = TreeSortOrder.RECENT_UPDATE
+                                        isSortMenuExpanded = false
+                                    }
+                                )
                             }
-                            focusManager.clearFocus()
-                        }),
-                        singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Stone950,
-                            unfocusedTextColor = Stone950,
-                            cursorColor = MamaoOrange,
-                            focusedBorderColor = MamaoOrange,
-                            unfocusedBorderColor = Stone200,
-                            focusedContainerColor = Stone50,
-                            unfocusedContainerColor = Stone50
-                        )
-                    )
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(5.dp))
 
-                    // Filter chips
+                    // Filter chips - distribuídos uniformemente na largura da tela sem precisar arrastar
                     Row(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         val handleFilterClick: (String) -> Unit = { filter ->
                             if (isGuest && filter != "todos") {
@@ -206,21 +372,22 @@ fun TreeListSheet(
                                 mapViewModel.setStatusFilter(filter)
                             }
                         }
-                        FilterChipItem("Todas", "todos", statusFilter, handleFilterClick)
-                        FilterChipItem("🍎 Maduro", "pronto", statusFilter, handleFilterClick)
-                        FilterChipItem("🍏 Verde", "crescendo", statusFilter, handleFilterClick)
-                        FilterChipItem("🌸 Florindo", "florindo", statusFilter, handleFilterClick)
-                        FilterChipItem("🌳 Vazio", "vazio", statusFilter, handleFilterClick)
+                        FilterChipItem("Todas", "todos", statusFilter, handleFilterClick, Modifier.weight(1f))
+                        FilterChipItem("🍎 Madura", "pronto", statusFilter, handleFilterClick, Modifier.weight(1f))
+                        FilterChipItem("🍏 Verde", "crescendo", statusFilter, handleFilterClick, Modifier.weight(1f))
+                        FilterChipItem("🌸 Flor", "florindo", statusFilter, handleFilterClick, Modifier.weight(1f))
+                        FilterChipItem("🌳 Vazia", "vazio", statusFilter, handleFilterClick, Modifier.weight(1f))
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     val nearbyCount = nearbyTrees.size
+                    val radiusDisplay = if (searchRadiusKm % 1.0 == 0.0) searchRadiusKm.toInt().toString() else searchRadiusKm.toString()
 
                     val countLabel = when {
                         isGuest && nearbyCount > 3 -> "Mostrando 3 de $nearbyCount fruteiras na sua região"
-                        nearbyCount > 0 -> "$nearbyCount ${if (nearbyCount == 1) "fruteira encontrada" else "fruteiras encontradas"} na sua região (raio de 20 km)"
-                        else -> "Nenhuma fruteira encontrada na sua região (raio de 20 km)"
+                        nearbyCount > 0 -> "$nearbyCount ${if (nearbyCount == 1) "fruteira encontrada" else "fruteiras encontradas"}"
+                        else -> "Nenhuma fruteira encontrada"
                     }
 
                     Text(
@@ -243,6 +410,7 @@ fun TreeListSheet(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val displayedTrees = if (isGuest) nearbyTrees.take(3) else nearbyTrees
+                    val radiusDisplay = if (searchRadiusKm % 1.0 == 0.0) searchRadiusKm.toInt().toString() else searchRadiusKm.toString()
                     if (displayedTrees.isEmpty()) {
                         // Empty state
                         Column(
@@ -257,7 +425,7 @@ fun TreeListSheet(
                                 color = Stone600
                             )
                             Text(
-                                "Não há fruteiras cadastradas em um raio de 20 km para este filtro.",
+                                "Não há fruteiras cadastradas em um raio de $radiusDisplay km para este filtro.",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = Stone400
                             )
@@ -408,23 +576,35 @@ private fun FilterChipItem(
     label: String,
     value: String,
     currentFilter: String,
-    onClick: (String) -> Unit
+    onClick: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val isSelected = currentFilter == value
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
         color = if (isSelected) MamaoOrangeLight else Stone50,
-        border = BorderStroke(1.dp, if (isSelected) MamaoOrange.copy(alpha = 0.3f) else Stone200),
+        border = BorderStroke(1.dp, if (isSelected) MamaoOrange.copy(alpha = 0.4f) else Stone200),
         onClick = { onClick(value) }
     ) {
-        Text(
-            label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
-                fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold
-            ),
-            color = if (isSelected) MamaoOrange else Stone500
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 7.dp, horizontal = 2.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.sp,
+                    fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                    letterSpacing = (-0.3).sp
+                ),
+                color = if (isSelected) MamaoOrange else Stone600
+            )
+        }
     }
 }
