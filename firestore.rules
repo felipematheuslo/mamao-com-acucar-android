@@ -54,14 +54,16 @@ service cloud.firestore {
     // --- TREE SCHEMAS & HELPERS ---
     function isValidTree(data) {
       return data.keys().hasAll(['createdBy', 'createdByName', 'species', 'name', 'latitude', 'longitude', 'currentStatus', 'createdAt'])
-        && (data.keys().size() == 8 || (data.keys().size() == 9 && data.keys().hasAll(['mainImage'])))
+        && data.keys().hasOnly(['createdBy', 'createdByName', 'species', 'name', 'latitude', 'longitude', 'currentStatus', 'createdAt', 'updatedAt', 'mainImage'])
         && data.createdBy is string && data.createdBy.size() <= 128
         && data.createdByName is string && data.createdByName.size() <= 100
         && data.species is string && data.species.size() <= 100
         && data.name is string && data.name.size() <= 150
         && data.latitude is number && data.longitude is number
         && data.currentStatus in ['florindo', 'crescendo', 'pronto', 'vazio']
-        && data.createdAt is string && data.createdAt.size() <= 50;
+        && data.createdAt is string && data.createdAt.size() <= 50
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50))
+        && (!('mainImage' in data) || (data.mainImage is string && data.mainImage.size() <= 2048));
     }
 
     match /trees/{treeId} {
@@ -73,8 +75,8 @@ service cloud.firestore {
         && (
           // Action 1: Creator updating their own tree details
           (incoming().createdBy == request.auth.uid) ||
-          // Action 2: Regular community member only updating the ripening status of the fruits
-          (incoming().diff(existing()).affectedKeys().hasOnly(['currentStatus']))
+          // Action 2: Regular community member only updating the ripening status of the fruits and updatedAt
+          (incoming().diff(existing()).affectedKeys().hasOnly(['currentStatus', 'updatedAt']))
         );
       allow delete: if isSignedIn() && existing().createdBy == request.auth.uid;
     }

@@ -178,7 +178,7 @@ class MapViewModel : ViewModel() {
                     latitude = latitude,
                     longitude = longitude,
                     createdBy = createdBy,
-                    createdByName = createdByName,
+                    createdByName = createdByName.ifBlank { "Comunidade" },
                     mainImage = "",
                     createdAt = java.time.Instant.now().toString()
                 )

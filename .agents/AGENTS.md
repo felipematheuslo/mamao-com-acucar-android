@@ -117,9 +117,10 @@ O progresso do usuário é determinado pela contagem de árvores cadastradas no 
 - `50+` árvores: **MESTRE FRUTÍFERO 🍒**
 
 ### Firestore Schemas
-- **`users/{uid}`**: Perfil do usuário (displayName, username, email, treeCount).
-- **`trees/{treeId}`**: Cadastro da fruteira (`name`, `species`, `latitude`, `longitude`, `currentStatus`, `createdByUid`, `createdAt`).
-- **`trees/{treeId}/updates/{updateId}`**: Histórico de alterações de status e comentários reportados.
+- **`users/{userId}`**: Perfil do usuário (`id`, `email`, `displayName`, `username`, `createdAt`).
+- **`usernames/{username}`**: Mapeamento de unicidade de username (`uid`).
+- **`trees/{treeId}`**: Cadastro da fruteira (`createdBy`, `createdByName`, `species`, `name`, `latitude`, `longitude`, `currentStatus`, `createdAt`, e opcionais `updatedAt`, `mainImage`).
+- **`updates/{updateId}`**: Histórico público de alterações de status e comentários (`treeId`, `createdBy`, `createdByName`, `comment`, `statusAtReport`, `createdAt`).
 
 ---
 
@@ -160,5 +161,14 @@ O progresso do usuário é determinado pela contagem de árvores cadastradas no 
 
 11. **Tratamento de Teclado e Insets (`imePadding`)**:
     - Em telas, diálogos e sheets contendo campos de texto (`TextField` / `OutlinedTextField`), como em `AddTreeDialog`, `LoginScreen` e `RegisterScreen`, utilize sempre `Modifier.imePadding()` em conjunto com scroll vertical (`Modifier.verticalScroll()`) para que o teclado virtual do Android não cubra os campos de digitação nem os botões de ação.
+
+12. **Paridade Obrigatória entre Modelos Kotlin e Regras do Firestore (`firestore.rules`)**:
+    - Qualquer adição, renomeação ou remoção de campos em modelos de dados persistidos (`TreeItem`, `CommentUpdate`, `UserProfile`) **DEVE** ser sincronizada imediatamente em `firestore.rules` (nas funções `isValidTree`, `isValidUser`, `isValidUpdate` e nas restrições de `affectedKeys()` em updates).
+    - O Firestore aplica validações estritas de schema (`hasOnly`, tipos e tamanhos de strings). Se o app enviar qualquer campo desconhecido ou não previsto nas regras, o Firestore rejeitará a operação com `PERMISSION_DENIED` ("Não foi possível salvar a fruteira. Tente novamente.").
+    - **Deploy Obrigatório**: Sempre que `firestore.rules` for modificado, efetue o deploy imediato para o ambiente de produção via Firebase CLI:
+      ```powershell
+      firebase deploy --only firestore:rules --non-interactive
+      ```
+    - **Retrocompatibilidade nos Mapeadores (`treeItemToMap`)**: Em campos cujo valor inicial é idêntico a outro (ex: `updatedAt` inicial igual a `createdAt`), não envie a chave redundante no momento da criação caso o leitor (`documentToTreeItem`) já realize o fallback seguro (`data["updatedAt"] ?: createdAt`). Isso garante tolerância e evita quebrar clientes legados ou ambientes sem regras sincronizadas.
 
 

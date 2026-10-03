@@ -318,9 +318,11 @@ class FirestoreRepository {
             "latitude" to tree.latitude,
             "longitude" to tree.longitude,
             "currentStatus" to tree.currentStatus.value,
-            "createdAt" to tree.createdAt,
-            "updatedAt" to tree.lastActivityTimestamp
+            "createdAt" to tree.createdAt
         )
+        if (tree.updatedAt.isNotEmpty() && tree.updatedAt != tree.createdAt) {
+            map["updatedAt"] = tree.updatedAt
+        }
         if (tree.mainImage.isNotEmpty()) {
             map["mainImage"] = tree.mainImage
         }
