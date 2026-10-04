@@ -360,6 +360,7 @@ class MapViewModel : ViewModel() {
                     }
 
                     _mapCenter.value = Pair(lat, lon)
+                    _searchQuery.value = ""
                     showToast("📍 Navegando para: $friendlyName")
                 } else {
                     showToast("Nenhum local ou fruta encontrado para '$query'. Tente buscar por bairro ou cidade.")
