@@ -81,7 +81,11 @@ fun MamaoApp() {
                     navController.navigate("auth/register")
                 },
                 onNavigateBack = {
-                    navController.popBackStack()
+                    if (!navController.popBackStack()) {
+                        navController.navigate("auth/welcome") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 }
             )
         }
@@ -95,7 +99,11 @@ fun MamaoApp() {
                     }
                 },
                 onNavigateBack = {
-                    navController.popBackStack()
+                    if (!navController.popBackStack()) {
+                        navController.navigate("auth/welcome") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 }
             )
         }
@@ -163,7 +171,7 @@ private fun SplashScreen() {
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    "mamão com açúcar",
+                    "Mamão com Açúcar",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.SansSerif,

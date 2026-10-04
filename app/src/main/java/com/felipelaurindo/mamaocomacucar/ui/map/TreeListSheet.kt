@@ -52,7 +52,7 @@ fun TreeListSheet(
     val searchQuery by mapViewModel.searchQuery.collectAsState()
     val statusFilter by mapViewModel.statusFilter.collectAsState()
 
-    var radiusInput by remember { mutableStateOf("20") }
+    var radiusInput by remember(isGuest) { mutableStateOf(if (isGuest) "2" else "20") }
     var sortOrder by remember { mutableStateOf(TreeSortOrder.DISTANCE) }
     var isSortMenuExpanded by remember { mutableStateOf(false) }
 
@@ -60,7 +60,7 @@ fun TreeListSheet(
         mapViewModel.getFilteredTrees()
     }
 
-    val searchRadiusKm = radiusInput.toDoubleOrNull() ?: 20.0
+    val searchRadiusKm = radiusInput.toDoubleOrNull() ?: if (isGuest) 2.0 else 20.0
 
     val nearbyTrees = remember(filteredTrees, searchRadiusKm, sortOrder) {
         val withinRadius = filteredTrees.filter { it.distance <= searchRadiusKm }
@@ -204,7 +204,12 @@ fun TreeListSheet(
                                     onValueChange = { newValue ->
                                         val digits = newValue.filter { it.isDigit() }
                                         if (digits.length <= 4) {
-                                            radiusInput = digits
+                                            val num = digits.toIntOrNull() ?: 0
+                                            if (isGuest && num > 2) {
+                                                onRequestAuth?.invoke("Cadastre-se gratuitamente para expandir seu raio de busca além de 2 km.")
+                                            } else {
+                                                radiusInput = digits
+                                            }
                                         }
                                     },
                                     modifier = Modifier.weight(1f),

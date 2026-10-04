@@ -131,6 +131,7 @@ private class ThresholdRotationGestureOverlay(
                                 newOrientation = 0f
                             }
                             mapView.mapOrientation = newOrientation
+                            onOrientationChanged?.invoke(newOrientation)
                         }
                     }
                 }
@@ -721,32 +722,65 @@ fun MapScreen(
                 }
             }
 
-            // Bússola (apenas quando mapa estiver rotacionado)
+            // Bússola / Indicador do Norte
             AnimatedVisibility(
-                visible = kotlin.math.abs(mapOrientation) > 1f && !isAnySheetOrDialogActive,
+                visible = !isAnySheetOrDialogActive,
                 enter = fadeIn() + scaleIn(),
                 exit = fadeOut() + scaleOut()
             ) {
-                FloatingActionButton(
+                Surface(
                     onClick = {
                         mapViewRef.value?.let { mv ->
-                            mv.mapOrientation = 0f
-                            mapOrientation = 0f
+                            val current = mv.mapOrientation % 360f
+                            if (kotlin.math.abs(current) > 0.5f) {
+                                val target = if (current > 180f) 360f else 0f
+                                android.animation.ValueAnimator.ofFloat(current, target).apply {
+                                    duration = 280L
+                                    interpolator = android.view.animation.DecelerateInterpolator()
+                                    addUpdateListener { anim ->
+                                        val v = (anim.animatedValue as Float) % 360f
+                                        val finalVal = if (v >= 359.5f || v <= 0.5f) 0f else v
+                                        mv.mapOrientation = finalVal
+                                        mapOrientation = finalVal
+                                    }
+                                    start()
+                                }
+                            }
                         }
                     },
                     shape = CircleShape,
-                    containerColor = Color.White,
-                    contentColor = Stone900,
+                    color = Color.White.copy(alpha = 0.95f),
+                    shadowElevation = 4.dp,
+                    border = BorderStroke(
+                        width = if (kotlin.math.abs(mapOrientation) > 1f) 1.5.dp else 1.dp,
+                        color = if (kotlin.math.abs(mapOrientation) > 1f) MamaoOrange else Stone200
+                    ),
                     modifier = Modifier.size(42.dp)
                 ) {
-                    Icon(
-                        Icons.Outlined.Navigation,
-                        contentDescription = "Redefinir orientação para o Norte",
-                        tint = Rose600,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .rotate(-mapOrientation)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.rotate(mapOrientation)
+                        ) {
+                            Text(
+                                text = "N",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 9.sp,
+                                    fontFamily = FontFamily.Monospace
+                                ),
+                                color = if (kotlin.math.abs(mapOrientation) > 1f) MamaoOrange else Rose600,
+                                lineHeight = 9.sp
+                            )
+                            Icon(
+                                Icons.Outlined.Navigation,
+                                contentDescription = "Redefinir orientação para o Norte",
+                                tint = if (kotlin.math.abs(mapOrientation) > 1f) MamaoOrange else Rose600,
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+                    }
                 }
             }
         }

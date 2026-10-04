@@ -1,5 +1,6 @@
 package com.felipelaurindo.mamaocomacucar.ui.auth
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -28,11 +28,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.felipelaurindo.mamaocomacucar.R
 import com.felipelaurindo.mamaocomacucar.ui.auth.components.ForgotPasswordDialog
-import com.felipelaurindo.mamaocomacucar.ui.auth.components.GoogleSignInButton
 import com.felipelaurindo.mamaocomacucar.ui.theme.*
 
 @Composable
@@ -42,7 +42,6 @@ fun LoginScreen(
     onNavigateBack: () -> Unit = {}
 ) {
     val isSubmitting by authViewModel.isSubmitting.collectAsState()
-    val isSubmittingGoogle by authViewModel.isSubmittingGoogle.collectAsState()
     val loginError by authViewModel.loginError.collectAsState()
     val showVerificationSent by authViewModel.showVerificationSent.collectAsState()
     val resendSuccess by authViewModel.resendSuccess.collectAsState()
@@ -57,7 +56,8 @@ fun LoginScreen(
     var showPassword by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
-    val context = LocalContext.current
+
+    BackHandler(onBack = onNavigateBack)
 
     Box(
         modifier = Modifier
@@ -65,19 +65,6 @@ fun LoginScreen(
             .background(Color.White)
             .statusBarsPadding()
     ) {
-        IconButton(
-            onClick = onNavigateBack,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 12.dp, top = 8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                contentDescription = "Voltar",
-                tint = Stone800
-            )
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -253,20 +240,12 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Links: Criar conta & Esqueceu a senha?
+            // Link: Esqueceu a senha?
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Criar conta",
-                    modifier = Modifier.clickable(onClick = onNavigateToRegister),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    color = MamaoOrange
-                )
                 Text(
                     text = "Esqueceu a senha?",
                     modifier = Modifier.clickable {
@@ -288,7 +267,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                enabled = !isSubmitting && !isSubmittingGoogle && email.isNotBlank() && password.isNotBlank(),
+                enabled = !isSubmitting && email.isNotBlank() && password.isNotBlank(),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MamaoOrange,
@@ -337,15 +316,46 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Google Sign In button
-            GoogleSignInButton(
-                onClick = { authViewModel.loginWithGoogle(context) },
-                isLoading = isSubmittingGoogle,
-                enabled = !isSubmitting && !isSubmittingGoogle,
-                text = "Entrar com o Google"
-            )
+            // Botão Criar Conta
+            OutlinedButton(
+                onClick = onNavigateToRegister,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                enabled = !isSubmitting,
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(
+                    1.5.dp,
+                    if (!isSubmitting) MamaoOrange else MamaoOrange.copy(alpha = 0.35f)
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MamaoOrange,
+                    disabledContentColor = MamaoOrange.copy(alpha = 0.35f)
+                )
+            ) {
+                Text(
+                    text = "CRIAR CONTA",
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 1.5.sp
+                    )
+                )
+            }
 
             Spacer(modifier = Modifier.navigationBarsPadding().height(32.dp))
+        }
+
+        IconButton(
+            onClick = onNavigateBack,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 12.dp, top = 8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                contentDescription = "Voltar",
+                tint = Stone800
+            )
         }
 
         if (showForgotPasswordDialog) {

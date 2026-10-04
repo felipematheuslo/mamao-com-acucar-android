@@ -48,7 +48,7 @@ private val CaveatFontFamily = FontFamily(
 fun WelcomeScreen(
     authViewModel: AuthViewModel,
     onContinueAsGuest: () -> Unit,
-    onNavigateToRegister: () -> Unit,
+    onNavigateToRegister: () -> Unit = {},
     onNavigateToLogin: () -> Unit
 ) {
     val context = LocalContext.current
@@ -207,18 +207,14 @@ fun WelcomeScreen(
             ) {
                 // Fita de frutas com efeito de pomar urbano
                 Row(
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     FruitBadge(drawableId = R.drawable.ic_fruit_pitanga, name = "Pitanga")
-                    Spacer(modifier = Modifier.width(10.dp))
                     FruitBadge(drawableId = R.drawable.ic_fruit_amora, name = "Amora")
-                    Spacer(modifier = Modifier.width(10.dp))
                     FruitBadge(drawableId = R.drawable.ic_fruit_manga, name = "Manga")
-                    Spacer(modifier = Modifier.width(10.dp))
                     FruitBadge(drawableId = R.drawable.ic_fruit_jabuticaba, name = "Jabuticaba")
-                    Spacer(modifier = Modifier.width(10.dp))
                     FruitBadge(drawableId = R.drawable.ic_fruit_caju, name = "Caju")
                 }
 
@@ -239,11 +235,11 @@ fun WelcomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 28.dp, bottom = 24.dp),
+                    .padding(top = 16.dp, bottom = 72.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // 1. Google Sign-In (Ação principal com 1 toque)
+                // 1. Google Sign-In (Ação com 1 toque)
                 GoogleSignInButton(
                     onClick = { authViewModel.loginWithGoogle(context) },
                     isLoading = isSubmittingGoogle,
@@ -252,60 +248,7 @@ fun WelcomeScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // 2. Explorar sem conta
-                OutlinedButton(
-                    onClick = onContinueAsGuest,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, Stone200),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Stone700
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Explore,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = Stone700
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Explorar o mapa sem conta",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.5.sp
-                        )
-                    )
-                }
-
-                // 3. Divisor suave
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        thickness = 1.dp,
-                        color = Stone200.copy(alpha = 0.8f)
-                    )
-                    Text(
-                        text = "ou com seu e-mail",
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.5.sp),
-                        color = Stone400,
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        thickness = 1.dp,
-                        color = Stone200.copy(alpha = 0.8f)
-                    )
-                }
-
-                // 4. Entrar com e-mail e senha
+                // 2. Entrar com e-mail e senha
                 OutlinedButton(
                     onClick = onNavigateToLogin,
                     modifier = Modifier
@@ -333,27 +276,59 @@ fun WelcomeScreen(
                     )
                 }
 
-                // 5. Rodapé: Criar conta
+                // 3. Divisor suave
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Novo por aqui? ",
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                        color = Stone500
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        thickness = 1.dp,
+                        color = Stone200.copy(alpha = 0.8f)
                     )
                     Text(
-                        text = "Criar conta",
-                        style = MaterialTheme.typography.bodySmall.copy(
+                        text = "OU",
+                        style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
+                            letterSpacing = 1.sp
                         ),
-                        color = MamaoOrange,
-                        modifier = Modifier
-                            .clickable { onNavigateToRegister() }
-                            .padding(vertical = 4.dp)
+                        color = Stone400,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        thickness = 1.dp,
+                        color = Stone200.copy(alpha = 0.8f)
+                    )
+                }
+
+                // 4. Explorar sem conta
+                OutlinedButton(
+                    onClick = onContinueAsGuest,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, Stone200),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Stone700
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Explore,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = Stone700
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Explorar o mapa sem conta",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.5.sp
+                        )
                     )
                 }
             }
@@ -367,28 +342,9 @@ private fun FruitBadge(
     name: String,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        shape = CircleShape,
-        color = Color.White,
-        border = BorderStroke(1.dp, Stone200.copy(alpha = 0.8f)),
-        modifier = modifier
-            .size(44.dp)
-            .shadow(
-                elevation = 3.dp,
-                shape = CircleShape,
-                ambientColor = Stone400.copy(alpha = 0.15f),
-                spotColor = MamaoOrange.copy(alpha = 0.15f)
-            )
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Image(
-                painter = painterResource(id = drawableId),
-                contentDescription = name,
-                modifier = Modifier.size(28.dp)
-            )
-        }
-    }
+    Image(
+        painter = painterResource(id = drawableId),
+        contentDescription = name,
+        modifier = modifier.size(34.dp)
+    )
 }

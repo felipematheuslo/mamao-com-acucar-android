@@ -1,5 +1,6 @@
 package com.felipelaurindo.mamaocomacucar.ui.auth
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,27 +60,14 @@ fun RegisterScreen(
         onDispose { authViewModel.resetRegistrationState() }
     }
 
+    BackHandler(enabled = !registrationComplete, onBack = onNavigateBack)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .statusBarsPadding()
     ) {
-        if (!registrationComplete) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = 12.dp, top = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Voltar",
-                    tint = Stone800
-                )
-            }
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -442,6 +430,21 @@ fun RegisterScreen(
                         color = MamaoOrange
                     )
                 }
+            }
+        }
+
+        if (!registrationComplete) {
+            IconButton(
+                onClick = onNavigateBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 12.dp, top = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = "Voltar",
+                    tint = Stone800
+                )
             }
         }
     }
