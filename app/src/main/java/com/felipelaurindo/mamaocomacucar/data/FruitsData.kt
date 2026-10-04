@@ -109,13 +109,25 @@ fun findFruitDefinition(speciesOrAlias: String): FruitDefinition? {
     val clean = speciesOrAlias.trim()
     if (clean.isBlank()) return null
     val norm = normalizeFruitKey(clean)
+    val stripped = norm.removePrefix("pe_de_")
+        .removePrefix("pes_de_")
+        .removePrefix("arvore_de_")
+        .removePrefix("arvores_de_")
+        .removePrefix("planta_de_")
+
+    val tokens = norm.split("_").filter { it.isNotBlank() }
 
     return FRUIT_DEFINITIONS.find { def ->
-        def.id == norm ||
-        normalizeFruitKey(def.displayName) == norm ||
-        def.aliases.any { normalizeFruitKey(it) == norm } ||
-        norm.contains(def.id) ||
-        (def.aliases.isNotEmpty() && def.aliases.any { norm.contains(normalizeFruitKey(it)) })
+        val defId = def.id
+        val defName = normalizeFruitKey(def.displayName)
+
+        // 1. Match exato ou com prefixo comum ("pe de manga" -> "manga")
+        defId == norm || defId == stripped ||
+        defName == norm || defName == stripped ||
+        def.aliases.any { normalizeFruitKey(it) == norm || normalizeFruitKey(it) == stripped } ||
+        // 2. Se a busca tiver palavras separadas, confere palavras inteiras (evita "natal" casando com "ata")
+        tokens.contains(defId) ||
+        def.aliases.any { tokens.contains(normalizeFruitKey(it)) }
     }
 }
 
