@@ -145,12 +145,10 @@ class MapViewModel : ViewModel() {
                     val nameNorm = com.felipelaurindo.mamaocomacucar.util.normalizeString(tw.tree.name)
                     val speciesNorm = com.felipelaurindo.mamaocomacucar.util.normalizeString(tw.tree.species)
                     val displayNorm = com.felipelaurindo.mamaocomacucar.util.normalizeString(getFruitDisplayName(tw.tree.species))
-                    val creatorNorm = com.felipelaurindo.mamaocomacucar.util.normalizeString(tw.tree.createdByName)
 
                     nameNorm.contains(normalizedQuery) ||
                     speciesNorm.contains(normalizedQuery) ||
-                    displayNorm.contains(normalizedQuery) ||
-                    creatorNorm.contains(normalizedQuery)
+                    displayNorm.contains(normalizedQuery)
                 }
 
                 val matchesStatus = filter == "todos" || tw.tree.currentStatus.value == filter
@@ -245,49 +243,52 @@ class MapViewModel : ViewModel() {
         val trimmed = query.trim()
         if (trimmed.isBlank()) return
 
-        val filtered = getFilteredTrees()
-        if (filtered.isNotEmpty()) {
-            val fruitName = getFruitDisplayName(filtered.first().tree.species)
+        // 1. Verifica PRIMEIRO se o usuário buscou explicitamente por uma FRUTA botânica (ex: manga, abacate, ata...)
+        val fruitDef = com.felipelaurindo.mamaocomacucar.data.findFruitDefinition(trimmed)
+        if (fruitDef != null) {
+            val fruitName = fruitDef.displayName
+            val targetId = fruitDef.id
+            val allTrees = getFilteredTrees()
+            val matchingFruitTrees = allTrees.filter { tw ->
+                tw.tree.species == targetId ||
+                com.felipelaurindo.mamaocomacucar.util.normalizeString(tw.tree.species) == com.felipelaurindo.mamaocomacucar.util.normalizeString(fruitName)
+            }
 
-            // Raio de 2 km para visitante, 20 km para usuário autenticado
-            val maxRadius = if (isGuest) 2.0 else 20.0
-            val nearby = filtered.filter { it.distance <= maxRadius }
+            if (matchingFruitTrees.isNotEmpty()) {
+                val maxRadius = if (isGuest) 2.0 else 20.0
+                val nearby = matchingFruitTrees.filter { it.distance <= maxRadius }
 
-            if (nearby.isNotEmpty()) {
-                val closest = nearby.first().tree
-                _mapCenter.value = Pair(closest.latitude, closest.longitude)
-                _selectedTree.value = closest
+                if (nearby.isNotEmpty()) {
+                    val closest = nearby.first().tree
+                    _mapCenter.value = Pair(closest.latitude, closest.longitude)
+                    _selectedTree.value = closest
 
-                val localCountText = if (nearby.size == 1) "1 fruteira" else "${nearby.size} fruteiras"
-                showToast("🌳 $localCountText de $fruitName encontrada(s) na sua região!")
-                return
-            } else {
-                if (isGuest) {
-                    val distantTrees = filtered.filter { it.distance > 2.0 }
-                    if (distantTrees.isNotEmpty()) {
-                        // Bloqueia a navegação de visitante para árvores fora de 2km e abre prompt de auth
-                        onGuestBlocked?.invoke(distantTrees.first().distance)
-                        return
+                    val localCountText = if (nearby.size == 1) "1 fruteira" else "${nearby.size} fruteiras"
+                    showToast("🌳 $localCountText de $fruitName encontrada(s) na sua região!")
+                    return
+                } else {
+                    if (isGuest) {
+                        val distantTrees = matchingFruitTrees.filter { it.distance > 2.0 }
+                        if (distantTrees.isNotEmpty()) {
+                            onGuestBlocked?.invoke(distantTrees.first().distance)
+                            return
+                        } else {
+                            showToast("Nenhum pé de $fruitName encontrada no seu raio de 2 km.")
+                            return
+                        }
                     } else {
-                        showToast("Nenhum pé de $fruitName encontrada no seu raio de 2 km.")
+                        showToast("Nenhum pé de $fruitName encontrada na sua região (raio de 20 km).")
                         return
                     }
-                } else {
-                    showToast("Nenhum pé de $fruitName encontrada na sua região (raio de 20 km).")
-                    return
                 }
+            } else {
+                val radiusText = if (isGuest) "no seu raio de 2 km" else "na sua região"
+                showToast("Nenhum pé de '$fruitName' cadastrada $radiusText.")
+                return
             }
         }
 
-        // Se não há árvores cadastradas com esse termo, verifica se é uma fruta botânica conhecida
-        val fruitDef = com.felipelaurindo.mamaocomacucar.data.findFruitDefinition(trimmed)
-        if (fruitDef != null) {
-            val radiusText = if (isGuest) "no seu raio de 2 km" else "na sua região"
-            showToast("Nenhum pé de '${fruitDef.displayName}' cadastrada $radiusText.")
-            return
-        }
-
-        // Se não for fruta botânica, pesquisa bairro, cidade ou endereço
+        // 2. Se NÃO for fruta botânica, pesquisa bairro, cidade ou endereço via Nominatim
         searchLocation(
             query = trimmed,
             isGuest = isGuest,
