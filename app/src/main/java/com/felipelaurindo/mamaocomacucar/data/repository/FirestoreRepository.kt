@@ -312,7 +312,6 @@ class FirestoreRepository {
     private fun treeItemToMap(tree: TreeItem): Map<String, Any> {
         val map = mutableMapOf<String, Any>(
             "createdBy" to tree.createdBy,
-            "createdByName" to tree.createdByName,
             "species" to tree.species,
             "name" to tree.name,
             "latitude" to tree.latitude,
@@ -320,6 +319,9 @@ class FirestoreRepository {
             "currentStatus" to tree.currentStatus.value,
             "createdAt" to tree.createdAt
         )
+        if (tree.createdByName.isNotEmpty()) {
+            map["createdByName"] = tree.createdByName
+        }
         if (tree.updatedAt.isNotEmpty() && tree.updatedAt != tree.createdAt) {
             map["updatedAt"] = tree.updatedAt
         }
@@ -342,13 +344,16 @@ class FirestoreRepository {
     }
 
     private fun commentUpdateToMap(update: CommentUpdate): Map<String, Any> {
-        return mapOf(
+        val map = mutableMapOf<String, Any>(
             "treeId" to update.treeId,
             "createdBy" to update.createdBy,
-            "createdByName" to update.createdByName,
             "comment" to update.comment,
             "statusAtReport" to update.statusAtReport.value,
             "createdAt" to update.createdAt
         )
+        if (update.createdByName.isNotEmpty()) {
+            map["createdByName"] = update.createdByName
+        }
+        return map
     }
 }

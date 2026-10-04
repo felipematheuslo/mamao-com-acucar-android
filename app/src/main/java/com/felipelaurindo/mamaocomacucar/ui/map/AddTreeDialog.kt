@@ -378,8 +378,7 @@ fun AddTreeDialog(
                                 status = selectedStatus,
                                 latitude = coordinates.first,
                                 longitude = coordinates.second,
-                                createdBy = currentUser.uid,
-                                createdByName = currentUser.displayName
+                                createdBy = currentUser.uid
                             )
                             onDismiss()
                         },

@@ -243,8 +243,7 @@ fun TreeDetailSheet(
                                         mapViewModel.submitReport(
                                             treeId = tree.id,
                                             status = phase,
-                                            createdBy = currentUser.uid,
-                                            createdByName = currentUser.displayName
+                                            createdBy = currentUser.uid
                                         )
                                         isSubmitting = false
                                         selectedPhase = null
@@ -338,7 +337,7 @@ fun TreeDetailSheet(
                             updates.forEach { update ->
                                 val updateMeta = getStatusMeta(update.statusAtReport)
                                 val updateUsername = creatorUsernames[update.createdBy]
-                                    ?: "@${update.createdByName.split(" ").first().lowercase()}"
+                                    ?: if (update.createdByName.isNotBlank()) "@${update.createdByName.split(" ").first().lowercase()}" else "@comunidade"
 
                                 Surface(
                                     shape = RoundedCornerShape(16.dp),
@@ -366,7 +365,7 @@ fun TreeDetailSheet(
                                                 horizontalArrangement = Arrangement.SpaceBetween
                                             ) {
                                                 Text(
-                                                    update.createdByName,
+                                                    if (update.createdByName.isNotBlank()) update.createdByName else updateUsername,
                                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                                     color = Stone900
                                                 )

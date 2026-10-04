@@ -53,10 +53,10 @@ service cloud.firestore {
 
     // --- TREE SCHEMAS & HELPERS ---
     function isValidTree(data) {
-      return data.keys().hasAll(['createdBy', 'createdByName', 'species', 'name', 'latitude', 'longitude', 'currentStatus', 'createdAt'])
+      return data.keys().hasAll(['createdBy', 'species', 'name', 'latitude', 'longitude', 'currentStatus', 'createdAt'])
         && data.keys().hasOnly(['createdBy', 'createdByName', 'species', 'name', 'latitude', 'longitude', 'currentStatus', 'createdAt', 'updatedAt', 'mainImage'])
         && data.createdBy is string && data.createdBy.size() <= 128
-        && data.createdByName is string && data.createdByName.size() <= 100
+        && (!('createdByName' in data) || (data.createdByName is string && data.createdByName.size() <= 100))
         && data.species is string && data.species.size() <= 100
         && data.name is string && data.name.size() <= 150
         && data.latitude is number && data.longitude is number
@@ -83,11 +83,11 @@ service cloud.firestore {
 
     // --- UPDATES/REPORTS SCHEMAS & HELPERS ---
     function isValidUpdate(data) {
-      return data.keys().hasAll(['treeId', 'createdBy', 'createdByName', 'comment', 'statusAtReport', 'createdAt'])
-        && data.keys().size() == 6
+      return data.keys().hasAll(['treeId', 'createdBy', 'comment', 'statusAtReport', 'createdAt'])
+        && data.keys().hasOnly(['treeId', 'createdBy', 'createdByName', 'comment', 'statusAtReport', 'createdAt'])
         && data.treeId is string && data.treeId.size() <= 128
         && data.createdBy is string && data.createdBy.size() <= 128
-        && data.createdByName is string && data.createdByName.size() <= 100
+        && (!('createdByName' in data) || (data.createdByName is string && data.createdByName.size() <= 100))
         && data.comment is string && data.comment.size() <= 1000
         && data.statusAtReport in ['florindo', 'crescendo', 'pronto', 'vazio']
         && data.createdAt is string && data.createdAt.size() <= 50;

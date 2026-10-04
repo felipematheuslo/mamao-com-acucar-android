@@ -165,7 +165,7 @@ class MapViewModel : ViewModel() {
         latitude: Double,
         longitude: Double,
         createdBy: String,
-        createdByName: String
+        createdByName: String = ""
     ) {
         viewModelScope.launch {
             try {
@@ -176,7 +176,7 @@ class MapViewModel : ViewModel() {
                     latitude = latitude,
                     longitude = longitude,
                     createdBy = createdBy,
-                    createdByName = createdByName.ifBlank { "Comunidade" },
+                    createdByName = createdByName,
                     mainImage = "",
                     createdAt = java.time.Instant.now().toString()
                 )
@@ -194,7 +194,7 @@ class MapViewModel : ViewModel() {
         treeId: String,
         status: TreeStatus,
         createdBy: String,
-        createdByName: String
+        createdByName: String = ""
     ) {
         viewModelScope.launch {
             try {
@@ -444,8 +444,9 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    fun getCreatorUsername(uid: String, fallbackName: String): String {
-        return _creatorUsernames.value[uid] ?: "@${fallbackName.split(" ").first().lowercase()}"
+    fun getCreatorUsername(uid: String, fallbackName: String = ""): String {
+        return _creatorUsernames.value[uid]
+            ?: if (fallbackName.isNotBlank()) "@${fallbackName.split(" ").first().lowercase()}" else "@comunidade"
     }
 
     override fun onCleared() {

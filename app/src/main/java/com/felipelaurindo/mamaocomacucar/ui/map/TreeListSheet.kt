@@ -439,7 +439,7 @@ fun TreeListSheet(
                         displayedTrees.forEach { tw ->
                             val tree = tw.tree
                             val username = creatorUsernames[tree.createdBy]
-                                ?: "@${tree.createdByName.split(" ").first().lowercase()}"
+                                ?: if (tree.createdByName.isNotBlank()) "@${tree.createdByName.split(" ").first().lowercase()}" else "@comunidade"
 
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
